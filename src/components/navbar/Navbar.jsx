@@ -38,7 +38,7 @@ const Navbar = () => {
           <button className=" text-[#454545] hover:text-[#000] cursor-pointer ">
             Log in
           </button>
-          <button className="bg-[#145086] text-[#fff] px-8 py-2  cursor-pointer x">
+          <button className="hidden md:flex bg-[#145086] text-[#fff] px-8 py-2  cursor-pointer x">
             Sign up
           </button>
 
