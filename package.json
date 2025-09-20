@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
+    "@vis.gl/react-google-maps": "^1.5.5",
+    "dotenv": "^17.2.2",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
