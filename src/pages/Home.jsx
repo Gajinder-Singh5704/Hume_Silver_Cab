@@ -1,14 +1,12 @@
 import Navbar from "../components/navbar/Navbar.jsx"
-import SmallNav from "../components/navbar/SmallNav.jsx"
-import SideBar from "../components/SideBar.jsx"
+import NavSection from "../components/navSection/NavSection.jsx"
 
 
 const Home = () => {
   return (
     <>
       <Navbar/>
-      <SmallNav/>
-      <SideBar/>
+      <NavSection/>
     </>
   )
 }
