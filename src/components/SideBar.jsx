@@ -120,23 +120,24 @@ const calculateFare = () => {
       vehicleSurcharge = 11;
       break;
     case "SUV":
+      vehicleSurcharge = 17.35
+      break;
     case "Maxi Taxi":
       vehicleSurcharge = 17.35;
       break;
   }
 
-  const base = 20 + distance * 2.426 + tolls * 17.46;
-  let fareValue = Math.max(base, 50) + vehicleSurcharge;
+  let base;
 
   // 🔑 Apply time type multiplier/surcharge
   if (timeType === 3) {
-    fareValue *= 1.2; // Overnight weekend surcharge
-  } else if (timeType === 1) {
-    fareValue *= 1.0; // Normal hours (no change)
+     base = 20 + distance * 2.426 + tolls * 17.46;
+  } else if (timeType === 2) {
+     base = 13 + distance * 2.204 + tolls * 17.46;
   } else {
-    fareValue *= 1.1; // Off-peak default (optional)
+     base = 8 + distance * 2.204 + tolls * 17.46;
   }
-
+  let fareValue = Math.max(base, 40) + vehicleSurcharge;
   setFare(fareValue.toFixed(2));
 };
 
