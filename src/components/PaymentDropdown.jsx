@@ -13,24 +13,14 @@ const PaymentDropdown = ({
   // Default payment options if none provided
   const defaultPaymentOptions = [
     {
-      id: 'credit-card',
-      name: 'Credit Card',
+      id: 'card',
+      name: 'Credit Card / Debit Card',
       description: '**** **** **** 4567',
       icon: <CreditCard className="w-6 h-6 text-blue-600" />,
       type: 'Primary',
       status: 'Default',
       color: 'bg-blue-50',
-      brand: 'Visa'
-    },
-    {
-      id: 'debit-card',
-      name: 'Debit Card',
-      description: '**** **** **** 8901',
-      icon: <CreditCard className="w-6 h-6 text-green-600" />,
-      type: 'Secondary',
-      status: 'Available',
-      color: 'bg-green-50',
-      brand: 'Mastercard'
+      brand: 'Visa,MasterCard'
     },
     {
       id: 'pay-driver-directly',
@@ -43,14 +33,14 @@ const PaymentDropdown = ({
       brand: 'Direct'
     },
     {
-      id: 'google-pay',
-      name: 'Google Pay',
+      id: 'CabCharge FastCard',
+      name: 'CabCharge FastCard',
       description: 'Saved payment method',
       icon: <Smartphone className="w-6 h-6 text-blue-500" />,
       type: 'Digital',
       status: 'Available',
       color: 'bg-blue-50',
-      brand: 'Google'
+      brand: 'FastCard'
     }
   ];
 
