@@ -26,7 +26,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [passenger, setPassenger] = useState("");
   const [contact, setContact] = useState("");
   const [instruction, setInstruction] = useState("");
-  const [isOn, setIsOn] = useState(false);
+  const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
@@ -50,6 +50,8 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [minuteVal, setMinuteVal] = useState("00");
   const [ampmVal, setAmpmVal] = useState("am");
   const [timeType, setTimeType] = useState(2); // number-3
+  const [fare, setFare] = useState(null);
+  const [contactError, setContactError] = useState("");
 
   const [destinationSuggestions, setDestinationSuggestions] = useState({});
 
@@ -57,6 +59,27 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const distanceRef = useRef(null);
   const tollRef = useRef(null);
   const timeTypeRef = useRef(null);
+
+  const calculateFare = () => {
+    if (!distanceKm) return null;
+
+    const baseFare = 5; // $5
+    const perKmRate = 2; // $2 per km
+    const tollCharge = hasToll ? 3 : 0; // $3 if toll exists
+    const vehicleMultiplier = selected === "Premium" ? 1.5 : 1;
+
+    // Time type multiplier: 1 = normal, 2 = peak, 3 = overnight weekend
+    let timeMultiplier = 1;
+    if (timeType === 2) timeMultiplier = 1.2;
+    if (timeType === 3) timeMultiplier = 1.5;
+
+    const totalFare =
+      (baseFare + perKmRate * parseFloat(distanceKm) + tollCharge) *
+      vehicleMultiplier *
+      timeMultiplier;
+
+    setFare(totalFare.toFixed(2));
+  };
 
   // polling for google availability
   const directionsServiceRef = useRef(null);
@@ -249,12 +272,44 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
       (result, status) => {
         if (status === "OK" && directionsRendererRef.current) {
           directionsRendererRef.current.setDirections(result);
+
+          const leg = result.routes[0].legs[0];
+          const km = (leg.distance.value / 1000).toFixed(1);
+          setDistanceKm(km);
+
+          const stepsText = leg.steps
+            .map((s) => s.instructions.toLowerCase())
+            .join(" ");
+          const summary = (result.routes[0].summary || "").toLowerCase();
+
+          const toll =
+            stepsText.includes("citylink") ||
+            stepsText.includes("eastlink") ||
+            stepsText.includes("tullamarine fwy") ||
+            stepsText.includes("tollway") ||
+            summary.includes("citylink") ||
+            summary.includes("eastlink") ||
+            summary.includes("tullamarine");
+
+          setHasToll(toll);
+
+          // --- Calculate fare ---
+          calculateFare();
+
+          console.log("📏 Distance:", km, "km | Toll:", toll ? "Yes" : "No");
         } else {
           console.error("Directions request failed:", status);
+          setDistanceKm("");
+          setHasToll(false);
+          setFare(null);
         }
       }
     );
   };
+
+  useEffect(() => {
+    if (distanceKm) calculateFare();
+  }, [selected, distanceKm, hasToll]);
 
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
@@ -326,7 +381,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                   value={destination}
                   onChange={(e) => handleDestinationChange(e, index)}
                   required
-                  disabled = {!pickup}
+                  disabled={!pickup}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -501,7 +556,11 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
           <p className="mt-2">Lock in a price with no additional charges.</p>
         </div>
 
-        <CarDropdown selectedOption={selected} onOptionSelect={setSelected} />
+        <CarDropdown
+          selectedOption={selected}
+          onOptionSelect={setSelected}
+          label={fare ? `Fare: $${fare}` : "Dest Required"}
+        />
 
         {/* Step 2 */}
         <div className="px-5 py-6">
@@ -540,13 +599,20 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                 type="tel"
                 inputProps={{
                   pattern: "[0-9]{10}",
-                  maxLength: 10,
+                  maxLength: 9,
                 }}
                 value={contact}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "");
                   setContact(value);
+                  if (value.length === 9 && value.startsWith("4")) {
+                    setContactError("");
+                  } else {
+                    setContactError("Number must be 9 digits and start with 4");
+                  }
                 }}
+                error={!!contactError}
+                helperText={contactError}
               />
             </div>
           </div>

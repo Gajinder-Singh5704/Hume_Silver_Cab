@@ -6,7 +6,8 @@ const CarDropdown = ({
   selectedOption = null, 
   onOptionSelect = () => {},
   title = "More vehicle/service options",
-  className = ""
+  className = "",
+  label
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -115,7 +116,7 @@ const CarDropdown = ({
             </div>
             <div className="text-right">
               <p className="text-sm font-medium text-gray-800">{currentSelection.fareEstimate}</p>
-              <p className="text-sm text-gray-600">{currentSelection.destRequired}</p>
+              <p className="text-sm text-gray-600">{label}</p>
             </div>
           </div>
         </div>
