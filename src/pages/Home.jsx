@@ -5,15 +5,38 @@ import SideBar from "../components/SideBar.jsx";
 import { useState } from "react";
 
 const Home = () => {
-  const [selectedPlace, setSelectedPlace] = useState(null)
-  const [selectedPickup,setSelectedPickup] = useState(null)
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [selectedPickup, setSelectedPickup] = useState(null);
+
   return (
     <>
       <Navbar />
       <NavSection onPlaceSelect={setSelectedPlace} />
-      <div className="flex">
-        <SideBar className="w-[25%]" onPickupSelect={setSelectedPickup} />
-        <MapSection className="w-[75%]" selectedPlace={selectedPlace} selectedPickup = {selectedPickup} />
+
+      {/* Desktop / Tablet */}
+      <div className="hidden md:flex w-full h-[calc(100vh-100px)]">
+        {/* Sidebar takes 25% */}
+        <div className="w-[25%] border-r">
+          <SideBar onPickupSelect={setSelectedPickup} />
+        </div>
+
+        {/* Map takes 75% */}
+        <div className="w-[75%]">
+          <MapSection selectedPlace={selectedPlace} selectedPickup={selectedPickup} />
+        </div>
+      </div>
+
+      {/* Mobile */}
+      <div className="flex flex-col md:hidden w-full h-[calc(100vh-100px)]">
+        {/* Map top half */}
+        <div className="h-[50vh]">
+          <MapSection selectedPlace={selectedPlace} selectedPickup={selectedPickup} />
+        </div>
+
+        {/* Sidebar bottom half */}
+        <div className="h-[50vh] overflow-y-auto border-t">
+          <SideBar onPickupSelect={setSelectedPickup} />
+        </div>
       </div>
     </>
   );

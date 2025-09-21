@@ -36,7 +36,7 @@ const NavSection = ({onPlaceSelect}) => {
             className="rounded-sm bg-white w-[200px] md:w-[280px] h-[30px] pl-2 pr-8 cursor-pointer"
             onClick={handleClick}
           />
-          <span className="absolute right-2 top-1/2 transform -translate-y-1/2">
+          <span className="absolute right-2 top-1/2 transform -translate-y-1/2" onClick={handleClick}>
             <PiPencilSimpleLineLight size={20} />
           </span>
         </div>
