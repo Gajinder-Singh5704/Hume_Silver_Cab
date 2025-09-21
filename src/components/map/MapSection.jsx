@@ -22,7 +22,7 @@ const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
     if (!directionsRendererRef.current) {
       directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
         map,
-        suppressMarkers: true, // since you already have your own markers
+        suppressMarkers: true,
         polylineOptions: {
           strokeColor: "#FF0000",
           strokeWeight: 4,
@@ -30,14 +30,18 @@ const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
       });
     }
 
-    const waypointsForGoogle = waypoints.map((wp) => ({ location: wp }));
+    // Filter out null waypoints
+    const validWaypoints = waypoints.filter(Boolean).map((wp) => ({
+      location: wp,
+      stopover: true,
+    }));
 
     directionsService.route(
       {
         origin,
         destination,
         travelMode: window.google.maps.TravelMode.DRIVING,
-        waypoints: waypointsForGoogle,
+        waypoints: validWaypoints,
         optimizeWaypoints: false,
       },
       (result, status) => {
@@ -52,6 +56,7 @@ const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
 
   return null;
 };
+
 
 
 const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {

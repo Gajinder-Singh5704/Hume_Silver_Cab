@@ -61,25 +61,30 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const timeTypeRef = useRef(null);
 
   const calculateFare = () => {
-    if (!distanceKm) return null;
+  if (!distanceKm) return null;
 
-    const baseFare = 5; // $5
-    const perKmRate = 2; // $2 per km
-    const tollCharge = hasToll ? 3 : 0; // $3 if toll exists
-    const vehicleMultiplier = selected === "Premium" ? 1.5 : 1;
+  const distance = parseFloat(distanceKm);
+  const tolls = hasToll ? 1 : 0;
 
-    // Time type multiplier: 1 = normal, 2 = peak, 3 = overnight weekend
-    let timeMultiplier = 1;
-    if (timeType === 2) timeMultiplier = 1.2;
-    if (timeType === 3) timeMultiplier = 1.5;
+  let baseFare = 0;
 
-    const totalFare =
-      (baseFare + perKmRate * parseFloat(distanceKm) + tollCharge) *
-      vehicleMultiplier *
-      timeMultiplier;
+  switch (selected) {
+    case "Premium":
+      baseFare = Math.max(20 + distance * 2.426 + tolls * 17.46, 50);
+      break;
+    case "Standard":
+      baseFare = Math.max(13 + distance * 2.204 + tolls * 17.46, 50);
+      break;
+    case "Economy":
+      baseFare = Math.max(8 + distance * 2.204 + tolls * 17.46, 50);
+      break;
+    default:
+      baseFare = 50; // fallback
+  }
 
-    setFare(totalFare.toFixed(2));
-  };
+  setFare(baseFare.toFixed(2));
+};
+
 
   // polling for google availability
   const directionsServiceRef = useRef(null);
