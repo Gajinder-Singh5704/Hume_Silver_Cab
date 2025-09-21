@@ -10,34 +10,49 @@ import {
 /** Draw a native google.maps.Polyline on the map for the given path.
  *  path: array of { lat: number, lng: number }
  */
-const PolylineOverlay = ({ path = [] }) => {
+const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
   const map = useMap();
+  const directionsRendererRef = React.useRef(null);
 
   useEffect(() => {
-    if (!map) return;
-    if (!window.google || !window.google.maps) return;
-    if (!path || path.length < 2) return;
+    if (!map || !window.google || !window.google.maps) return;
+    if (!origin || !destination) return;
 
-    // ensure lat/lng are numbers and in LatLngLiteral shape
-    const latLngPath = path.map((p) => ({ lat: Number(p.lat), lng: Number(p.lng) }));
+    const directionsService = new window.google.maps.DirectionsService();
+    if (!directionsRendererRef.current) {
+      directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+        map,
+        suppressMarkers: true, // since you already have your own markers
+        polylineOptions: {
+          strokeColor: "#FF0000",
+          strokeWeight: 4,
+        },
+      });
+    }
 
-    const poly = new window.google.maps.Polyline({
-      path: latLngPath,
-      strokeColor: "#FF0000",
-      strokeOpacity: 0.85,
-      strokeWeight: 4,
-      geodesic: true,
-    });
+    const waypointsForGoogle = waypoints.map((wp) => ({ location: wp }));
 
-    poly.setMap(map);
-
-    return () => {
-      poly.setMap(null);
-    };
-  }, [map, JSON.stringify(path)]); // stringify to trigger effect when path contents change
+    directionsService.route(
+      {
+        origin,
+        destination,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        waypoints: waypointsForGoogle,
+        optimizeWaypoints: false,
+      },
+      (result, status) => {
+        if (status === "OK" && result) {
+          directionsRendererRef.current.setDirections(result);
+        } else {
+          console.error("Directions request failed:", status);
+        }
+      }
+    );
+  }, [map, origin, destination, JSON.stringify(waypoints)]);
 
   return null;
 };
+
 
 const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
   const map = useMap();
@@ -97,10 +112,15 @@ const RecenterButton = ({ selectedPickup, destinations }) => {
 
 const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
   // build polyline path: pickup -> dest1 -> dest2 ...
+  
   const path = [
     ...(selectedPickup ? [selectedPickup] : []),
     ...destinations.filter(Boolean),
   ];
+
+  const origin = selectedPickup;
+  const destination = destinations[destinations.length - 1];
+  const waypoints = destinations.slice(0, -1);
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY}>
@@ -147,8 +167,8 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
               )
           )}
 
-          {/* Native polyline overlay (straight lines between points) */}
-          {path.length > 1 && <PolylineOverlay path={path} />}
+           {/* Directions route */}
+          <DirectionsOverlay origin={origin} waypoints={waypoints} destination={destination} />
 
           <RecenterButton
             selectedPickup={selectedPickup}

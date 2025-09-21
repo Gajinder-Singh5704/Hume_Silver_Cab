@@ -162,8 +162,26 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     }
   };
 
+  const handleDeleteDestination = (index) => {
+    // Remove the destination
+    const newDestinations = [...destinations];
+    newDestinations.splice(index, 1);
+    setDestinations(newDestinations);
 
-const handlePickupSelect = async (s) => {
+    // Remove the corresponding location
+    const newLocs = [...destinationLocs];
+    newLocs.splice(index, 1);
+    setDestinationLocs(newLocs);
+
+    // Notify parent about updated destinations
+    onDestinationsSelect(newLocs);
+
+    // Optionally, remove marker from map
+    // Since we are creating new markers each time, the removed marker will disappear on next route update
+    updateRoute(pickupLoc, newLocs);
+  };
+
+  const handlePickupSelect = async (s) => {
     setPickup(s.description);
     setPickupSuggestions([]);
 
@@ -308,7 +326,33 @@ const handlePickupSelect = async (s) => {
                   value={destination}
                   onChange={(e) => handleDestinationChange(e, index)}
                   required
+                  disabled = {!pickup}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        {destination && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleChange(index, "")} // clear input but keep field
+                          >
+                            <span style={{ fontSize: 16 }}>✖</span>
+                          </IconButton>
+                        )}
+                      </InputAdornment>
+                    ),
+                  }}
                 />
+
+                {/* Delete button for the entire field */}
+                {destinations.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteDestination(index)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-red-500 text-white rounded"
+                  >
+                    Delete
+                  </button>
+                )}
 
                 {destinationSuggestions[index]?.length > 0 && (
                   <ul className="absolute z-50 bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto w-full">
