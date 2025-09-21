@@ -12,6 +12,7 @@ import { IoAddCircle } from "react-icons/io5";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
 import { getPlaces ,getGeocode   } from "../hooks/map";
+import PaymentDropdown from "./PaymentDropdown";
 
 const SideBar = ({ onPickupSelect }) => {
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -22,6 +23,7 @@ const SideBar = ({ onPickupSelect }) => {
   const [instruction, setInstruction] = useState("");
   const [isOn, setIsOn] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState(null);
 
   const handlePickupChange = async (e) => {
     const value = e.target.value;
@@ -56,14 +58,28 @@ const SideBar = ({ onPickupSelect }) => {
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+
+  }
+
+  
+
+  // Handle when user selects a payment method
+  const handlePaymentSelect = (paymentMethod) => {
+    setSelectedPayment(paymentMethod);
+    console.log('Selected payment:', paymentMethod);
+  };
+
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
-      <form>
+      <form onSubmit={handleSubmit}>
         {/* Step 1 */}
 
         <div className="px-5 py-6">
           <h3 className="text-sm mb-4 hidden md:flex">
-            Step 1 of 4 <b>Booking details</b>
+            Step 1 of 4  <b className="ml-2"> Booking details</b>
           </h3>
 
           <h2 className="md:hidden text-2xl text-bold mb-2">Fare Estimates Calculator</h2>
@@ -228,12 +244,20 @@ const SideBar = ({ onPickupSelect }) => {
             {" "}
             Step 3 of 4 <b>Payment</b>
           </h3>
+
+            <PaymentDropdown
+            selectedOption={selectedPayment}
+            onOptionSelect={handlePaymentSelect}
+            title="Select payment method"
+            className="mb-4"
+            />
+
         </div>
 
         {/* Step 4 */}
 
         <div className="px-5 py-6">
-          <h3 className="text-sm mt-2 mb-4">
+          <h3 className="text-sm mb-4">
             {" "}
             Step 4 of 4 <b>Driver Instruction</b>
           </h3>
@@ -256,6 +280,16 @@ const SideBar = ({ onPickupSelect }) => {
               placeholder="e.g. Unit, Gate and floor numbers"
             />
           </div>
+        </div>
+
+        <div className="mt-3">
+            <button className="w-[80%] ml-[10%] px-2 py-4 border border-gray-500 rounded-md cursor-pointer">
+                Request Booking
+            </button>
+        </div>
+
+        <div className="mt-3">
+
         </div>
       </form>
     </section>

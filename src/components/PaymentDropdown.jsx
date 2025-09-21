@@ -1,0 +1,134 @@
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp, CreditCard, Smartphone, Wallet, Building } from 'lucide-react';
+
+const PaymentDropdown = ({ 
+  paymentOptions = [], 
+  selectedOption = null, 
+  onOptionSelect = () => {},
+  title = "Payment method",
+  className = ""
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Default payment options if none provided
+  const defaultPaymentOptions = [
+    {
+      id: 'credit-card',
+      name: 'Credit Card',
+      description: '**** **** **** 4567',
+      icon: <CreditCard className="w-6 h-6 text-blue-600" />,
+      type: 'Primary',
+      status: 'Default',
+      color: 'bg-blue-50',
+      brand: 'Visa'
+    },
+    {
+      id: 'debit-card',
+      name: 'Debit Card',
+      description: '**** **** **** 8901',
+      icon: <CreditCard className="w-6 h-6 text-green-600" />,
+      type: 'Secondary',
+      status: 'Available',
+      color: 'bg-green-50',
+      brand: 'Mastercard'
+    },
+    {
+      id: 'pay-driver-directly',
+      name: 'Pay Driver Directly',
+      description: 'Cash or card to driver',
+      icon: <Wallet className="w-6 h-6 text-orange-600" />,
+      type: 'Direct',
+      status: 'Available',
+      color: 'bg-orange-50',
+      brand: 'Direct'
+    },
+    {
+      id: 'google-pay',
+      name: 'Google Pay',
+      description: 'Saved payment method',
+      icon: <Smartphone className="w-6 h-6 text-blue-500" />,
+      type: 'Digital',
+      status: 'Available',
+      color: 'bg-blue-50',
+      brand: 'Google'
+    }
+  ];
+
+  const options = paymentOptions.length > 0 ? paymentOptions : defaultPaymentOptions;
+  const currentSelection = selectedOption || options[0];
+
+  const handleOptionSelect = (option) => {
+    onOptionSelect(option);
+    setIsOpen(false);
+  };
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  return (
+    <div className={`w-full max-w-md mx-auto bg-white rounded-lg shadow-lg ${className}`}>
+      {/* Dropdown Header */}
+      <button
+        onClick={toggleDropdown}
+        className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 rounded-t-lg border-b hover:bg-gray-100 transition-colors"
+      >
+        <span className="text-gray-700 font-medium">{title}</span>
+        {isOpen ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
+      </button>
+
+      {/* Selected Option (when closed) */}
+      {!isOpen && currentSelection && (
+        <div className={`px-4 py-4 ${currentSelection.color || 'bg-gray-50'} rounded-b-lg`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">{currentSelection.icon}</div>
+              <div>
+                <h3 className="font-semibold text-gray-800">{currentSelection.name}</h3>
+                <p className="text-sm text-gray-600">{currentSelection.description}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-800">{currentSelection.type}</p>
+              <p className="text-sm text-gray-600">{currentSelection.status}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dropdown Options */}
+      {isOpen && (
+        <div className="max-h-80 overflow-y-auto">
+          {options.map((option, index) => (
+            <button
+              key={option.id}
+              onClick={() => handleOptionSelect(option)}
+              className={`w-full px-4 py-4 ${option.color} hover:opacity-80 transition-opacity border-b border-gray-200 last:border-b-0 ${
+                index === options.length - 1 ? 'rounded-b-lg' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">{option.icon}</div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-gray-800">{option.name}</h3>
+                    <p className="text-sm text-gray-600">{option.description}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-800">{option.type}</p>
+                  <p className="text-sm text-gray-600">{option.status}</p>
+                  {currentSelection && currentSelection.id === option.id && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-1 ml-auto"></div>
+                  )}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PaymentDropdown;
