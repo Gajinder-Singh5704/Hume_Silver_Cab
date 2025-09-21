@@ -15,13 +15,13 @@ const Home = () => {
       <NavSection onPlaceSelect={setSelectedPlace} />
 
       <div className="hidden md:flex w-full h-[calc(100vh-100px)]">
-        <div className="w-[27%] border-r">
+        <div className="w-[380px] border-r">
           <SideBar
             onPickupSelect={setSelectedPickup}
             onDestinationsSelect={setSelectedDestinations}
           />
         </div>
-        <div className="w-[73%]">
+        <div className="flex-1">
           <MapSection
             selectedPlace={selectedPlace}
             selectedPickup={selectedPickup}
