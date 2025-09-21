@@ -24,7 +24,7 @@ const MapUpdater = ({ selectedPlace, selectedPickup }) => {
   return null;
 };
 
-// ✅ Recenter button component
+// Recenter button component
 const RecenterButton = ({ selectedPickup }) => {
   const map = useMap();
 
@@ -64,24 +64,17 @@ const MapSection = ({ selectedPlace, selectedPickup }) => {
             streetViewControl: false,
             fullscreenControl: false,
             gestureHandling: "greedy",
-         
           }}
-          zoomControl = {false}
+          zoomControl={false}
         >
-          <MapUpdater
-            selectedPlace={selectedPlace}
-            selectedPickup={selectedPickup}
-          />
+          <MapUpdater selectedPlace={selectedPlace} selectedPickup={selectedPickup} />
 
           {selectedPickup && selectedPickup.lat && selectedPickup.lng && (
-            <AdvancedMarker
-              position={{ lat: selectedPickup.lat, lng: selectedPickup.lng }}
-            >
+            <AdvancedMarker position={{ lat: selectedPickup.lat, lng: selectedPickup.lng }}>
               <Pin background="blue" borderColor="white" glyphColor="white" />
             </AdvancedMarker>
           )}
 
-          {/* ✅ Button overlays on map */}
           <RecenterButton selectedPickup={selectedPickup} />
         </Map>
       </div>
@@ -90,3 +83,4 @@ const MapSection = ({ selectedPlace, selectedPickup }) => {
 };
 
 export default MapSection;
+  
