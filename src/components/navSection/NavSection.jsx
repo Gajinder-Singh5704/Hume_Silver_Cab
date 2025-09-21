@@ -12,7 +12,6 @@ const NavSection = () => {
 
   const items = [
     { label: "Map View", icon: FaMap },
-    { label: "Schedule View", icon: MdWindow },
   ];
 
   const handleClick = () => {
@@ -51,21 +50,18 @@ const NavSection = () => {
                 <Icon />
                 <p className="text-sm md:text-base">{item.label}</p>
               </div>
-              {isSelected && (
-                <div className="h-1 w-full bg-blue-500 mt-1 rounded" />
-              )}
             </div>
           );
         })}
       </div>
 
-      {/* What's New (right side) */}
+      {/* What's New (right side)
       <div className="flex items-center gap-3 absolute right-4">
         <FiZap size={20} className="text-white" />
         <span className="font-medium text-white text-sm md:text-base">
           What's New
         </span>
-      </div>
+      </div> */}
 
       {/* Modal */}
       {isOpen && <Modal onClose={handleClick} />}
