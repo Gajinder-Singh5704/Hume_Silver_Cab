@@ -1,4 +1,6 @@
 import {
+    Box,
+  Button,
   Checkbox,
   FormControlLabel,
   Radio,
@@ -17,7 +19,7 @@ import PaymentDropdown from "./PaymentDropdown";
 const SideBar = ({ onPickupSelect }) => {
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [pickup, setPickup] = useState("");
-  const [destination, setDestination] = useState("");
+  const [destinations, setDestinations] = useState([""]);
   const [passenger, setPassenger] = useState("");
   const [contact, setContact] = useState("");
   const [instruction, setInstruction] = useState("");
@@ -72,6 +74,23 @@ const SideBar = ({ onPickupSelect }) => {
     console.log('Selected payment:', paymentMethod);
   };
 
+  
+
+  const handleChange = (index, value) => {
+    const newDestinations = [...destinations];
+    newDestinations[index] = value;
+    setDestinations(newDestinations);
+  };
+
+  const handleAdd = () => {
+    if (
+      destinations.length < 4 &&
+      destinations[destinations.length - 1].trim() !== ""
+    ) {
+      setDestinations([...destinations, ""]);
+    }
+  };
+
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
       <form onSubmit={handleSubmit}>
@@ -115,22 +134,31 @@ const SideBar = ({ onPickupSelect }) => {
             )}
           </div>
 
-          <div className="mb-4">
-            <TextField
-              label="Add destination(required)" // 👈 Floating label
-              variant="outlined" // outlined | filled | standard
-              fullWidth
-              required
-              placeholder="Add your destination"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-            />
-          </div>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 
-          <div className="flex gap-3 items-center align-center">
-            <IoAddCircle size={20} />
-            <span className="inline-block">Add Destination</span>
-          </div>
+                {destinations.map((destination, index) => (
+                <TextField
+                key={index}
+                label={`Destination ${index + 1}`}
+                variant="outlined"
+                fullWidth
+                value={destination}
+                onChange={(e) => handleChange(index, e.target.value)}
+                required
+                />
+                ))}
+
+                <Button
+                    variant="outlined"
+                    onClick={handleAdd}
+                    disabled={
+                    destinations.length >= 4 ||
+                    destinations[destinations.length - 1].trim() === ""
+                    }
+                >
+                    + Add Destination
+                </Button>
+            </Box>
         </div>
 
         <div className="flex  gap-4 px-4 ml-4 md:ml-0 items-center md:justify-center">
@@ -283,13 +311,9 @@ const SideBar = ({ onPickupSelect }) => {
         </div>
 
         <div className="mt-3">
-            <button className="w-[80%] ml-[10%] px-2 py-4 border border-gray-500 rounded-md cursor-pointer">
+            <button className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer">
                 Request Booking
             </button>
-        </div>
-
-        <div className="mt-3">
-
         </div>
       </form>
     </section>
