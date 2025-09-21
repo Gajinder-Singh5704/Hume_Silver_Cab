@@ -13,22 +13,29 @@ import {
 const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
   const map = useMap();
   const directionsRendererRef = React.useRef(null);
-
   useEffect(() => {
     if (!map || !window.google || !window.google.maps) return;
-    if (!origin || !destination) return;
+    // if (!origin || !destination) return;
 
     const directionsService = new window.google.maps.DirectionsService();
     if (!directionsRendererRef.current) {
-      directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
-        map,
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: "#FF0000",
-          strokeWeight: 4,
-        },
-      });
+      directionsRendererRef.current = new window.google.maps.DirectionsRenderer(
+        {
+          map,
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: "#FF0000",
+            strokeWeight: 4,
+          },
+        }
+      );
     }
+
+     if (!origin || !destination) {
+    // clear all polylines
+    directionsRendererRef.current.setDirections({ routes: [] });
+    return;
+  }
 
     // Filter out null waypoints
     const validWaypoints = waypoints.filter(Boolean).map((wp) => ({
@@ -56,8 +63,6 @@ const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
 
   return null;
 };
-
-
 
 const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
   const map = useMap();
@@ -96,7 +101,6 @@ const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
   return null;
 };
 
-
 // Recenter button component
 const RecenterButton = ({ selectedPickup, destinations }) => {
   const map = useMap();
@@ -129,7 +133,7 @@ const RecenterButton = ({ selectedPickup, destinations }) => {
 
 const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
   // build polyline path: pickup -> dest1 -> dest2 ...
-  
+
   const path = [
     ...(selectedPickup ? [selectedPickup] : []),
     ...destinations.filter(Boolean),
@@ -184,12 +188,15 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
               )
           )}
 
-           {/* Directions route */}
-{origin && destination && destination !== "" && (
-  <DirectionsOverlay origin={origin} waypoints={waypoints} destination={destination} />
-)}
-
-
+          {/* Directions route */}
+          {
+           
+            <DirectionsOverlay
+              origin={origin}
+              waypoints={waypoints}
+              destination={destination}
+            />
+          }
 
           <RecenterButton
             selectedPickup={selectedPickup}

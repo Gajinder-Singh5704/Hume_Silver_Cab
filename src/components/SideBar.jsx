@@ -32,8 +32,6 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
   // add new state for map overlays
   const [destinationLocs, setDestinationLocs] = useState([]); // array of {lat, lng}
-  const mapRef = useRef(null); // Google Map reference
-  const directionsRendererRef = useRef(null);
 
   // internal geo selections
   const [pickupLoc, setPickupLoc] = useState(null); // {lat, lng}
@@ -60,115 +58,84 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const tollRef = useRef(null);
   const timeTypeRef = useRef(null);
 
-// determine time type (helper stays the same)
-function determineTimeType(dateObj) {
-  const day = dateObj.getDay(); // 0=Sun, 5=Fri, 6=Sat
-  const hour = dateObj.getHours();
-  let timeType = 2; // default off-peak
+  // determine time type (helper stays the same)
+  function determineTimeType(dateObj) {
+    const day = dateObj.getDay(); // 0=Sun, 5=Fri, 6=Sat
+    const hour = dateObj.getHours();
+    let timeType = 2; // default off-peak
 
-  if (
-    (day === 5 && hour >= 22) || // Friday 22:00–23:59
-    (day === 6 && hour < 4)  ||  // Saturday 00:00–03:59
-    (day === 6 && hour >= 22) || // Saturday 22:00–23:59
-    (day === 0 && hour < 4)      // Sunday 00:00–03:59
-  ) {
-    timeType = 3; // Overnight Weekend
-  } else if (hour >= 9 && hour < 17) {
-    timeType = 1; // Normal
+    if (
+      (day === 5 && hour >= 22) || // Friday 22:00–23:59
+      (day === 6 && hour < 4) || // Saturday 00:00–03:59
+      (day === 6 && hour >= 22) || // Saturday 22:00–23:59
+      (day === 0 && hour < 4) // Sunday 00:00–03:59
+    ) {
+      timeType = 3; // Overnight Weekend
+    } else if (hour >= 9 && hour < 17) {
+      timeType = 1; // Normal
+    }
+
+    return timeType;
   }
 
-  return timeType;
-}
-
-// set initial and later booking time type
-useEffect(() => {
-  let dateObj;
-
-  if (bookingMode === "now") {
-    dateObj = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
-    );
-  } else if (bookingMode === "later" && dateVal) {
-    const hour = parseInt(hourVal, 10) % 12 + (ampmVal === "pm" ? 12 : 0);
-    dateObj = new Date(`${dateVal}T${hour}:${minuteVal}:00`);
-  }
-
-  if (dateObj) {
-    setTimeType(determineTimeType(dateObj));
-  }
-}, [bookingMode, dateVal, hourVal, minuteVal, ampmVal]);
-
-
-const melbourneNow = new Date(
-  new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
-);
-
-
-const calculateFare = () => {
-  if (!distanceKm) return null;
-
-  const distance = parseFloat(distanceKm);
-  const tolls = hasToll ? 1 : 0;
-
-  // vehicle surcharges
-  let vehicleSurcharge = 0;
-  switch (selected) {
-    case "Sedan":
-      vehicleSurcharge = 0;
-      break;
-    case "Silver Service":
-      vehicleSurcharge = 11;
-      break;
-    case "SUV":
-      vehicleSurcharge = 17.35
-      break;
-    case "Maxi Taxi":
-      vehicleSurcharge = 17.35;
-      break;
-  }
-
-  let base;
-
-  // 🔑 Apply time type multiplier/surcharge
-  if (timeType === 3) {
-     base = 20 + distance * 2.426 + tolls * 17.46;
-  } else if (timeType === 2) {
-     base = 13 + distance * 2.204 + tolls * 17.46;
-  } else {
-     base = 8 + distance * 2.204 + tolls * 17.46;
-  }
-  let fareValue = Math.max(base, 40) + vehicleSurcharge;
-  setFare(fareValue.toFixed(2));
-};
-
-
-
-  // polling for google availability
-  const directionsServiceRef = useRef(null);
+  // set initial and later booking time type
   useEffect(() => {
-    let poll = setInterval(() => {
-      if (
-        typeof window !== "undefined" &&
-        window.google &&
-        window.google.maps &&
-        window.google.maps.DirectionsService
-      ) {
-        directionsServiceRef.current =
-          new window.google.maps.DirectionsService();
-        directionsRendererRef.current =
-          new window.google.maps.DirectionsRenderer({
-            suppressMarkers: true, // we’ll use custom markers
-          });
-        // attach renderer to your map (make sure mapRef is passed from parent or global)
-        if (mapRef.current) {
-          directionsRendererRef.current.setMap(mapRef.current);
-        }
-        clearInterval(poll);
-      }
-    }, 500);
+    let dateObj;
 
-    return () => clearInterval(poll);
-  }, []);
+    if (bookingMode === "now") {
+      dateObj = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
+      );
+    } else if (bookingMode === "later" && dateVal) {
+      const hour = (parseInt(hourVal, 10) % 12) + (ampmVal === "pm" ? 12 : 0);
+      dateObj = new Date(`${dateVal}T${hour}:${minuteVal}:00`);
+    }
+
+    if (dateObj) {
+      setTimeType(determineTimeType(dateObj));
+    }
+  }, [bookingMode, dateVal, hourVal, minuteVal, ampmVal]);
+
+  const melbourneNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
+  );
+
+  const calculateFare = () => {
+    if (!distanceKm) return null;
+
+    const distance = parseFloat(distanceKm);
+    const tolls = hasToll ? 1 : 0;
+
+    // vehicle surcharges
+    let vehicleSurcharge = 0;
+    switch (selected) {
+      case "Sedan":
+        vehicleSurcharge = 0;
+        break;
+      case "Silver Service":
+        vehicleSurcharge = 11;
+        break;
+      case "SUV":
+        vehicleSurcharge = 17.35;
+        break;
+      case "Maxi Taxi":
+        vehicleSurcharge = 17.35;
+        break;
+    }
+
+    let base;
+
+    // 🔑 Apply time type multiplier/surcharge
+    if (timeType === 3) {
+      base = 20 + distance * 2.426 + tolls * 17.46;
+    } else if (timeType === 2) {
+      base = 13 + distance * 2.204 + tolls * 17.46;
+    } else {
+      base = 8 + distance * 2.204 + tolls * 17.46;
+    }
+    let fareValue = Math.max(base, 40) + vehicleSurcharge;
+    setFare(fareValue.toFixed(2));
+  };
 
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
   const handlePickupChange = async (e) => {
@@ -232,15 +199,6 @@ const calculateFare = () => {
         // ✅ send all updated destination locations to parent
         onDestinationsSelect(newLocs);
 
-        if (mapRef.current) {
-          new window.google.maps.Marker({
-            position: location,
-            map: mapRef.current,
-            icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-          });
-        }
-
-        updateRoute(pickupLoc, newLocs);
       }
     } catch (err) {
       console.error("Failed to select destination", err);
@@ -248,37 +206,36 @@ const calculateFare = () => {
   };
 
   const handleDeleteDestination = (index) => {
-  // If this is the last remaining field, just clear it
-  if (destinations.length === 1) {
-    const newDestinations = [""]; // keep one empty field
+    // If this is the last remaining field, just clear it
+    if (destinations.length === 1) {
+      const newDestinations = [""];
+      setDestinations(newDestinations);
+
+      const newLocs = []; // remove any location
+      setDestinationLocs(newLocs);
+
+      // Notify parent about updated destinations
+      onDestinationsSelect(newLocs);
+
+      // Update route with empty destinations
+      updateRoute(pickupLoc, newLocs);
+      return;
+    }
+
+    // Otherwise, remove the field normally
+    const newDestinations = [...destinations];
+    newDestinations.splice(index, 1);
     setDestinations(newDestinations);
 
-    const newLocs = []; // remove any location
+    const newLocs = [...destinationLocs];
+    newLocs.splice(index, 1);
     setDestinationLocs(newLocs);
 
     // Notify parent about updated destinations
     onDestinationsSelect(newLocs);
 
-    // Update route with empty destinations
     updateRoute(pickupLoc, newLocs);
-    return;
-  }
-
-  // Otherwise, remove the field normally
-  const newDestinations = [...destinations];
-  newDestinations.splice(index, 1);
-  setDestinations(newDestinations);
-
-  const newLocs = [...destinationLocs];
-  newLocs.splice(index, 1);
-  setDestinationLocs(newLocs);
-
-  // Notify parent about updated destinations
-  onDestinationsSelect(newLocs);
-
-  updateRoute(pickupLoc, newLocs);
-};
-
+  };
 
   const handlePickupSelect = async (s) => {
     setPickup(s.description);
@@ -290,22 +247,11 @@ const calculateFare = () => {
         setPickupLoc(location);
         onPickupSelect(location);
 
-        if (mapRef.current) {
-          new window.google.maps.Marker({
-            position: location,
-            map: mapRef.current,
-            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-          });
-        }
-
-        updateRoute(location, destinationLocs);
       }
     } catch (err) {
       console.error("Failed to select pickup", err);
     }
   };
-
-  
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
@@ -319,53 +265,51 @@ const calculateFare = () => {
     setDestinations(newDestinations);
   };
 
- const handleAdd = () => {
-  if (
-    destinations.length < 4 &&
-    typeof destinations[destinations.length - 1] === "string" &&
-    destinations[destinations.length - 1].trim() !== ""
-  ) {
-    setDestinations([...destinations, ""]);
-  }
-};
+  const handleAdd = () => {
+    if (
+      destinations.length < 4 &&
+      typeof destinations[destinations.length - 1] === "string" &&
+      destinations[destinations.length - 1].trim() !== ""
+    ) {
+      setDestinations([...destinations, ""]);
+    }
+  };
 
-
-
-  const updateRoute = (pickup, dests) => {
-  if (!directionsRendererRef.current) return;
-
-  // If no destinations, clear the route
+const updateRoute = (pickup, dests) => {
   if (!pickup || dests.length === 0) {
-    directionsRendererRef.current.setDirections({ routes: [] }); // clear polyline
     setDistanceKm("");
     setHasToll(false);
     setFare(null);
     return;
   }
 
-  const waypoints = dests.slice(0, -1).map((loc) => ({
-    location: loc,
-    stopover: true,
-  }));
+  const service = new window.google.maps.DirectionsService();
 
-  directionsServiceRef.current.route(
+  service.route(
     {
       origin: pickup,
       destination: dests[dests.length - 1],
-      waypoints,
+      waypoints: dests.slice(0, -1).map((loc) => ({
+        location: loc,
+        stopover: true,
+      })),
       travelMode: window.google.maps.TravelMode.DRIVING,
     },
     (result, status) => {
-      if (status === "OK" && directionsRendererRef.current) {
-        directionsRendererRef.current.setDirections(result);
+      if (status === "OK" && result.routes.length > 0) {
+        const leg = result.routes[0].legs.reduce(
+          (acc, l) => {
+            acc.distance += l.distance.value;
+            acc.steps.push(...l.steps);
+            return acc;
+          },
+          { distance: 0, steps: [] }
+        );
 
-        const leg = result.routes[0].legs[0];
-        const km = (leg.distance.value / 1000).toFixed(1);
+        const km = (leg.distance / 1000).toFixed(1);
         setDistanceKm(km);
 
-        const stepsText = leg.steps
-          .map((s) => s.instructions.toLowerCase())
-          .join(" ");
+        const stepsText = leg.steps.map((s) => s.instructions.toLowerCase()).join(" ");
         const summary = (result.routes[0].summary || "").toLowerCase();
 
         const toll =
@@ -390,9 +334,11 @@ const calculateFare = () => {
 };
 
 
+
+
   useEffect(() => {
     if (distanceKm) calculateFare();
-  }, [selected, distanceKm, hasToll,timeType]);
+  }, [selected, distanceKm, hasToll, timeType]);
 
   // ...existing code...
   const handleSubmit = (e) => {
@@ -448,7 +394,7 @@ const calculateFare = () => {
     setContactError("");
     setDestinationSuggestions({});
   };
-// ...existing code...
+  // ...existing code...
 
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
@@ -527,7 +473,7 @@ const calculateFare = () => {
                         {destination && (
                           <IconButton
                             size="small"
-                            onClick={() =>  handleDeleteDestination(index)} // clear input but keep field
+                            onClick={() => handleDeleteDestination(index)} // clear input but keep field
                           >
                             <span style={{ fontSize: 16 }}>✖</span>
                           </IconButton>
@@ -572,11 +518,11 @@ const calculateFare = () => {
             <Button
               variant="outlined"
               onClick={handleAdd}
-               disabled={
-    destinations.length >= 4 ||
-    !destinations[destinations.length - 1] || // check for undefined/null
-    destinations[destinations.length - 1].trim() === ""
-  }
+              disabled={
+                destinations.length >= 4 ||
+                !destinations[destinations.length - 1] || // check for undefined/null
+                destinations[destinations.length - 1].trim() === ""
+              }
             >
               + Add Destination
             </Button>
@@ -638,9 +584,11 @@ const calculateFare = () => {
               <input
                 type="date"
                 min={new Date().toISOString().split("T")[0]}
-                max={new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-                  .toISOString()
-                  .split("T")[0]} // 15 days from now
+                max={
+                  new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .split("T")[0]
+                } // 15 days from now
                 className="w-full border rounded px-3 py-2"
                 value={dateVal}
                 onChange={(e) => setDateVal(e.target.value)}
@@ -700,18 +648,19 @@ const calculateFare = () => {
           <p className="mt-2">Lock in a price with no additional charges.</p>
         </div>
 
-       <CarDropdown
-  selectedOption={selected}
-  onOptionSelect={setSelected}
-  label={
-    fare
-      ? isOn
-        ? `Fare: $${fare}` // Fixed Price ON → exact fare
-        : `Fare: $${(fare - 5).toFixed(2)} - $${(parseFloat(fare) + 5).toFixed(2)}` // Fixed Price OFF → show range
-      : "Dest Required"
-  }
-/>
-
+        <CarDropdown
+          selectedOption={selected}
+          onOptionSelect={setSelected}
+          label={
+            fare
+              ? isOn
+                ? `Fare: $${fare}` // Fixed Price ON → exact fare
+                : `Fare: $${(fare - 5).toFixed(2)} - $${(
+                    parseFloat(fare) + 5
+                  ).toFixed(2)}` // Fixed Price OFF → show range
+              : "Dest Required"
+          }
+        />
 
         {/* Step 2 */}
         <div className="px-5 py-6">
