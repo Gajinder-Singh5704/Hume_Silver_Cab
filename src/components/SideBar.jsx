@@ -231,6 +231,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log()
   };
 
   // Handle when user selects a payment method
@@ -497,6 +498,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
               <label className="block text-sm mb-1">Select date</label>
               <input
                 type="date"
+                min={new Date().toISOString().split("T")[0]}
                 className="w-full border rounded px-3 py-2"
                 value={dateVal}
                 onChange={(e) => setDateVal(e.target.value)}
