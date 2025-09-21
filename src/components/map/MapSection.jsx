@@ -185,13 +185,10 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
           )}
 
            {/* Directions route */}
-{destinations.length > 0 && destinations.some(Boolean) && origin && destination && (
-  <DirectionsOverlay
-    origin={origin}
-    waypoints={waypoints}
-    destination={destination}
-  />
+{origin && destination && destination !== "" && (
+  <DirectionsOverlay origin={origin} waypoints={waypoints} destination={destination} />
 )}
+
 
 
           <RecenterButton
