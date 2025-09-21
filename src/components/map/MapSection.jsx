@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import {
   APIProvider,
   Map,
@@ -5,37 +6,80 @@ import {
   Pin,
   useMap,
 } from "@vis.gl/react-google-maps";
-import { useEffect } from "react";
 
-const MapUpdater = ({ selectedPlace, selectedPickup }) => {
+/** Draw a native google.maps.Polyline on the map for the given path.
+ *  path: array of { lat: number, lng: number }
+ */
+const PolylineOverlay = ({ path = [] }) => {
   const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+    if (!window.google || !window.google.maps) return;
+    if (!path || path.length < 2) return;
+
+    // ensure lat/lng are numbers and in LatLngLiteral shape
+    const latLngPath = path.map((p) => ({ lat: Number(p.lat), lng: Number(p.lng) }));
+
+    const poly = new window.google.maps.Polyline({
+      path: latLngPath,
+      strokeColor: "#FF0000",
+      strokeOpacity: 0.85,
+      strokeWeight: 4,
+      geodesic: true,
+    });
+
+    poly.setMap(map);
+
+    return () => {
+      poly.setMap(null);
+    };
+  }, [map, JSON.stringify(path)]); // stringify to trigger effect when path contents change
+
+  return null;
+};
+
+const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
+  const map = useMap();
+
   useEffect(() => {
     if (!map) return;
 
-    if (selectedPlace) {
-      map.panTo({ lat: selectedPlace.lat, lng: selectedPlace.lng });
-      map.setZoom(13);
-    } else if (selectedPickup) {
-      map.panTo({ lat: selectedPickup.lat, lng: selectedPickup.lng });
+    const bounds = new window.google.maps.LatLngBounds();
+
+    if (selectedPickup) {
+      bounds.extend(selectedPickup);
+    }
+    destinations.forEach((dest) => {
+      if (dest) bounds.extend(dest);
+    });
+
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds, 80);
+    } else if (selectedPlace) {
+      map.panTo(selectedPlace);
       map.setZoom(13);
     }
-  }, [map, selectedPlace, selectedPickup]);
+  }, [map, selectedPlace, selectedPickup, destinations]);
 
   return null;
 };
 
 // Recenter button component
-const RecenterButton = ({ selectedPickup }) => {
+const RecenterButton = ({ selectedPickup, destinations }) => {
   const map = useMap();
 
   const handleRecenter = () => {
     if (!map) return;
 
-    if (selectedPickup) {
-      map.panTo({ lat: selectedPickup.lat, lng: selectedPickup.lng });
-      map.setZoom(13);
+    const bounds = new window.google.maps.LatLngBounds();
+
+    if (selectedPickup) bounds.extend(selectedPickup);
+    destinations.forEach((dest) => dest && bounds.extend(dest));
+
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds, 80);
     } else {
-      // fallback to default
       map.panTo({ lat: 53.54, lng: 10 });
       map.setZoom(10);
     }
@@ -51,7 +95,13 @@ const RecenterButton = ({ selectedPickup }) => {
   );
 };
 
-const MapSection = ({ selectedPlace, selectedPickup }) => {
+const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
+  // build polyline path: pickup -> dest1 -> dest2 ...
+  const path = [
+    ...(selectedPickup ? [selectedPickup] : []),
+    ...destinations.filter(Boolean),
+  ];
+
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY}>
       <div className="w-full h-full relative">
@@ -67,15 +117,43 @@ const MapSection = ({ selectedPlace, selectedPickup }) => {
           }}
           zoomControl={false}
         >
-          <MapUpdater selectedPlace={selectedPlace} selectedPickup={selectedPickup} />
+          <MapUpdater
+            selectedPlace={selectedPlace}
+            selectedPickup={selectedPickup}
+            destinations={destinations}
+          />
 
-          {selectedPickup && selectedPickup.lat && selectedPickup.lng && (
-            <AdvancedMarker position={{ lat: selectedPickup.lat, lng: selectedPickup.lng }}>
+          {/* Pickup marker */}
+          {selectedPickup && (
+            <AdvancedMarker position={selectedPickup}>
               <Pin background="blue" borderColor="white" glyphColor="white" />
             </AdvancedMarker>
           )}
 
-          <RecenterButton selectedPickup={selectedPickup} />
+          {/* Destination markers with numbers */}
+          {destinations.map(
+            (dest, idx) =>
+              dest && (
+                <AdvancedMarker key={idx} position={dest}>
+                  <Pin
+                    background="red"
+                    borderColor="white"
+                    glyphColor="white"
+                    scale={1.2}
+                  >
+                    <span className="text-white font-bold">{idx + 1}</span>
+                  </Pin>
+                </AdvancedMarker>
+              )
+          )}
+
+          {/* Native polyline overlay (straight lines between points) */}
+          {path.length > 1 && <PolylineOverlay path={path} />}
+
+          <RecenterButton
+            selectedPickup={selectedPickup}
+            destinations={destinations}
+          />
         </Map>
       </div>
     </APIProvider>
@@ -83,4 +161,3 @@ const MapSection = ({ selectedPlace, selectedPickup }) => {
 };
 
 export default MapSection;
-  

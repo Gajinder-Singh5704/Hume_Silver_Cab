@@ -7,35 +7,42 @@ import { useState } from "react";
 const Home = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedPickup, setSelectedPickup] = useState(null);
+  const [destinations, setSelectedDestinations] = useState([]);
 
   return (
     <>
       <Navbar />
       <NavSection onPlaceSelect={setSelectedPlace} />
 
-      {/* Desktop / Tablet */}
       <div className="hidden md:flex w-full h-[calc(100vh-100px)]">
-        {/* Sidebar takes 25% */}
         <div className="w-[27%] border-r">
-          <SideBar onPickupSelect={setSelectedPickup} />
+          <SideBar
+            onPickupSelect={setSelectedPickup}
+            onDestinationsSelect={setSelectedDestinations}
+          />
         </div>
-
-        {/* Map takes 75% */}
         <div className="w-[73%]">
-          <MapSection selectedPlace={selectedPlace} selectedPickup={selectedPickup} />
+          <MapSection
+            selectedPlace={selectedPlace}
+            selectedPickup={selectedPickup}
+            destinations={destinations}
+          />
         </div>
       </div>
 
-      {/* Mobile */}
       <div className="flex flex-col md:hidden w-full h-[calc(100vh-100px)]">
-        {/* Map top half */}
         <div className="h-[50vh]">
-          <MapSection selectedPlace={selectedPlace} selectedPickup={selectedPickup} />
+          <MapSection
+            selectedPlace={selectedPlace}
+            selectedPickup={selectedPickup}
+            destinations={destinations}
+          />
         </div>
-
-        {/* Sidebar bottom half */}
         <div className="h-[50vh] overflow-y-auto border-t">
-          <SideBar onPickupSelect={setSelectedPickup} />
+          <SideBar
+            onPickupSelect={setSelectedPickup}
+            onDestinationsSelect={setSelectedDestinations}
+          />
         </div>
       </div>
     </>

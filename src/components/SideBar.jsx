@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Box,
+  Box,
   Button,
   Checkbox,
   FormControlLabel,
@@ -15,10 +15,10 @@ import { CheckIcon, CrossIcon, LockIcon, LockOpen } from "lucide-react";
 import { IoAddCircle } from "react-icons/io5";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
-import { getPlaces ,getGeocode   } from "../hooks/map";
+import { getPlaces, getGeocode } from "../hooks/map";
 import PaymentDropdown from "./PaymentDropdown";
 
-const SideBar = ({ onPickupSelect }) => {
+const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [pickup, setPickup] = useState("");
@@ -30,9 +30,14 @@ const SideBar = ({ onPickupSelect }) => {
   const [selected, setSelected] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
+  // add new state for map overlays
+  const [destinationLocs, setDestinationLocs] = useState([]); // array of {lat, lng}
+  const mapRef = useRef(null); // Google Map reference
+  const directionsRendererRef = useRef(null);
+
   // internal geo selections
   const [pickupLoc, setPickupLoc] = useState(null); // {lat, lng}
-  const [destinationLoc, setDestinationLoc] = useState(null);
+  // const [destinationLoc, setDestinationLoc] = useState(null);
 
   // route & toll
   const [distanceKm, setDistanceKm] = useState("");
@@ -46,6 +51,8 @@ const SideBar = ({ onPickupSelect }) => {
   const [ampmVal, setAmpmVal] = useState("am");
   const [timeType, setTimeType] = useState(2); // number-3
 
+  const [destinationSuggestions, setDestinationSuggestions] = useState({});
+
   // refs for hidden inputs used by external Forminator code
   const distanceRef = useRef(null);
   const tollRef = useRef(null);
@@ -55,8 +62,22 @@ const SideBar = ({ onPickupSelect }) => {
   const directionsServiceRef = useRef(null);
   useEffect(() => {
     let poll = setInterval(() => {
-      if (typeof window !== "undefined" && window.google && window.google.maps && window.google.maps.DirectionsService) {
-        directionsServiceRef.current = new window.google.maps.DirectionsService();
+      if (
+        typeof window !== "undefined" &&
+        window.google &&
+        window.google.maps &&
+        window.google.maps.DirectionsService
+      ) {
+        directionsServiceRef.current =
+          new window.google.maps.DirectionsService();
+        directionsRendererRef.current =
+          new window.google.maps.DirectionsRenderer({
+            suppressMarkers: true, // we’ll use custom markers
+          });
+        // attach renderer to your map (make sure mapRef is passed from parent or global)
+        if (mapRef.current) {
+          directionsRendererRef.current.setMap(mapRef.current);
+        }
         clearInterval(poll);
       }
     }, 500);
@@ -84,28 +105,65 @@ const SideBar = ({ onPickupSelect }) => {
     }
   };
 
-  const handleDestinationChange = async (e) => {
+  const handleDestinationChange = async (e, index) => {
     const value = e.target.value;
-    setDestination(value);
-    setDestinationLoc(null);
+    const newDestinations = [...destinations];
+    newDestinations[index] = value;
+    setDestinations(newDestinations);
 
     if (!value) {
-      // clear suggestions
-      return setDestinationSuggestions([]);
+      setDestinationSuggestions((prev) => ({ ...prev, [index]: [] }));
+      return;
     }
 
     try {
       const data = await getPlaces(value);
-      if (data?.predictions) setDestinationSuggestions(data.predictions);
+      if (data?.predictions) {
+        setDestinationSuggestions((prev) => ({
+          ...prev,
+          [index]: data.predictions,
+        }));
+      }
     } catch (err) {
       console.error("Error fetching destination places:", err);
-      setDestinationSuggestions([]);
+      setDestinationSuggestions((prev) => ({ ...prev, [index]: [] }));
     }
   };
 
-  const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+  const handleDestinationSelect = async (s, index) => {
+    const newDestinations = [...destinations];
+    newDestinations[index] = s.description;
+    setDestinations(newDestinations);
 
-  const handlePickupSelect = async (s) => {
+    setDestinationSuggestions((prev) => ({ ...prev, [index]: [] }));
+
+    try {
+      const location = await getGeocode(s);
+      if (location) {
+        const newLocs = [...destinationLocs];
+        newLocs[index] = location;
+        setDestinationLocs(newLocs);
+
+        // ✅ send all updated destination locations to parent
+        onDestinationsSelect(newLocs);
+
+        if (mapRef.current) {
+          new window.google.maps.Marker({
+            position: location,
+            map: mapRef.current,
+            icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+          });
+        }
+
+        updateRoute(pickupLoc, newLocs);
+      }
+    } catch (err) {
+      console.error("Failed to select destination", err);
+    }
+  };
+
+
+const handlePickupSelect = async (s) => {
     setPickup(s.description);
     setPickupSuggestions([]);
 
@@ -113,8 +171,17 @@ const SideBar = ({ onPickupSelect }) => {
       const location = await getGeocode(s);
       if (location) {
         setPickupLoc(location);
-        // pass pickup location up (existing behavior)
         onPickupSelect(location);
+
+        if (mapRef.current) {
+          new window.google.maps.Marker({
+            position: location,
+            map: mapRef.current,
+            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+          });
+        }
+
+        updateRoute(location, destinationLocs);
       }
     } catch (err) {
       console.error("Failed to select pickup", err);
@@ -122,20 +189,14 @@ const SideBar = ({ onPickupSelect }) => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-
-
-  }
-
-  
+    e.preventDefault();
+  };
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
     setSelectedPayment(paymentMethod);
-    console.log('Selected payment:', paymentMethod);
+    console.log("Selected payment:", paymentMethod);
   };
-
-  
 
   const handleChange = (index, value) => {
     const newDestinations = [...destinations];
@@ -152,6 +213,31 @@ const SideBar = ({ onPickupSelect }) => {
     }
   };
 
+  const updateRoute = (pickup, dests) => {
+    if (!pickup || dests.length === 0 || !directionsServiceRef.current) return;
+
+    const waypoints = dests.slice(0, -1).map((loc) => ({
+      location: loc,
+      stopover: true,
+    }));
+
+    directionsServiceRef.current.route(
+      {
+        origin: pickup,
+        destination: dests[dests.length - 1],
+        waypoints,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK" && directionsRendererRef.current) {
+          directionsRendererRef.current.setDirections(result);
+        } else {
+          console.error("Directions request failed:", status);
+        }
+      }
+    );
+  };
+
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
       <form onSubmit={handleSubmit}>
@@ -160,11 +246,15 @@ const SideBar = ({ onPickupSelect }) => {
         {/* Step 1 */}
         <div className="px-5 py-6">
           <h3 className="text-sm mb-4 hidden md:flex">
-            Step 1 of 4  <b className="ml-2"> Booking details</b>
+            Step 1 of 4 <b className="ml-2"> Booking details</b>
           </h3>
 
-          <h2 className="md:hidden text-2xl text-bold mb-2">Fare Estimates Calculator</h2>
-          <h3 className="md:hidden mb-4 text-sm">Please enter a valid pickup and destination </h3>
+          <h2 className="md:hidden text-2xl text-bold mb-2">
+            Fare Estimates Calculator
+          </h2>
+          <h3 className="md:hidden mb-4 text-sm">
+            Please enter a valid pickup and destination{" "}
+          </h3>
 
           <div className="mb-4 relative">
             <TextField
@@ -179,7 +269,7 @@ const SideBar = ({ onPickupSelect }) => {
                 endAdornment: (
                   <InputAdornment position="end">
                     {pickup ? (
-                      <IconButton size="small" onClick={clearPickup}>
+                      <IconButton size="small">
                         <span style={{ fontSize: 16 }}>✖</span>
                       </IconButton>
                     ) : null}
@@ -196,39 +286,62 @@ const SideBar = ({ onPickupSelect }) => {
                     className="p-2 hover:bg-gray-100 cursor-pointer"
                     onClick={() => handlePickupSelect(s)}
                   >
-                    <span className="font-medium">{s.structured_formatting.main_text}</span>
-                    <span className="text-gray-500 ml-2 text-sm">{s.structured_formatting.secondary_text}</span>
+                    <span className="font-medium">
+                      {s.structured_formatting.main_text}
+                    </span>
+                    <span className="text-gray-500 ml-2 text-sm">
+                      {s.structured_formatting.secondary_text}
+                    </span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
 
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-
-                {destinations.map((destination, index) => (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {destinations.map((destination, index) => (
+              <div key={index} className="relative">
                 <TextField
-                key={index}
-                label={`Destination ${index + 1}`}
-                variant="outlined"
-                fullWidth
-                value={destination}
-                onChange={(e) => handleChange(index, e.target.value)}
-                required
+                  label={`Destination ${index + 1}`}
+                  variant="outlined"
+                  fullWidth
+                  value={destination}
+                  onChange={(e) => handleDestinationChange(e, index)}
+                  required
                 />
-                ))}
 
-                <Button
-                    variant="outlined"
-                    onClick={handleAdd}
-                    disabled={
-                    destinations.length >= 4 ||
-                    destinations[destinations.length - 1].trim() === ""
-                    }
-                >
-                    + Add Destination
-                </Button>
-            </Box>
+                {destinationSuggestions[index]?.length > 0 && (
+                  <ul className="absolute z-50 bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto w-full">
+                    {destinationSuggestions[index].map((s) => (
+                      <li
+                        key={s.place_id}
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handleDestinationSelect(s, index)}
+                      >
+                        <span className="font-medium">
+                          {s.structured_formatting.main_text}
+                        </span>
+                        <span className="text-gray-500 ml-2 text-sm">
+                          {s.structured_formatting.secondary_text}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+
+            <Button
+              variant="outlined"
+              onClick={handleAdd}
+              disabled={
+                destinations.length >= 4 ||
+                destinations[destinations.length - 1].trim() === ""
+              }
+            >
+              + Add Destination
+            </Button>
+          </Box>
         </div>
 
         {/* Booking now/later radio - controlled */}
@@ -292,15 +405,25 @@ const SideBar = ({ onPickupSelect }) => {
             </div>
 
             <div className="flex gap-2">
-              <select value={hourVal} onChange={(e) => setHourVal(e.target.value)} className="border rounded p-2">
-                {Array.from({ length: 12 }, (_, i) => (i + 1).toString()).map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
-                ))}
+              <select
+                value={hourVal}
+                onChange={(e) => setHourVal(e.target.value)}
+                className="border rounded p-2"
+              >
+                {Array.from({ length: 12 }, (_, i) => (i + 1).toString()).map(
+                  (h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  )
+                )}
               </select>
 
-              <select value={minuteVal} onChange={(e) => setMinuteVal(e.target.value)} className="border rounded p-2">
+              <select
+                value={minuteVal}
+                onChange={(e) => setMinuteVal(e.target.value)}
+                className="border rounded p-2"
+              >
                 {["00", "15", "30", "45"].map((m) => (
                   <option key={m} value={m}>
                     {m}
@@ -308,7 +431,11 @@ const SideBar = ({ onPickupSelect }) => {
                 ))}
               </select>
 
-              <select value={ampmVal} onChange={(e) => setAmpmVal(e.target.value)} className="border rounded p-2">
+              <select
+                value={ampmVal}
+                onChange={(e) => setAmpmVal(e.target.value)}
+                className="border rounded p-2"
+              >
                 <option value="am">am</option>
                 <option value="pm">pm</option>
               </select>
@@ -353,7 +480,11 @@ const SideBar = ({ onPickupSelect }) => {
 
           <div className="flex items-center justify-center gap-2 w-full">
             <div className="w-[20%] border rounded-sm h-14 flex items-center justify-center gap-1 ">
-              <img className="h-5" src="https://flagsapi.com/AU/flat/64.png" alt="AU" />
+              <img
+                className="h-5"
+                src="https://flagsapi.com/AU/flat/64.png"
+                alt="AU"
+              />
               +61
             </div>
             <div className="flex-grow">
@@ -384,13 +515,12 @@ const SideBar = ({ onPickupSelect }) => {
             Step 3 of 4 <b>Payment</b>
           </h3>
 
-            <PaymentDropdown
+          <PaymentDropdown
             selectedOption={selectedPayment}
             onOptionSelect={handlePaymentSelect}
             title="Select payment method"
             className="mb-4"
-            />
-
+          />
         </div>
 
         {/* Step 4 Driver Instruction */}
@@ -421,9 +551,9 @@ const SideBar = ({ onPickupSelect }) => {
         </div>
 
         <div className="mt-3">
-            <button className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer">
-                Request Booking
-            </button>
+          <button className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer">
+            Request Booking
+          </button>
         </div>
       </form>
     </section>
