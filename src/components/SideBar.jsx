@@ -60,26 +60,87 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const tollRef = useRef(null);
   const timeTypeRef = useRef(null);
 
-  const calculateFare = () => {
-    if (!distanceKm) return null;
+// determine time type (helper stays the same)
+function determineTimeType(dateObj) {
+  const day = dateObj.getDay(); // 0=Sun, 5=Fri, 6=Sat
+  const hour = dateObj.getHours();
+  let timeType = 2; // default off-peak
 
-    const baseFare = 5; // $5
-    const perKmRate = 2; // $2 per km
-    const tollCharge = hasToll ? 3 : 0; // $3 if toll exists
-    const vehicleMultiplier = selected === "Premium" ? 1.5 : 1;
+  if (
+    (day === 5 && hour >= 22) || // Friday 22:00–23:59
+    (day === 6 && hour < 4)  ||  // Saturday 00:00–03:59
+    (day === 6 && hour >= 22) || // Saturday 22:00–23:59
+    (day === 0 && hour < 4)      // Sunday 00:00–03:59
+  ) {
+    timeType = 3; // Overnight Weekend
+  } else if (hour >= 9 && hour < 17) {
+    timeType = 1; // Normal
+  }
 
-    // Time type multiplier: 1 = normal, 2 = peak, 3 = overnight weekend
-    let timeMultiplier = 1;
-    if (timeType === 2) timeMultiplier = 1.2;
-    if (timeType === 3) timeMultiplier = 1.5;
+  return timeType;
+}
 
-    const totalFare =
-      (baseFare + perKmRate * parseFloat(distanceKm) + tollCharge) *
-      vehicleMultiplier *
-      timeMultiplier;
+// set initial and later booking time type
+useEffect(() => {
+  let dateObj;
 
-    setFare(totalFare.toFixed(2));
-  };
+  if (bookingMode === "now") {
+    dateObj = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
+    );
+  } else if (bookingMode === "later" && dateVal) {
+    const hour = parseInt(hourVal, 10) % 12 + (ampmVal === "pm" ? 12 : 0);
+    dateObj = new Date(`${dateVal}T${hour}:${minuteVal}:00`);
+  }
+
+  if (dateObj) {
+    setTimeType(determineTimeType(dateObj));
+  }
+}, [bookingMode, dateVal, hourVal, minuteVal, ampmVal]);
+
+
+const melbourneNow = new Date(
+  new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
+);
+
+
+const calculateFare = () => {
+  if (!distanceKm) return null;
+
+  const distance = parseFloat(distanceKm);
+  const tolls = hasToll ? 1 : 0;
+
+  // vehicle surcharges
+  let vehicleSurcharge = 0;
+  switch (selected) {
+    case "Sedan":
+      vehicleSurcharge = 0;
+      break;
+    case "Silver Service":
+      vehicleSurcharge = 11;
+      break;
+    case "SUV":
+    case "Maxi Taxi":
+      vehicleSurcharge = 17.35;
+      break;
+  }
+
+  const base = 20 + distance * 2.426 + tolls * 17.46;
+  let fareValue = Math.max(base, 50) + vehicleSurcharge;
+
+  // 🔑 Apply time type multiplier/surcharge
+  if (timeType === 3) {
+    fareValue *= 1.2; // Overnight weekend surcharge
+  } else if (timeType === 1) {
+    fareValue *= 1.0; // Normal hours (no change)
+  } else {
+    fareValue *= 1.1; // Off-peak default (optional)
+  }
+
+  setFare(fareValue.toFixed(2));
+};
+
+
 
   // polling for google availability
   const directionsServiceRef = useRef(null);
@@ -186,23 +247,37 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   };
 
   const handleDeleteDestination = (index) => {
-    // Remove the destination
-    const newDestinations = [...destinations];
-    newDestinations.splice(index, 1);
+  // If this is the last remaining field, just clear it
+  if (destinations.length === 1) {
+    const newDestinations = [""]; // keep one empty field
     setDestinations(newDestinations);
 
-    // Remove the corresponding location
-    const newLocs = [...destinationLocs];
-    newLocs.splice(index, 1);
+    const newLocs = []; // remove any location
     setDestinationLocs(newLocs);
 
     // Notify parent about updated destinations
     onDestinationsSelect(newLocs);
 
-    // Optionally, remove marker from map
-    // Since we are creating new markers each time, the removed marker will disappear on next route update
+    // Update route with empty destinations
     updateRoute(pickupLoc, newLocs);
-  };
+    return;
+  }
+
+  // Otherwise, remove the field normally
+  const newDestinations = [...destinations];
+  newDestinations.splice(index, 1);
+  setDestinations(newDestinations);
+
+  const newLocs = [...destinationLocs];
+  newLocs.splice(index, 1);
+  setDestinationLocs(newLocs);
+
+  // Notify parent about updated destinations
+  onDestinationsSelect(newLocs);
+
+  updateRoute(pickupLoc, newLocs);
+};
+
 
   const handlePickupSelect = async (s) => {
     setPickup(s.description);
@@ -243,71 +318,80 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     setDestinations(newDestinations);
   };
 
-  const handleAdd = () => {
-    if (
-      destinations.length < 4 &&
-      destinations[destinations.length - 1].trim() !== ""
-    ) {
-      setDestinations([...destinations, ""]);
-    }
-  };
+ const handleAdd = () => {
+  if (
+    destinations.length < 4 &&
+    typeof destinations[destinations.length - 1] === "string" &&
+    destinations[destinations.length - 1].trim() !== ""
+  ) {
+    setDestinations([...destinations, ""]);
+  }
+};
+
+
 
   const updateRoute = (pickup, dests) => {
-    if (!pickup || dests.length === 0 || !directionsServiceRef.current) return;
+  if (!directionsRendererRef.current) return;
 
-    const waypoints = dests.slice(0, -1).map((loc) => ({
-      location: loc,
-      stopover: true,
-    }));
+  // If no destinations, clear the route
+  if (!pickup || dests.length === 0) {
+    directionsRendererRef.current.setDirections({ routes: [] }); // clear polyline
+    setDistanceKm("");
+    setHasToll(false);
+    setFare(null);
+    return;
+  }
 
-    directionsServiceRef.current.route(
-      {
-        origin: pickup,
-        destination: dests[dests.length - 1],
-        waypoints,
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === "OK" && directionsRendererRef.current) {
-          directionsRendererRef.current.setDirections(result);
+  const waypoints = dests.slice(0, -1).map((loc) => ({
+    location: loc,
+    stopover: true,
+  }));
 
-          const leg = result.routes[0].legs[0];
-          const km = (leg.distance.value / 1000).toFixed(1);
-          setDistanceKm(km);
+  directionsServiceRef.current.route(
+    {
+      origin: pickup,
+      destination: dests[dests.length - 1],
+      waypoints,
+      travelMode: window.google.maps.TravelMode.DRIVING,
+    },
+    (result, status) => {
+      if (status === "OK" && directionsRendererRef.current) {
+        directionsRendererRef.current.setDirections(result);
 
-          const stepsText = leg.steps
-            .map((s) => s.instructions.toLowerCase())
-            .join(" ");
-          const summary = (result.routes[0].summary || "").toLowerCase();
+        const leg = result.routes[0].legs[0];
+        const km = (leg.distance.value / 1000).toFixed(1);
+        setDistanceKm(km);
 
-          const toll =
-            stepsText.includes("citylink") ||
-            stepsText.includes("eastlink") ||
-            stepsText.includes("tullamarine fwy") ||
-            stepsText.includes("tollway") ||
-            summary.includes("citylink") ||
-            summary.includes("eastlink") ||
-            summary.includes("tullamarine");
+        const stepsText = leg.steps
+          .map((s) => s.instructions.toLowerCase())
+          .join(" ");
+        const summary = (result.routes[0].summary || "").toLowerCase();
 
-          setHasToll(toll);
+        const toll =
+          stepsText.includes("citylink") ||
+          stepsText.includes("eastlink") ||
+          stepsText.includes("tullamarine fwy") ||
+          stepsText.includes("tollway") ||
+          summary.includes("citylink") ||
+          summary.includes("eastlink") ||
+          summary.includes("tullamarine");
 
-          // --- Calculate fare ---
-          calculateFare();
-
-          console.log("📏 Distance:", km, "km | Toll:", toll ? "Yes" : "No");
-        } else {
-          console.error("Directions request failed:", status);
-          setDistanceKm("");
-          setHasToll(false);
-          setFare(null);
-        }
+        setHasToll(toll);
+        calculateFare();
+      } else {
+        console.error("Directions request failed:", status);
+        setDistanceKm("");
+        setHasToll(false);
+        setFare(null);
       }
-    );
-  };
+    }
+  );
+};
+
 
   useEffect(() => {
     if (distanceKm) calculateFare();
-  }, [selected, distanceKm, hasToll]);
+  }, [selected, distanceKm, hasToll,timeType]);
 
   // ...existing code...
   const handleSubmit = (e) => {
@@ -442,7 +526,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                         {destination && (
                           <IconButton
                             size="small"
-                            onClick={() => handleChange(index, "")} // clear input but keep field
+                            onClick={() =>  handleDeleteDestination(index)} // clear input but keep field
                           >
                             <span style={{ fontSize: 16 }}>✖</span>
                           </IconButton>
@@ -487,10 +571,11 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
             <Button
               variant="outlined"
               onClick={handleAdd}
-              disabled={
-                destinations.length >= 4 ||
-                destinations[destinations.length - 1].trim() === ""
-              }
+               disabled={
+    destinations.length >= 4 ||
+    !destinations[destinations.length - 1] || // check for undefined/null
+    destinations[destinations.length - 1].trim() === ""
+  }
             >
               + Add Destination
             </Button>
@@ -611,11 +696,18 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
           <p className="mt-2">Lock in a price with no additional charges.</p>
         </div>
 
-        <CarDropdown
-          selectedOption={selected}
-          onOptionSelect={setSelected}
-          label={fare ? `Fare: $${fare}` : "Dest Required"}
-        />
+       <CarDropdown
+  selectedOption={selected}
+  onOptionSelect={setSelected}
+  label={
+    fare
+      ? isOn
+        ? `Fare: $${fare}` // Fixed Price ON → exact fare
+        : `Fare: $${(fare - 5).toFixed(2)} - $${(parseFloat(fare) + 5).toFixed(2)}` // Fixed Price OFF → show range
+      : "Dest Required"
+  }
+/>
+
 
         {/* Step 2 */}
         <div className="px-5 py-6">
