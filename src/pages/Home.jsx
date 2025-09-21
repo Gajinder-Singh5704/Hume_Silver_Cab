@@ -16,12 +16,12 @@ const Home = () => {
       {/* Desktop / Tablet */}
       <div className="hidden md:flex w-full h-[calc(100vh-100px)]">
         {/* Sidebar takes 25% */}
-        <div className="w-[25%] border-r">
+        <div className="w-[27%] border-r">
           <SideBar onPickupSelect={setSelectedPickup} />
         </div>
 
         {/* Map takes 75% */}
-        <div className="w-[75%]">
+        <div className="w-[73%]">
           <MapSection selectedPlace={selectedPlace} selectedPickup={selectedPickup} />
         </div>
       </div>
