@@ -229,10 +229,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log()
-  };
+  
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
@@ -311,6 +308,62 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   useEffect(() => {
     if (distanceKm) calculateFare();
   }, [selected, distanceKm, hasToll]);
+
+  // ...existing code...
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Gather all form data
+    const formData = {
+      pickup,
+      pickupLoc,
+      destinations,
+      destinationLocs,
+      passenger,
+      contact,
+      instruction,
+      isOn,
+      selected,
+      selectedPayment,
+      bookingMode,
+      dateVal,
+      hourVal,
+      minuteVal,
+      ampmVal,
+      timeType,
+      fare,
+      hasToll,
+      distanceKm,
+    };
+
+    alert("Booking requested");
+    console.log("Booking Data:", formData);
+
+    // Reset all fields
+    setPickup("");
+    setPickupLoc(null);
+    setPickupSuggestions([]);
+    setDestinations([""]);
+    setDestinationLocs([]);
+    setPassenger("");
+    setContact("");
+    setInstruction("");
+    setIsOn(true);
+    setSelected(null);
+    setSelectedPayment(null);
+    setBookingMode("now");
+    setDateVal("");
+    setHourVal("9");
+    setMinuteVal("00");
+    setAmpmVal("am");
+    setTimeType(2);
+    setFare(null);
+    setHasToll(false);
+    setDistanceKm("");
+    setContactError("");
+    setDestinationSuggestions({});
+  };
+// ...existing code...
 
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
@@ -600,7 +653,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                 required
                 type="tel"
                 inputProps={{
-                  pattern: "[0-9]{10}",
+                  pattern: "[0-9]{9}",
                   maxLength: 9,
                 }}
                 value={contact}
