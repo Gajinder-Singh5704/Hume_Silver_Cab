@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, CreditCard, Smartphone, Wallet, Building } from 'lucide-react';
+import cabchargeLogo from '../assets/cabcharge.png';
 
 const PaymentDropdown = ({ 
   paymentOptions = [], 
