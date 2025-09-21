@@ -66,24 +66,36 @@ const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
     if (!map) return;
 
     const bounds = new window.google.maps.LatLngBounds();
+    const hasPickup = !!selectedPickup;
+    const hasDests = destinations.some(Boolean);
 
-    if (selectedPickup) {
+    if (hasPickup) {
       bounds.extend(selectedPickup);
     }
     destinations.forEach((dest) => {
       if (dest) bounds.extend(dest);
     });
 
-    if (!bounds.isEmpty()) {
+    if (hasPickup && hasDests) {
+      // Case 1: Pickup + destinations → fit bounds
       map.fitBounds(bounds, 80);
-    } else if (selectedPlace) {
-      map.panTo(selectedPlace);
-      map.setZoom(13);
+    } else if (hasPickup) {
+      // Case 2: Only pickup → zoom to pickup
+      map.panTo(selectedPickup);
+      map.setZoom(14);
+    } else if (hasDests) {
+      // Case 2b: Only destinations → zoom to them
+      map.fitBounds(bounds, 80);
+    } else {
+      // Case 3: Neither → reset to default
+      map.panTo({ lat: 53.54, lng: 10 });
+      map.setZoom(10);
     }
   }, [map, selectedPlace, selectedPickup, destinations]);
 
   return null;
 };
+
 
 // Recenter button component
 const RecenterButton = ({ selectedPickup, destinations }) => {
@@ -173,7 +185,14 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
           )}
 
            {/* Directions route */}
-          <DirectionsOverlay origin={origin} waypoints={waypoints} destination={destination} />
+{destinations.length > 0 && destinations.some(Boolean) && origin && destination && (
+  <DirectionsOverlay
+    origin={origin}
+    waypoints={waypoints}
+    destination={destination}
+  />
+)}
+
 
           <RecenterButton
             selectedPickup={selectedPickup}
