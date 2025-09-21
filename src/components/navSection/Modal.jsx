@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { getPlaces } from "../../hooks/map";
+import { getPlaces , getGeocode } from "../../hooks/map";
 
-
-export default function Modal({ onClose }) {
+export default function Modal({ onClose , onPlaceSelect}) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-
 
   const handleClose = () => onClose();
 
@@ -27,6 +25,22 @@ export default function Modal({ onClose }) {
       setSuggestions([]);
     }
   };
+
+  const handlePlaceClick = async (s) => {
+  setQuery(s.description);
+  setSuggestions([]);
+   
+  try {
+    const location = await getGeocode(s);
+    if (location) {
+      onPlaceSelect(location);
+      onClose()
+    }
+  } catch (err) {
+    console.error("Failed to get place details", err);
+  }
+   
+};
 
   return (
     <div>
@@ -61,10 +75,7 @@ export default function Modal({ onClose }) {
                 <li
                   key={s.place_id}
                   className="p-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
-                    setQuery(s.description);
-                    setSuggestions([]);
-                  }}
+                  onClick={() => handlePlaceClick(s)}
                 >
                   <span className="font-medium">
                     {s.structured_formatting.main_text}
