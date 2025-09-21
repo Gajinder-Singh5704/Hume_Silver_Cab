@@ -14,13 +14,13 @@ const CarDropdown = ({
   // Default vehicle options if none provided
   const defaultVehicleOptions = [
     {
-      id: 'next-available',
-      name: 'Next Available',
+      id: 'sedan',
+      name: 'Sedan',
       passengers: '1 - 4 passengers',
       image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Sedan.png',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
-      color: 'bg-orange-100'
+      color: 'bg-gray-100'
     },
     {
       id: 'silver-service',
@@ -32,22 +32,13 @@ const CarDropdown = ({
       color: 'bg-gray-100'
     },
     {
-      id: 'sedan',
-      name: 'Sedan',
-      passengers: '1 - 4 passengers',
-      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Sedan.png',
+      id: 'suv',
+      name: 'SUV',
+      passengers: '1 - 7 passengers',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg1SpUuRbiMmaQOiQx4xg4ksi0gwexn2_xFw&s',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
-      color: 'bg-gray-100'
-    },
-    {
-      id: 'wheelchair',
-      name: 'Wheelchair',
-      passengers: 'Accessible Taxi',
-      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Wheelchair.png',
-      fareEstimate: 'Fare Estimate',
-      destRequired: 'Dest required',
-      color: 'bg-blue-50'
+      color: 'bg-gray-50'
     },
     {
       id: 'maxi-taxi',
@@ -57,15 +48,6 @@ const CarDropdown = ({
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-gray-100'
-    },
-    {
-      id: 'parcel-delivery',
-      name: 'Parcel Delivery',
-      passengers: 'Fits in a car',
-      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/parcel-delivery.png',
-      fareEstimate: 'Fare Estimate',
-      destRequired: 'Dest required',
-      color: 'bg-orange-50'
     }
   ];
 
