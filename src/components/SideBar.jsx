@@ -57,16 +57,17 @@ const SideBar = ({ onPickupSelect }) => {
   };
 
   return (
-    <section className="w-[25%] h-[83.4vh] overflow-y-scroll">
+    <section className=" w-full  h-[83.4vh] overflow-y-scroll">
       <form>
         {/* Step 1 */}
 
         <div className="px-5 py-6">
-          <h3 className="text-sm mb-4">
-            {" "}
+          <h3 className="text-sm mb-4 hidden md:flex">
             Step 1 of 4 <b>Booking details</b>
           </h3>
 
+          <h2 className="md:hidden text-2xl text-bold mb-2">Fare Estimates Calculator</h2>
+          <h3 className="md:hidden mb-4 text-sm">Please enter a valid pickup and destination </h3>
           <div className="mb-4 relative">
             <TextField
               label="Add pickup (required)"
@@ -116,14 +117,19 @@ const SideBar = ({ onPickupSelect }) => {
           </div>
         </div>
 
-        <div className="flex gap-4 px-4 items-center justify-center">
-          <RadioGroup row defaultChecked="now">
+        <div className="flex  gap-4 px-4 ml-4 md:ml-0 items-center md:justify-center">
+          <RadioGroup  row  defaultValue="now"  sx={{
+          flexDirection: {
+            xs: "column", 
+            md: "row",   
+          },
+        }}>
             <FormControlLabel
               value="now"
               control={
                 <Radio
                   sx={{
-                    color: "green", // unchecked color
+                    color: "black", // unchecked color
                     "&.Mui-checked": {
                       color: "green", // checked color
                     },
@@ -139,7 +145,7 @@ const SideBar = ({ onPickupSelect }) => {
               control={
                 <Radio
                   sx={{
-                    color: "green", // unchecked color
+                    color: "black", // unchecked color
                     "&.Mui-checked": {
                       color: "green", // checked color
                     },
