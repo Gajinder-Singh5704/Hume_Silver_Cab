@@ -17,7 +17,7 @@ const CarDropdown = ({
       id: 'next-available',
       name: 'Next Available',
       passengers: '1 - 4 passengers',
-      icon: '🚗',
+      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Sedan.png',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-orange-100'
@@ -26,7 +26,7 @@ const CarDropdown = ({
       id: 'silver-service',
       name: 'Silver Service',
       passengers: '1 - 4 passengers',
-      icon: '🚗',
+      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Silver.png',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-gray-100'
@@ -35,7 +35,7 @@ const CarDropdown = ({
       id: 'sedan',
       name: 'Sedan',
       passengers: '1 - 4 passengers',
-      icon: '🚗',
+      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Sedan.png',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-gray-100'
@@ -44,7 +44,7 @@ const CarDropdown = ({
       id: 'wheelchair',
       name: 'Wheelchair',
       passengers: 'Accessible Taxi',
-      icon: <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">♿</div>,
+      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Wheelchair.png',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-blue-50'
@@ -53,7 +53,7 @@ const CarDropdown = ({
       id: 'maxi-taxi',
       name: 'MAXI TAXI',
       passengers: '1 - 11 passengers',
-      icon: '🚐',
+      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/MAXI.png',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-gray-100'
@@ -62,7 +62,7 @@ const CarDropdown = ({
       id: 'parcel-delivery',
       name: 'Parcel Delivery',
       passengers: 'Fits in a car',
-      icon: <Package className="w-8 h-8 text-orange-500" />,
+      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/parcel-delivery.png',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-orange-50'
@@ -104,7 +104,7 @@ const CarDropdown = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="text-2xl">
-                {typeof currentSelection.icon === 'string' ? currentSelection.icon : currentSelection.icon}
+                {typeof currentSelection.icon === 'string' ? <img src={currentSelection.image} className='h-10'/> : <img src={currentSelection.image} className='h-10'/>}
               </div>
               <div>
                 <div className="flex items-center space-x-2">
@@ -136,7 +136,7 @@ const CarDropdown = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="text-2xl">
-                    {typeof option.icon === 'string' ? option.icon : option.icon}
+                    {typeof option.icon === 'string' ? <img src={option.image} className='h-10'/> : <img src={option.image} className='h-10'/>}
                   </div>
                   <div className="text-left">
                     <div className="flex items-center space-x-2">
