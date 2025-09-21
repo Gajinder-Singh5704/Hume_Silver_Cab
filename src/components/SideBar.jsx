@@ -638,6 +638,9 @@ const calculateFare = () => {
               <input
                 type="date"
                 min={new Date().toISOString().split("T")[0]}
+                max={new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+                  .toISOString()
+                  .split("T")[0]} // 15 days from now
                 className="w-full border rounded px-3 py-2"
                 value={dateVal}
                 onChange={(e) => setDateVal(e.target.value)}
