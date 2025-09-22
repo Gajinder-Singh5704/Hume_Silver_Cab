@@ -11,7 +11,7 @@ const NavSection = ({onPlaceSelect}) => {
 
   const items = [{ label: "Map View", icon: FaMap }];
 
-  const handleClick = () => setIsOpen(!isOpen);
+  const handleClick = () => {}
 
   const handlePlaceSelect = (place) => {
     setSelectedPlace(place.description); 

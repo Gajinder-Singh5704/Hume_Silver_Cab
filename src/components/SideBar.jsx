@@ -51,6 +51,10 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
 
+  const [tempHour, setTempHour] = useState(hourVal);
+  const [tempMinute, setTempMinute] = useState(minuteVal);
+  const [tempAmPm, setTempAmPm] = useState(ampmVal);
+
   const [destinationSuggestions, setDestinationSuggestions] = useState({});
 
   // refs for hidden inputs used by external Forminator code
@@ -101,52 +105,50 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   );
 
   const calculateFare = () => {
-  console.log("Calculate called");
-  if (!distanceKm) return null;
+    console.log("Calculate called");
+    if (!distanceKm) return null;
 
-  const distance = parseFloat(distanceKm);
-  const tolls = hasToll ? 1 : 0;
-  const bookingFees = 4;
+    const distance = parseFloat(distanceKm);
+    const tolls = hasToll ? 1 : 0;
+    const bookingFees = 4;
 
-  // Destructure selected object
-  const { name: vehicleName = "Sedan" } = selected ?? {};
+    // Destructure selected object
+    const { name: vehicleName = "Sedan" } = selected ?? {};
 
-  // vehicle surcharges
-  let vehicleSurcharge = 0;
-  switch (vehicleName) {
-    case "Sedan":
-      vehicleSurcharge = 0;
-      break;
-    case "Silver Service":
-      vehicleSurcharge = 11;
-      break;
-    case "SUV":
-    case "Maxi Taxi":
-      vehicleSurcharge = 17.80;
-      break;
-  }
+    // vehicle surcharges
+    let vehicleSurcharge = 0;
+    switch (vehicleName) {
+      case "Sedan":
+        vehicleSurcharge = 0;
+        break;
+      case "Silver Service":
+        vehicleSurcharge = 11;
+        break;
+      case "SUV":
+      case "Maxi Taxi":
+        vehicleSurcharge = 17.8;
+        break;
+    }
 
-  let base;
-  if (timeType === 3) {
-    base = 20 + distance * 2.493 + tolls * 17.46 + 7.80;
-  } else if (timeType === 2) {
-    base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
-  } else {
-    base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
-  }
+    let base;
+    if (timeType === 3) {
+      base = 20 + distance * 2.493 + tolls * 17.46 + 7.8;
+    } else if (timeType === 2) {
+      base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
+    } else {
+      base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
+    }
 
-  let fareValue = Math.max(base, 40) + vehicleSurcharge + bookingFees;
+    let fareValue = Math.max(base, 40) + vehicleSurcharge + bookingFees;
 
-  // ✅ Add airport surcharge
-  if (isAirportPickup(pickup)) {
-    fareValue += 4.68;
-    console.log("Airport surcharge applied!");
-  }
+    // ✅ Add airport surcharge
+    if (isAirportPickup(pickup)) {
+      fareValue += 4.68;
+      console.log("Airport surcharge applied!");
+    }
 
-  setFare(fareValue.toFixed(2));
-};
-
-
+    setFare(fareValue.toFixed(2));
+  };
 
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
   const handlePickupChange = async (e) => {
@@ -257,7 +259,6 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
       if (location) {
         setPickupLoc(location);
         onPickupSelect(location);
-
       }
     } catch (err) {
       console.error("Failed to select pickup", err);
@@ -286,106 +287,107 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     }
   };
 
-const updateRoute = (pickup, dests) => {
-  console.log("Calling calculate")
-  if (!pickup || dests.length === 0) {
-    setDistanceKm("");
-    setHasToll(false);
-    setFare(null);
-    return;
-  }
-
-  const service = new window.google.maps.DirectionsService();
-
-  service.route(
-    {
-      origin: pickup,
-      destination: dests[dests.length - 1],
-      waypoints: dests.slice(0, -1).map((loc) => ({
-        location: loc,
-        stopover: true,
-      })),
-      travelMode: window.google.maps.TravelMode.DRIVING,
-    },
-    (result, status) => {
-      if (status === "OK" && result.routes.length > 0) {
-        const leg = result.routes[0].legs.reduce(
-          (acc, l) => {
-            acc.distance += l.distance.value;
-            acc.steps.push(...l.steps);
-            return acc;
-          },
-          { distance: 0, steps: [] }
-        );
-
-        const km = (leg.distance / 1000).toFixed(1);
-        setDistanceKm(km);
-
-        const stepsText = leg.steps.map((s) => s.instructions.toLowerCase()).join(" ");
-        const summary = (result.routes[0].summary || "").toLowerCase();
-
-        let pickupAddress = "";
-
-      // If pickup is string
-      if (typeof pickup === "string") {
-        pickupAddress = pickup;
-      }
-      // If pickup is a Google Places Autocomplete result
-      else if (pickup?.description) {
-        pickupAddress = pickup.description;
-      }
-      // If pickup is an object with `name`
-      else if (pickup?.name) {
-        pickupAddress = pickup.name;
-      }
-      // Otherwise fallback to empty string
-      else {
-        console.warn("Pickup is not a string or place object:", pickup);
-      }
-
-        const toll =
-          stepsText.includes("citylink") ||
-          stepsText.includes("eastlink") ||
-          stepsText.includes("tullamarine fwy") ||
-          stepsText.includes("tollway") ||
-          summary.includes("citylink") ||
-          summary.includes("eastlink") ||
-          summary.includes("tullamarine");
-        setHasToll(toll);
-        calculateFare();
-      } else {
-        console.error("Directions request failed:", status);
-        setDistanceKm("");
-        setHasToll(false);
-        setFare(null);
-      }
+  const updateRoute = (pickup, dests) => {
+    console.log("Calling calculate");
+    if (!pickup || dests.length === 0) {
+      setDistanceKm("");
+      setHasToll(false);
+      setFare(null);
+      return;
     }
-  );
-};
 
+    const service = new window.google.maps.DirectionsService();
 
-const isAirportPickup = (pickup) => {
-        let pickupAddress = "";
+    service.route(
+      {
+        origin: pickup,
+        destination: dests[dests.length - 1],
+        waypoints: dests.slice(0, -1).map((loc) => ({
+          location: loc,
+          stopover: true,
+        })),
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK" && result.routes.length > 0) {
+          const leg = result.routes[0].legs.reduce(
+            (acc, l) => {
+              acc.distance += l.distance.value;
+              acc.steps.push(...l.steps);
+              return acc;
+            },
+            { distance: 0, steps: [] }
+          );
 
-        if (typeof pickup === "string") {
-          pickupAddress = pickup;
-        } else if (pickup?.description) {
-          pickupAddress = pickup.description;
-        } else if (pickup?.name) {
-          pickupAddress = pickup.name;
+          const km = (leg.distance / 1000).toFixed(1);
+          setDistanceKm(km);
+
+          const stepsText = leg.steps
+            .map((s) => s.instructions.toLowerCase())
+            .join(" ");
+          const summary = (result.routes[0].summary || "").toLowerCase();
+
+          let pickupAddress = "";
+
+          // If pickup is string
+          if (typeof pickup === "string") {
+            pickupAddress = pickup;
+          }
+          // If pickup is a Google Places Autocomplete result
+          else if (pickup?.description) {
+            pickupAddress = pickup.description;
+          }
+          // If pickup is an object with `name`
+          else if (pickup?.name) {
+            pickupAddress = pickup.name;
+          }
+          // Otherwise fallback to empty string
+          else {
+            console.warn("Pickup is not a string or place object:", pickup);
+          }
+
+          const toll =
+            stepsText.includes("citylink") ||
+            stepsText.includes("eastlink") ||
+            stepsText.includes("tullamarine fwy") ||
+            stepsText.includes("tollway") ||
+            summary.includes("citylink") ||
+            summary.includes("eastlink") ||
+            summary.includes("tullamarine");
+          setHasToll(toll);
+          calculateFare();
         } else {
-          console.warn("Pickup is not a string or place object:", pickup);
+          console.error("Directions request failed:", status);
+          setDistanceKm("");
+          setHasToll(false);
+          setFare(null);
         }
+      }
+    );
+  };
 
-        const lower = pickupAddress.toLowerCase();
-        return (
-          lower.includes("airport") ||
-          lower.includes("intl") ||
-          lower.includes("international") ||
-          lower.includes("domestic terminal") ||
-          lower.includes("terminal")
-        );
-      };
+  const isAirportPickup = (pickup) => {
+    let pickupAddress = "";
+
+    if (typeof pickup === "string") {
+      pickupAddress = pickup;
+    } else if (pickup?.description) {
+      pickupAddress = pickup.description;
+    } else if (pickup?.name) {
+      pickupAddress = pickup.name;
+    } else {
+      console.warn("Pickup is not a string or place object:", pickup);
+    }
+
+    const lower = pickupAddress.toLowerCase();
+    return (
+      lower.includes("airport") ||
+      lower.includes("intl") ||
+      lower.includes("international") ||
+      lower.includes("domestic terminal") ||
+      lower.includes("terminal")
+    );
+  };
 
   useEffect(() => {
     if (distanceKm) calculateFare();
@@ -445,7 +447,6 @@ const isAirportPickup = (pickup) => {
     setContactError("");
     setDestinationSuggestions({});
   };
-  // ...existing code...
 
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
@@ -639,17 +640,17 @@ const isAirportPickup = (pickup) => {
                   new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
                     .toISOString()
                     .split("T")[0]
-                } // 15 days from now
+                }
                 className="w-full border rounded px-3 py-2"
                 value={dateVal}
                 onChange={(e) => setDateVal(e.target.value)}
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <select
-                value={hourVal}
-                onChange={(e) => setHourVal(e.target.value)}
+                value={tempHour}
+                onChange={(e) => setTempHour(e.target.value)}
                 className="border rounded p-2"
               >
                 {Array.from({ length: 12 }, (_, i) => (i + 1).toString()).map(
@@ -662,8 +663,8 @@ const isAirportPickup = (pickup) => {
               </select>
 
               <select
-                value={minuteVal}
-                onChange={(e) => setMinuteVal(e.target.value)}
+                value={tempMinute}
+                onChange={(e) => setTempMinute(e.target.value)}
                 className="border rounded p-2"
               >
                 {["00", "15", "30", "45"].map((m) => (
@@ -674,13 +675,26 @@ const isAirportPickup = (pickup) => {
               </select>
 
               <select
-                value={ampmVal}
-                onChange={(e) => setAmpmVal(e.target.value)}
+                value={tempAmPm}
+                onChange={(e) => setTempAmPm(e.target.value)}
                 className="border rounded p-2"
               >
                 <option value="am">am</option>
                 <option value="pm">pm</option>
               </select>
+
+              {/* ✅ Done button */}
+              <button
+                type="button"
+                className="ml-2 px-3 py-1 bg-green-600 text-white rounded"
+                onClick={() => {
+                  setHourVal(tempHour);
+                  setMinuteVal(tempMinute);
+                  setAmpmVal(tempAmPm);
+                }}
+              >
+                Done
+              </button>
             </div>
           </div>
         )}
@@ -715,7 +729,6 @@ const isAirportPickup = (pickup) => {
           />
         </div>
 
-
         {/* Step 2 */}
         <div className="px-5 py-6">
           <h3 className="text-sm mt-4 mb-4">
@@ -724,52 +737,57 @@ const isAirportPickup = (pickup) => {
           </h3>
 
           <div className="mb-4">
-            <TextField
-              label="Passenger Name"
-              variant="outlined"
-              fullWidth
-              required
-              placeholder="Passenger name"
-              value={passenger}
-              onChange={(e) => setPassenger(e.target.value)}
-            />
-          </div>
+  <TextField
+    label="Passenger Name"
+    variant="outlined"
+    fullWidth
+    required
+    placeholder="Passenger name"
+    value={passenger}
+    onChange={(e) => setPassenger(e.target.value)}
+  />
+</div>
 
-          <div className="flex items-center justify-center gap-2 w-full">
-            <div className="w-[20%] border rounded-sm h-14 flex items-center justify-center gap-1 ">
-              <img
-                className="h-5"
-                src="https://flagsapi.com/AU/flat/64.png"
-                alt="AU"
-              />
-              +61
-            </div>
-            <div className="flex-grow">
-              <TextField
-                label="Contact Number"
-                variant="outlined"
-                fullWidth
-                required
-                type="tel"
-                inputProps={{
-                  pattern: "[0-9]{9}",
-                  maxLength: 9,
-                }}
-                value={contact}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "");
-                  setContact(value);
-                  if (value.length === 9 && value.startsWith("4")) {
-                    setContactError("");
-                  } else {
-                    setContactError("Number must be 9 digits and start with 4");
-                  }
-                }}
-                error={!!contactError}
-                helperText={contactError}
-              />
-            </div>
-          </div>
+<div className="flex items-center justify-center gap-2 w-full">
+  <div className="w-[20%] border rounded-sm h-14 flex items-center justify-center gap-1">
+    <img
+      className="h-5"
+      src="https://flagsapi.com/AU/flat/64.png"
+      alt="AU"
+    />
+    +61
+  </div>
+  <div className="flex-grow">
+    <TextField
+      label="Contact Number"
+      variant="outlined"
+      fullWidth
+      required
+      type="tel"
+      inputProps={{
+        pattern: "[0-9]{9}",
+        maxLength: 9,
+      }}
+      value={contact}
+      onChange={(e) => {
+        const value = e.target.value.replace(/\D/g, "");
+        setContact(value);
+        if (value.length === 9 && value.startsWith("4")) {
+          setContactError("");
+        } else {
+          setContactError("Number must be 9 digits and start with 4");
+        }
+      }}
+      error={!!contactError}
+    />
+  </div>
+</div>
+
+{/* Shared error message below both fields */}
+{contactError && (
+  <p className="text-red-600 text-sm mt-1">{contactError}</p>
+)}
+
         </div>
 
         {/* Step 3 Payment */}
