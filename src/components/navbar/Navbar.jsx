@@ -24,7 +24,7 @@ const Navbar = () => {
       <nav className="flex items-center justify-between pt-4 pb-4 text-[16px]">
         {/* logo section */}
         <div className="ml-8">
-          <img src={logo} alt="logo" className="h-[36px]" />
+          <img src={logo} alt="logo" className="h-[50px]" />
         </div>
         {/* nav links section */}
         <div className="flex space-x-8 mr-4 items-center ">
