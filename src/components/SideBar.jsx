@@ -882,7 +882,8 @@ const calculateFare = () => {
                         setHourVal(String(newHour));
                         setMinuteVal(m);
                         setAmpmVal(newAmPm);
-                        setTempTime(""); // clear temp
+                        setTempTime(""); 
+                        calculateFare()
                       }}
                       className="absolute right-2 top-7.5 px-2 py-1 text-sm bg-green-600 text-white rounded"
                     >
@@ -1003,7 +1004,6 @@ const calculateFare = () => {
         {/* Step 4 Driver Instruction */}
         <div className="px-5 py-6">
           <h3 className="text-sm mb-4">
-            {" "}
             Step 4 of 4 <b>Driver Instruction</b>
           </h3>
 
