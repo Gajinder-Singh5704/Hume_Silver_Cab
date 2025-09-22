@@ -1,16 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { tolls, eastLinkTolls } from "../assets/tollsData";
+import { tolls, normalizeRoad, roadAliases } from "../assets/tollsData";
 import {
   Box,
   Button,
+  Checkbox,
   FormControlLabel,
   Radio,
   RadioGroup,
   TextField,
+  ToggleButton,
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import { LockIcon } from "lucide-react";
+import { CheckIcon, CrossIcon, LockIcon, LockOpen } from "lucide-react";
+import { IoAddCircle } from "react-icons/io5";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
 import { getPlaces, getGeocode, attachPlacesAutocomplete } from "../hooks/map";
@@ -72,6 +75,36 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [destinationLocs, setDestinationLocs] = useState([]);
 
   // Attach Google Autocomplete once Maps API is ready
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        clearInterval(interval);
+
+        if (pickupInputRef.current) {
+          attachPlacesAutocomplete(pickupInputRef.current, async (place) => {
+            setPickup(place.formatted_address);
+
+            const location = place.geometry?.location
+              ? {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+              }
+              : await getGeocode(place);
+
+            if (location) {
+              setPickupLoc(location);
+              onPickupSelect(location);
+            }
+          });
+        }
+      }
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [onPickupSelect]);
+
+
+  const destinationRefs = useRef([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -134,18 +167,22 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
 
+  const [tempHour, setTempHour] = useState(hourVal);
+  const [tempMinute, setTempMinute] = useState(minuteVal);
+  const [tempAmPm, setTempAmPm] = useState(ampmVal);
   const [tempTime, setTempTime] = useState(
     `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
   );
 
   const [destinationSuggestions, setDestinationSuggestions] = useState({});
 
-  // tolls
-  const [tollCount, setTollCount] = useState(0);
-
+  // refs for hidden inputs used by external Forminator code
+  const distanceRef = useRef(null);
+  const tollRef = useRef(null);
+  const timeTypeRef = useRef(null);
 
   // determine time type (helper stays the same)
-  const determineTimeType = (dateObj) => {
+  function determineTimeType(dateObj) {
     const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
     const hour24 = dateObj.getHours();
     const minute = dateObj.getMinutes();
@@ -157,21 +194,13 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
     if (
       (day === 5 && hour24 >= 22) || // Friday 22:00–23:59
-<<<<<<< HEAD
-      (day === 6 && hour24 < 4) || // Saturday 00:00–03:59
-      (day === 6 && hour24 >= 22) || // Saturday 22:00–23:59
-      (day === 0 && hour24 < 4) // Sunday 00:00–03:59
-=======
       (day === 6 && hour24 < 4) ||   // Saturday 00:00–03:59
       (day === 6 && hour24 >= 22) || // Saturday 22:00–23:59
       (day === 0 && hour24 < 4)      // Sunday 00:00–03:59
->>>>>>> 163ba1cef02ec7f7aeef6c696df3601db8cd44ab
     ) {
       timeType = 3; // Overnight Weekend
     } else if (hour24 >= 9 && hour24 < 17) {
       timeType = 1; // Normal
-<<<<<<< HEAD
-=======
     }
 
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -196,112 +225,84 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     } else if (bookingMode === "later" && dateVal) {
       const hour = (parseInt(hourVal, 10) % 12) + (ampmVal === "pm" ? 12 : 0);
       dateObj = new Date(`${dateVal}T${hour}:${minuteVal}:00`);
->>>>>>> 163ba1cef02ec7f7aeef6c696df3601db8cd44ab
     }
 
-    const dayNames = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    console.log(
-      `Calculated time type: ${timeType} | Day: ${
-        dayNames[day]
-      } | Time: ${hour12}:${minute.toString().padStart(2, "0")} ${ampm}`
-    );
-
-    return timeType;
-  };
+    if (dateObj) {
+      setTimeType(determineTimeType(dateObj));
+    }
+  }, [bookingMode, dateVal, hourVal, minuteVal, ampmVal]);
 
   const melbourneNow = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
   );
 
 const calculateFare = () => {
+  console.log("=== Fare Calculation Started ===");
+
   if (!distanceKm) {
+    console.log("❌ No distance available — aborting fare calculation.");
     return null;
   }
 
-  const distance = parseFloat(distanceKm); // ensure number
+  const distance = parseInt(distanceKm);
+  console.log("📏 Distance (km):", distance);
 
-  // Use actual toll cost or default to 0
   const tollCost = hasToll && fare ? parseFloat(fare) : 0;
+  console.log("💰 Toll cost included:", tollCost);
 
-    // Extract selected vehicle safely with fallback
-    const { name: vehicleName = "Sedan" } = selected ?? {};
+  const bookingFees = 4;
+  console.log("🧾 Booking fee:", bookingFees);
 
-    // Calculate vehicle surcharge
-    let vehicleSurcharge = 0;
-    switch (vehicleName) {
-      case "Sedan":
-        vehicleSurcharge = 0;
-        break;
-      case "Silver Service":
-        vehicleSurcharge = 11;
-        break;
-      case "SUV":
-      case "Maxi Taxi":
-        vehicleSurcharge = 17.8;
-        break;
-    }
+  const { name: vehicleName = "Sedan" } = selected ?? {};
+  console.log("🚖 Selected vehicle:", vehicleName);
 
-    // Calculate base fare based on timeType
-    let base;
-    if (timeType === 3) {
-      base = 20 + distance * 2.493 + tolls * 17.46 + 7.8;
-    } else if (timeType === 2) {
-      base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
-    } else {
-      base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
-    }
+  // Vehicle surcharge
+  let vehicleSurcharge = 0;
+  switch (vehicleName) {
+    case "Sedan":
+      vehicleSurcharge = 0;
+      break;
+    case "Silver Service":
+      vehicleSurcharge = 11;
+      break;
+    case "SUV":
+    case "Maxi Taxi":
+      vehicleSurcharge = 17.8;
+      break;
+  }
+  console.log("🚘 Vehicle surcharge:", vehicleSurcharge);
 
-<<<<<<< HEAD
-    // Apply minimum fare
-    let minApplied = base < 40;
-    let fareValue = Math.max(base, 40);
-=======
-  // Calculate base fare based on timeType
+  // Base fare calculation based on time type
   let base;
   if (timeType === 3) {
     base = 20 + distance * 2.493 + tollCost + 7.8;
+    console.log("⏰ Time type: Peak (3) → Base fare formula: 20 + distance*2.493 + toll + 7.8");
   } else if (timeType === 2) {
     base = 13 + distance * 2.265 + tollCost + 6.55;
+    console.log("⏰ Time type: Shoulder (2) → Base fare formula: 13 + distance*2.265 + toll + 6.55");
   } else {
     base = 8 + distance * 2.037 + tollCost + 5.25;
+    console.log("⏰ Time type: Off-Peak (else) → Base fare formula: 8 + distance*2.037 + toll + 5.25");
   }
+  console.log("📊 Base fare before minimum check:", base);
 
   // Apply minimum fare
   let fareValue = Math.max(base, 40);
+  console.log("🔎 Applied minimum fare (40 if needed):", fareValue);
 
-  // Add vehicle surcharge and booking fees
+  // Add surcharges
   fareValue += vehicleSurcharge + bookingFees;
+  console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
 
   // Airport surcharge
   if (isAirportPickup(pickup)) {
     fareValue += 4.68;
+    console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
   }
 
+  console.log("✅ Final fare calculated:", fareValue.toFixed(2));
   setFare(fareValue.toFixed(2));
 };
->>>>>>> 163ba1cef02ec7f7aeef6c696df3601db8cd44ab
-
-    // Add vehicle surcharge and booking fees
-    fareValue += vehicleSurcharge;
-
-    fareValue += bookingFees;
-
-    // Airport surcharge
-    if (isAirportPickup(pickup)) {
-      fareValue += 4.68;
-    } else {
-    }
-
-    setFare(fareValue.toFixed(2));
-  };
 
 
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
@@ -405,8 +406,8 @@ const calculateFare = () => {
   };
 
   const handleDeletePickup = () => {
-    setPickup(""); // Clear pickup input
-    setPickupLoc(null); // Clear location object
+    setPickup("");          // Clear pickup input
+    setPickupLoc(null);     // Clear location object
     setPickupSuggestions([]); // Clear any autocomplete suggestions
 
     // Notify parent that pickup is now empty
@@ -498,7 +499,6 @@ const calculateFare = () => {
           const stepsText = leg.steps
             .map((s) => s.instructions.toLowerCase())
             .join(" ");
-          const summary = (result.routes[0].summary || "").toLowerCase();
 
           // Determine toll road usage
           // ---- Toll calculation ---- //
@@ -520,41 +520,61 @@ const calculateFare = () => {
   };
 
   // ---- Helpers ---- //
-  function calculateToll(stepsText) {
-    let toll = 0;
+function calculateToll(stepsText) {
+  let toll = 0;
 
-    // Strip HTML tags and lowercase for easier matching
-    const plainText = stepsText.replace(/<[^>]*>?/gm, "").toLowerCase();
-    console.log("=== Toll Calculation ===");
-    console.log("Cleaned steps text:", plainText);
+  // Strip HTML tags and lowercase
+  let plainText = stepsText.replace(/<[^>]*>?/gm, "").toLowerCase();
 
-    tolls.forEach((entry) => {
-      const entryIndex = plainText.indexOf(entry.entryPoint.toLowerCase());
-      if (entryIndex !== -1) {
-        console.log(`Entry point found: ${entry.entryPoint} at index ${entryIndex}`);
+  // Normalize each known road alias inside the text
+  Object.keys(roadAliases).forEach((alias) => {
+    if (plainText.includes(alias)) {
+      console.log(`Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`);
+      plainText = plainText.replaceAll(alias, roadAliases[alias]);
+    }
+  });
 
-        // Track the farthest exit matched
-        let farthestExitPrice = 0;
-        entry.exits.forEach((exit) => {
-          const exitIndex = plainText.indexOf(exit.exitPoint.toLowerCase());
-          if (exitIndex !== -1 && exitIndex > entryIndex) {
-            console.log(`  Exit point matched: ${exit.exitPoint} at index ${exitIndex}, price: ${exit.price}`);
-            farthestExitPrice = Math.max(farthestExitPrice, exit.price);
+  console.log("=== Toll Calculation ===");
+  console.log("Normalized steps text:", plainText);
+
+  tolls.forEach((entry) => {
+    const normalizedEntry = normalizeRoad(entry.entryPoint);
+    const entryIndex = plainText.indexOf(normalizedEntry);
+
+    if (entryIndex !== -1) {
+      console.log(`✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`);
+
+      // Track farthest exit match
+      let farthestExit = null;
+      let farthestExitIndex = -1;
+
+      entry.exits.forEach((exit) => {
+        const normalizedExit = normalizeRoad(exit.exitPoint);
+        const exitIndex = plainText.indexOf(normalizedExit);
+
+        if (exitIndex !== -1 && exitIndex > entryIndex) {
+          console.log(`   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`);
+          if (exitIndex > farthestExitIndex) {
+            farthestExitIndex = exitIndex;
+            farthestExit = exit;
           }
-        });
-
-        if (farthestExitPrice > 0) {
-          console.log(`  Farthest exit price for entry ${entry.entryPoint}: ${farthestExitPrice}`);
-          toll = Math.max(toll, farthestExitPrice);
         }
-      } else {
-        console.log(`Entry point not found: ${entry.entryPoint}`);
-      }
-    });
+      });
 
-    console.log("Total calculated toll:", toll);
-    return toll;
-  }
+      if (farthestExit) {
+        console.log(`   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`);
+        toll = Math.max(toll, farthestExit.price);
+      } else {
+        console.log(`   ⚠ No exits matched after entry point: ${normalizedEntry}`);
+      }
+    } else {
+      console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
+    }
+  });
+
+  console.log("💰 Final calculated toll:", toll);
+  return toll;
+}
 
 
   const isAirportPickup = (pickup) => {
@@ -580,6 +600,11 @@ const calculateFare = () => {
     );
   };
 
+  useEffect(() => {
+    if (distanceKm) calculateFare();
+  }, [selected, distanceKm, hasToll, timeType]);
+
+  // ...existing code...
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -633,8 +658,8 @@ const calculateFare = () => {
     setContactError("");
     setDestinationSuggestions({});
 
-    onPickupSelect(null);
-    onDestinationsSelect([]);
+    onPickupSelect(setPickupLoc)
+    onDestinationsSelect(setDestinationLocs)
 
     // Update route with empty destinations
     // updateRoute(pickupLoc, newLocs);
@@ -674,19 +699,15 @@ const calculateFare = () => {
                 endAdornment: (
                   <InputAdornment position="end">
                     {pickup ? (
-                      <IconButton size="small">
-                        <span
-                          onClick={handleDeletePickup}
-                          style={{ fontSize: 16 }}
-                        >
-                          ✖
-                        </span>
+                      <IconButton size="small" >
+                        <span onClick={handleDeletePickup} style={{ fontSize: 16 }}>✖</span>
                       </IconButton>
                     ) : null}
                   </InputAdornment>
                 ),
               }}
             />
+
 
             {pickupSuggestions.length > 0 && (
               <ul className="absolute z-50 bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto w-full">
@@ -962,15 +983,10 @@ const calculateFare = () => {
                 }}
                 value={contact}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, ""); // only digits
+                  const value = e.target.value.replace(/\D/g, "");
                   setContact(value);
-
-                  if (value.length == 0) {
-                    setContactError(null);
-                  }
-
                   if (value.length === 9 && value.startsWith("4")) {
-                    setContactError(""); // valid
+                    setContactError("");
                   } else {
                     setContactError("Number must be 9 digits and start with 4");
                   }
@@ -1029,10 +1045,7 @@ const calculateFare = () => {
         </div>
 
         <div className="mt-3">
-          <button
-            type="submit"
-            className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer"
-          >
+          <button type="submit" className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer">
             Request Booking
           </button>
         </div>
