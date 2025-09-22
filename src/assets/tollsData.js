@@ -1,4 +1,4 @@
-export const cityLinkTolls = [
+export const tolls = [
     {
         entryPoint: "tullamarine fwy",
         exits: [
@@ -8,6 +8,7 @@ export const cityLinkTolls = [
             { exitPoint: "footscray rd", price: 6.46 },
             { exitPoint: "bolte bridge", price: 10.50 },
             { exitPoint: "west gate fwy", price: 6.46 },
+            { exitPoint: "w gate fwy", price: 6.46 },
             { exitPoint: "kings way", price: 6.46 },
             { exitPoint: "power st", price: 6.46 },
             { exitPoint: "swan st", price: 0 },
@@ -27,6 +28,7 @@ export const cityLinkTolls = [
             { exitPoint: "footscray rd", price: 6.46 },
             { exitPoint: "bolte bridge", price: 10.50 },
             { exitPoint: "west gate fwy", price: 6.46 },
+            { exitPoint: "w gate fwy", price: 6.46 },
             { exitPoint: "kings way", price: 6.46 },
             { exitPoint: "power st", price: 6.46 },
             { exitPoint: "swan st", price: 0 },
@@ -46,6 +48,7 @@ export const cityLinkTolls = [
             { exitPoint: "footscray rd", price: 6.46 },
             { exitPoint: "bolte bridge", price: 10.50 },
             { exitPoint: "west gate fwy", price: 6.46 },
+            { exitPoint: "w gate fwy", price: 6.46 },
             { exitPoint: "kings way", price: 6.46 },
             { exitPoint: "power st", price: 6.46 },
             { exitPoint: "swan st", price: 0 },
@@ -425,6 +428,97 @@ export const cityLinkTolls = [
             { exitPoint: "tullamarine fwy", price: 3.23 }
         ]
     },
+      {
+    entryPoint: "springvale rd",
+    exits: [
+      { exitPoint: "ringwood bypass", price: 3.56 }
+    ]
+  },
+  {
+    entryPoint: "springvale rd",
+    exits: [
+      { exitPoint: "maroondah hwy", price: 3.56 }
+    ]
+  },
+  {
+    entryPoint: "maroondah hwy",
+    exits: [
+      { exitPoint: "canterbury rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "canterbury rd",
+    exits: [
+      { exitPoint: "boronia rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "boronia rd",
+    exits: [
+      { exitPoint: "burwood hwy", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "burwood hwy",
+    exits: [
+      { exitPoint: "high street rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "high street rd",
+    exits: [
+      { exitPoint: "ferntree gully rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "ferntree gully rd",
+    exits: [
+      { exitPoint: "wellington rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "wellington rd",
+    exits: [
+      { exitPoint: "police rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "monash fwy",
+    exits: [
+      { exitPoint: "princes hwy", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "princes hwy",
+    exits: [
+      { exitPoint: "cheltenham rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "dandenong bypass",
+    exits: [
+      { exitPoint: "greens rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "greens rd",
+    exits: [
+      { exitPoint: "thompson rd", price: 3.36 }
+    ]
+  },
+  {
+    entryPoint: "thompson rd",
+    exits: [
+      { exitPoint: "peninsula link", price: 3.36 }
+    ]
+  },
+
+  {
+    entryPoint: "thompson rd",
+    exits: [
+      { exitPoint: "frankston fwy", price: 3.36 }
+    ]
+  }
 ];
 
 export const eastLinkTolls = [
