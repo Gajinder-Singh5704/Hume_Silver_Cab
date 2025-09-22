@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../assets/tollsData";
 import {
   Box,
@@ -12,8 +12,7 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import { CheckIcon, CrossIcon, LockIcon, LockOpen } from "lucide-react";
-import { IoAddCircle } from "react-icons/io5";
+import {  LockIcon } from "lucide-react";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
 import { getPlaces, getGeocode, attachPlacesAutocomplete } from "../hooks/map";
