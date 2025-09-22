@@ -58,7 +58,7 @@ const PaymentDropdown = ({
   };
 
   return (
-    <div className={`w-full max-w-md mx-auto bg-white rounded-lg shadow-lg ${className}`}>
+    <div className={`w-full mx-auto bg-white rounded-lg shadow-lg ${className}`}>
       {/* Dropdown Header */}
       <button type="button"
         onClick={toggleDropdown}

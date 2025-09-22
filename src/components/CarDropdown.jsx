@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Info, Package } from 'lucide-react';
+import images from '../assets/images.js';
 
 const CarDropdown = ({ 
   vehicleOptions = [], 
@@ -17,7 +18,7 @@ const CarDropdown = ({
       id: 'sedan',
       name: 'Sedan',
       passengers: '1 - 4 passengers',
-      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Sedan.png',
+      image: images.sedan,
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-gray-100'
@@ -26,7 +27,7 @@ const CarDropdown = ({
       id: 'silver-service',
       name: 'Silver Service',
       passengers: '1 - 4 passengers',
-      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/Silver.png',
+      image: images.silver,
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-gray-100'
@@ -35,7 +36,7 @@ const CarDropdown = ({
       id: 'suv',
       name: 'SUV',
       passengers: '1 - 6 passengers',
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg1SpUuRbiMmaQOiQx4xg4ksi0gwexn2_xFw&s',
+      image: images.suv,
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-gray-50'
@@ -44,7 +45,7 @@ const CarDropdown = ({
       id: 'maxi-taxi',
       name: 'MAXI TAXI',
       passengers: '1 - 11 passengers',
-      image: 'https://book-13cabs-cyhdf8encdbmgmgs.z01.azurefd.net/Vehicles/MAXI.png',
+      image: images.maxi,
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
       color: 'bg-gray-100'
@@ -69,7 +70,7 @@ const CarDropdown = ({
   
 
   return (
-    <div className={`w-full max-w-md mx-auto bg-white rounded-lg shadow-lg ${className}`}>
+    <div className={`w-full  mx-auto bg-white rounded-lg shadow-lg ${className} mt-4`}>
       {/* Dropdown Header */}
       <button
         onClick={toggleDropdown}
