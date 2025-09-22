@@ -181,24 +181,37 @@ useEffect(() => {
   const timeTypeRef = useRef(null);
 
   // determine time type (helper stays the same)
-  function determineTimeType(dateObj) {
-    const day = dateObj.getDay(); // 0=Sun, 5=Fri, 6=Sat
-    const hour = dateObj.getHours();
-    let timeType = 2; // default off-peak
+function determineTimeType(dateObj) {
+  const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const hour24 = dateObj.getHours();
+  const minute = dateObj.getMinutes();
+  let timeType = 2; // default off-peak
 
-    if (
-      (day === 5 && hour >= 22) || // Friday 22:00–23:59
-      (day === 6 && hour < 4) || // Saturday 00:00–03:59
-      (day === 6 && hour >= 22) || // Saturday 22:00–23:59
-      (day === 0 && hour < 4) // Sunday 00:00–03:59
-    ) {
-      timeType = 3; // Overnight Weekend
-    } else if (hour >= 9 && hour < 17) {
-      timeType = 1; // Normal
-    }
+  // Convert to 12-hour format for logging
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  const ampm = hour24 >= 12 ? "PM" : "AM";
 
-    return timeType;
+  if (
+    (day === 5 && hour24 >= 22) || // Friday 22:00–23:59
+    (day === 6 && hour24 < 4) ||   // Saturday 00:00–03:59
+    (day === 6 && hour24 >= 22) || // Saturday 22:00–23:59
+    (day === 0 && hour24 < 4)      // Sunday 00:00–03:59
+  ) {
+    timeType = 3; // Overnight Weekend
+  } else if (hour24 >= 9 && hour24 < 17) {
+    timeType = 1; // Normal
   }
+
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  console.log(
+    `Calculated time type: ${timeType} | Day: ${dayNames[day]} | Time: ${hour12}:${minute
+      .toString()
+      .padStart(2, "0")} ${ampm}`
+  );
+
+  return timeType;
+}
+
 
   // set initial and later booking time type
   useEffect(() => {
@@ -222,51 +235,101 @@ useEffect(() => {
     new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
   );
 
-  const calculateFare = () => {
-    console.log("Calculate called");
-    if (!distanceKm) return null;
+const calculateFare = () => {
+  console.log("=== 🟡 Fare Calculation Started ===");
 
-    const distance = parseFloat(distanceKm);
-    const tolls = hasToll ? 1 : 0;
-    const bookingFees = 4;
+  if (!distanceKm) {
+    console.warn("⛔ No distance available. Cannot calculate fare.");
+    return null;
+  }
 
-    // Destructure selected object
-    const { name: vehicleName = "Sedan" } = selected ?? {};
+  const distance = parseInt(distanceKm);
+  console.log(`📏 Distance (km): ${distance} km`);
 
-    // vehicle surcharges
-    let vehicleSurcharge = 0;
-    switch (vehicleName) {
-      case "Sedan":
-        vehicleSurcharge = 0;
-        break;
-      case "Silver Service":
-        vehicleSurcharge = 11;
-        break;
-      case "SUV":
-      case "Maxi Taxi":
-        vehicleSurcharge = 17.8;
-        break;
-    }
+  const tolls = hasToll ? 1 : 0;
+  console.log(`🚧 Toll Detected: ${hasToll ? "YES" : "NO"} | Toll count used in calculation: ${tolls}`);
 
-    let base;
-    if (timeType === 3) {
-      base = 20 + distance * 2.493 + tolls * 17.46 + 7.8;
-    } else if (timeType === 2) {
-      base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
-    } else {
-      base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
-    }
+  const bookingFees = 4;
+  console.log(`💰 Booking Fees: $${bookingFees}`);
 
-    let fareValue = Math.max(base, 40) + vehicleSurcharge + bookingFees;
+  // Extract selected vehicle safely with fallback
+  const { name: vehicleName = "Sedan" } = selected ?? {};
+  console.log(`🚖 Selected Vehicle: ${vehicleName}`);
 
-    // ✅ Add airport surcharge
-    if (isAirportPickup(pickup)) {
-      fareValue += 4.68;
-      console.log("Airport surcharge applied!");
-    }
+  // Calculate vehicle surcharge
+  let vehicleSurcharge = 0;
+  switch (vehicleName) {
+    case "Sedan":
+      vehicleSurcharge = 0;
+      break;
+    case "Silver Service":
+      vehicleSurcharge = 11;
+      break;
+    case "SUV":
+    case "Maxi Taxi":
+      vehicleSurcharge = 17.8;
+      break;
+  }
+  console.log(`➕ Vehicle Surcharge: $${vehicleSurcharge}`);
 
-    setFare(fareValue.toFixed(2));
-  };
+  // Calculate base fare based on timeType
+  let base;
+  if (timeType === 3) {
+    base = 20 + distance * 2.493 + tolls * 17.46 + 7.8;
+    console.log(
+      `⏰ Time Type: Overnight Weekend (3) | Formula: 20 + (${distance} × 2.493) + (${tolls} × 17.46) + 7.8 = $${base.toFixed(
+        2
+      )}`
+    );
+  } else if (timeType === 2) {
+    base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
+    console.log(
+      `⏰ Time Type: Off-Peak (2) | Formula: 13 + (${distance} × 2.265) + (${tolls} × 17.46) + 6.55 = $${base.toFixed(
+        2
+      )}`
+    );
+  } else {
+    base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
+    console.log(
+      `⏰ Time Type: Normal (1) | Formula: 8 + (${distance} × 2.037) + (${tolls} × 17.46) + 5.25 = $${base.toFixed(
+        2
+      )}`
+    );
+  }
+
+  // Apply minimum fare
+  let minApplied = base < 40;
+  let fareValue = Math.max(base, 40);
+  console.log(
+    minApplied
+      ? `⚠️ Base fare $${base.toFixed(2)} is below minimum $40. Using minimum fare: $40.00`
+      : `✅ Base fare above minimum. Using calculated fare: $${fareValue.toFixed(2)}`
+  );
+
+  // Add vehicle surcharge and booking fees
+  fareValue += vehicleSurcharge;
+  console.log(`➕ Adding Vehicle Surcharge: +$${vehicleSurcharge} → $${fareValue.toFixed(2)}`);
+
+  fareValue += bookingFees;
+  console.log(`➕ Adding Booking Fees: +$${bookingFees} → $${fareValue.toFixed(2)}`);
+
+  // Airport surcharge
+  if (isAirportPickup(pickup)) {
+    fareValue += 4.68;
+    console.log(`🛫 Airport Pickup: +$4.68 → $${fareValue.toFixed(2)}`);
+  } else {
+    console.log("🛫 Airport Pickup: NO extra charge applied.");
+  }
+
+  console.log("✅ === FINAL FARE CALCULATED ===");
+  console.log(`💵 Final Fare: $${fareValue.toFixed(2)}`);
+
+  setFare(fareValue.toFixed(2));
+};
+
+
+
+
 
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
   const handlePickupChange = async (e) => {
@@ -367,6 +430,19 @@ useEffect(() => {
 
     updateRoute(pickupLoc, newLocs);
   };
+
+  const handleDeletePickup = () => {
+    setPickup("");          // Clear pickup input
+    setPickupLoc(null);     // Clear location object
+    setPickupSuggestions([]); // Clear any autocomplete suggestions
+
+    // Notify parent that pickup is now empty
+    onPickupSelect(null);
+
+    // Also reset route if neede
+    // d
+    updateRoute(null, destinationLocs);
+    };
 
   const handlePickupSelect = async (s) => {
     setPickup(s.description);
@@ -564,7 +640,15 @@ useEffect(() => {
     setDistanceKm("");
     setContactError("");
     setDestinationSuggestions({});
-  };
+
+    onPickupSelect(setPickupLoc)
+    onDestinationsSelect(setDestinationLocs)
+
+      // Update route with empty destinations
+      // updateRoute(pickupLoc, newLocs);
+
+   };
+  // ...existing code...
 
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
@@ -598,8 +682,8 @@ useEffect(() => {
                 endAdornment: (
                   <InputAdornment position="end">
                     {pickup ? (
-                      <IconButton size="small" onClick={() => setPickup("")}>
-                        <span style={{ fontSize: 16 }}>✖</span>
+                      <IconButton size="small" >
+                        <span onClick={handleDeletePickup} style={{ fontSize: 16 }}>✖</span>
                       </IconButton>
                     ) : null}
                   </InputAdornment>
@@ -944,7 +1028,7 @@ useEffect(() => {
         </div>
 
         <div className="mt-3">
-          <button className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer">
+          <button type="submit" className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer">
             Request Booking
           </button>
         </div>

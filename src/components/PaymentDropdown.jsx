@@ -60,7 +60,7 @@ const PaymentDropdown = ({
   return (
     <div className={`w-full max-w-md mx-auto bg-white rounded-lg shadow-lg ${className}`}>
       {/* Dropdown Header */}
-      <button
+      <button type="button"
         onClick={toggleDropdown}
         className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 rounded-t-lg border-b hover:bg-gray-100 transition-colors"
       >
