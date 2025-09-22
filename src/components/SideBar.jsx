@@ -101,40 +101,52 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   );
 
   const calculateFare = () => {
-    if (!distanceKm) return null;
+  console.log("Calculate called");
+  if (!distanceKm) return null;
 
-    const distance = parseFloat(distanceKm);
-    const tolls = hasToll ? 1 : 0;
-    const bookingFees = 4
-    // vehicle surcharges
-    let vehicleSurcharge = 0;
-    switch (selected) {
-      case "Sedan":
-        vehicleSurcharge = 0;
-        break;
-      case "Silver Service":
-        vehicleSurcharge = 11;
-        break;
-      case "SUV":
-        vehicleSurcharge = 17.80;
-        break;
-      case "Maxi Taxi":
-        vehicleSurcharge = 17.80;
-        break;
-    }
+  const distance = parseFloat(distanceKm);
+  const tolls = hasToll ? 1 : 0;
+  const bookingFees = 4;
 
-    let base;
-    // 🔑 Apply time type multiplier/surcharge
-    if (timeType === 3) {
-      base = 20 + distance * 2.493 + tolls * 17.46 + 7.80;
-    } else if (timeType === 2) {
-      base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
-    } else {
-      base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
-    }
-    let fareValue = Math.max(base, 40) + vehicleSurcharge + bookingFees;
-    setFare(fareValue.toFixed(2));
-  };
+  // Destructure selected object
+  const { name: vehicleName = "Sedan" } = selected ?? {};
+
+  // vehicle surcharges
+  let vehicleSurcharge = 0;
+  switch (vehicleName) {
+    case "Sedan":
+      vehicleSurcharge = 0;
+      break;
+    case "Silver Service":
+      vehicleSurcharge = 11;
+      break;
+    case "SUV":
+    case "Maxi Taxi":
+      vehicleSurcharge = 17.80;
+      break;
+  }
+
+  let base;
+  if (timeType === 3) {
+    base = 20 + distance * 2.493 + tolls * 17.46 + 7.80;
+  } else if (timeType === 2) {
+    base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
+  } else {
+    base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
+  }
+
+  let fareValue = Math.max(base, 40) + vehicleSurcharge + bookingFees;
+
+  // ✅ Add airport surcharge
+  if (isAirportPickup(pickup)) {
+    fareValue += 4.68;
+    console.log("Airport surcharge applied!");
+  }
+
+  setFare(fareValue.toFixed(2));
+};
+
+
 
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
   const handlePickupChange = async (e) => {
@@ -197,7 +209,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
         // ✅ send all updated destination locations to parent
         onDestinationsSelect(newLocs);
-
+        updateRoute(pickupLoc, newLocs);
       }
     } catch (err) {
       console.error("Failed to select destination", err);
@@ -275,6 +287,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   };
 
 const updateRoute = (pickup, dests) => {
+  console.log("Calling calculate")
   if (!pickup || dests.length === 0) {
     setDistanceKm("");
     setHasToll(false);
@@ -311,6 +324,25 @@ const updateRoute = (pickup, dests) => {
         const stepsText = leg.steps.map((s) => s.instructions.toLowerCase()).join(" ");
         const summary = (result.routes[0].summary || "").toLowerCase();
 
+        let pickupAddress = "";
+
+      // If pickup is string
+      if (typeof pickup === "string") {
+        pickupAddress = pickup;
+      }
+      // If pickup is a Google Places Autocomplete result
+      else if (pickup?.description) {
+        pickupAddress = pickup.description;
+      }
+      // If pickup is an object with `name`
+      else if (pickup?.name) {
+        pickupAddress = pickup.name;
+      }
+      // Otherwise fallback to empty string
+      else {
+        console.warn("Pickup is not a string or place object:", pickup);
+      }
+
         const toll =
           stepsText.includes("citylink") ||
           stepsText.includes("eastlink") ||
@@ -319,7 +351,6 @@ const updateRoute = (pickup, dests) => {
           summary.includes("citylink") ||
           summary.includes("eastlink") ||
           summary.includes("tullamarine");
-
         setHasToll(toll);
         calculateFare();
       } else {
@@ -333,7 +364,28 @@ const updateRoute = (pickup, dests) => {
 };
 
 
+const isAirportPickup = (pickup) => {
+        let pickupAddress = "";
 
+        if (typeof pickup === "string") {
+          pickupAddress = pickup;
+        } else if (pickup?.description) {
+          pickupAddress = pickup.description;
+        } else if (pickup?.name) {
+          pickupAddress = pickup.name;
+        } else {
+          console.warn("Pickup is not a string or place object:", pickup);
+        }
+
+        const lower = pickupAddress.toLowerCase();
+        return (
+          lower.includes("airport") ||
+          lower.includes("intl") ||
+          lower.includes("international") ||
+          lower.includes("domestic terminal") ||
+          lower.includes("terminal")
+        );
+      };
 
   useEffect(() => {
     if (distanceKm) calculateFare();
@@ -630,20 +682,23 @@ const updateRoute = (pickup, dests) => {
 
           <p className="mt-2">Lock in a price with no additional charges.</p>
         </div>
+        <div className="w-full px-5">
+          <CarDropdown
+            selectedOption={selected}
+            onOptionSelect={setSelected}
+            label={
+              fare
+                ? isOn
+                  ? `Fare: $${fare}`
+                  : `Fare: $${(fare - 5).toFixed(2)} - $${(
+                      parseFloat(fare) + 5
+                    ).toFixed(2)}`
+                : "Dest Required"
+            }
+            className="w-full" // <- pass this down
+          />
+        </div>
 
-        <CarDropdown
-          selectedOption={selected}
-          onOptionSelect={setSelected}
-          label={
-            fare
-              ? isOn
-                ? `Fare: $${fare}` // Fixed Price ON → exact fare
-                : `Fare: $${(fare - 5).toFixed(2)} - $${(
-                    parseFloat(fare) + 5
-                  ).toFixed(2)}` // Fixed Price OFF → show range
-              : "Dest Required"
-          }
-        />
 
         {/* Step 2 */}
         <div className="px-5 py-6">
