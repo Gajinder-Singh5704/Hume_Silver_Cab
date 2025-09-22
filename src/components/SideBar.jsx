@@ -29,6 +29,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  
 
   // add new state for map overlays
   const [destinationLocs, setDestinationLocs] = useState([]); // array of {lat, lng}
