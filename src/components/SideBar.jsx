@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import React, { useEffect, useRef, useState } from "react";
 import { cityLinkTolls, eastLinkTolls } from "../assets/tollsData";
 import {
   Box,
@@ -11,7 +10,7 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import { LockIcon} from "lucide-react";
+import { LockIcon } from "lucide-react";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
 import { getPlaces, getGeocode, attachPlacesAutocomplete } from "../hooks/map";
@@ -32,117 +31,8 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    if (window.google && window.google.maps && window.google.maps.places) {
-      clearInterval(interval);
-
-      if (pickupInputRef.current) {
-        const options = {
-          componentRestrictions: { country: "au" },
-          fields: ["formatted_address", "geometry"],
-        };
-
-        const pickupAuto = new window.google.maps.places.Autocomplete(
-          pickupInputRef.current,
-          options
-        );
-
-        pickupAuto.addListener("place_changed", () => {
-          const place = pickupAuto.getPlace();
-          if (!place || !place.geometry) return;
-
-          setPickup(place.formatted_address);
-
-          const location = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          };
-          setPickupLoc(location);
-          onPickupSelect(location);
-        });
-      }
-    }
-  }, 300);
-
-  return () => clearInterval(interval);
-}, [onPickupSelect]);
-
-
   const [pickupLoc, setPickupLoc] = useState(null);
   const [destinationLocs, setDestinationLocs] = useState([]);
-
-  // Attach Google Autocomplete once Maps API is ready
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        clearInterval(interval);
-
-        if (pickupInputRef.current) {
-          attachPlacesAutocomplete(pickupInputRef.current, async (place) => {
-            setPickup(place.formatted_address);
-
-            const location = place.geometry?.location
-              ? {
-                  lat: place.geometry.location.lat(),
-                  lng: place.geometry.location.lng(),
-                }
-              : await getGeocode(place);
-
-            if (location) {
-              setPickupLoc(location);
-              onPickupSelect(location);
-            }
-          });
-        }
-      }
-    }, 300);
-
-    return () => clearInterval(interval); 
-  }, [onPickupSelect]);
-
-
-  const destinationRefs = useRef([]);
-
-useEffect(() => {
-  const interval = setInterval(() => {
-    if (window.google && window.google.maps && window.google.maps.places) {
-      clearInterval(interval);
-
-      destinationRefs.current.forEach((input, idx) => {
-        if (input) {
-          const options = {
-            componentRestrictions: { country: "au" },
-            fields: ["formatted_address", "geometry"],
-          };
-          const auto = new window.google.maps.places.Autocomplete(input, options);
-
-          auto.addListener("place_changed", () => {
-            const place = auto.getPlace();
-            if (!place || !place.geometry) return;
-
-            const newDestinations = [...destinations];
-            newDestinations[idx] = place.formatted_address;
-            setDestinations(newDestinations);
-
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            };
-            const newLocs = [...destinationLocs];
-            newLocs[idx] = location;
-            setDestinationLocs(newLocs);
-            onDestinationsSelect(newLocs);
-
-            updateRoute(pickupLoc, newLocs);
-          });
-        }
-      });
-    }
-  }, 300);
-
-  return () => clearInterval(interval);
-}, [destinations, pickupLoc, destinationLocs, onDestinationsSelect]);
 
   // route & toll
   const [distanceKm, setDistanceKm] = useState("");
@@ -158,136 +48,116 @@ useEffect(() => {
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
 
-  const [tempHour, setTempHour] = useState(hourVal);
-  const [tempMinute, setTempMinute] = useState(minuteVal);
-  const [tempAmPm, setTempAmPm] = useState(ampmVal);
   const [tempTime, setTempTime] = useState(
     `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
   );
 
   const [destinationSuggestions, setDestinationSuggestions] = useState({});
 
-  // refs for hidden inputs used by external Forminator code
-  const distanceRef = useRef(null);
-  const tollRef = useRef(null);
-  const timeTypeRef = useRef(null);
+  // tolls
+  const [tollCount, setTollCount] = useState(0);
+
 
   // determine time type (helper stays the same)
-function determineTimeType(dateObj) {
-  const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  const hour24 = dateObj.getHours();
-  const minute = dateObj.getMinutes();
-  let timeType = 2; // default off-peak
+  const determineTimeType = (dateObj) => {
+    const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+    const hour24 = dateObj.getHours();
+    const minute = dateObj.getMinutes();
+    let timeType = 2; // default off-peak
 
-  // Convert to 12-hour format for logging
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  const ampm = hour24 >= 12 ? "PM" : "AM";
+    // Convert to 12-hour format for logging
+    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+    const ampm = hour24 >= 12 ? "PM" : "AM";
 
-  if (
-    (day === 5 && hour24 >= 22) || // Friday 22:00–23:59
-    (day === 6 && hour24 < 4) ||   // Saturday 00:00–03:59
-    (day === 6 && hour24 >= 22) || // Saturday 22:00–23:59
-    (day === 0 && hour24 < 4)      // Sunday 00:00–03:59
-  ) {
-    timeType = 3; // Overnight Weekend
-  } else if (hour24 >= 9 && hour24 < 17) {
-    timeType = 1; // Normal
-  }
-
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  console.log(
-    `Calculated time type: ${timeType} | Day: ${dayNames[day]} | Time: ${hour12}:${minute
-      .toString()
-      .padStart(2, "0")} ${ampm}`
-  );
-
-  return timeType;
-}
-
-
-  // set initial and later booking time type
-  useEffect(() => {
-    let dateObj;
-
-    if (bookingMode === "now") {
-      dateObj = new Date(
-        new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
-      );
-    } else if (bookingMode === "later" && dateVal) {
-      const hour = (parseInt(hourVal, 10) % 12) + (ampmVal === "pm" ? 12 : 0);
-      dateObj = new Date(`${dateVal}T${hour}:${minuteVal}:00`);
+    if (
+      (day === 5 && hour24 >= 22) || // Friday 22:00–23:59
+      (day === 6 && hour24 < 4) || // Saturday 00:00–03:59
+      (day === 6 && hour24 >= 22) || // Saturday 22:00–23:59
+      (day === 0 && hour24 < 4) // Sunday 00:00–03:59
+    ) {
+      timeType = 3; // Overnight Weekend
+    } else if (hour24 >= 9 && hour24 < 17) {
+      timeType = 1; // Normal
     }
 
-    if (dateObj) {
-      setTimeType(determineTimeType(dateObj));
-    }
-  }, [bookingMode, dateVal, hourVal, minuteVal, ampmVal]);
+    const dayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    console.log(
+      `Calculated time type: ${timeType} | Day: ${
+        dayNames[day]
+      } | Time: ${hour12}:${minute.toString().padStart(2, "0")} ${ampm}`
+    );
+
+    return timeType;
+  };
 
   const melbourneNow = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
   );
 
-const calculateFare = () => {
+  const calculateFare = () => {
+    if (!distanceKm) {
+      return null;
+    }
 
-  if (!distanceKm) {
-    return null;
-  }
+    const distance = parseInt(distanceKm);
 
-  const distance = parseInt(distanceKm);
+    const tolls = hasToll ? 1 : 0;
 
-  const tolls = hasToll ? 1 : 0;
+    const bookingFees = 4;
 
-  const bookingFees = 4;
+    // Extract selected vehicle safely with fallback
+    const { name: vehicleName = "Sedan" } = selected ?? {};
 
-  // Extract selected vehicle safely with fallback
-  const { name: vehicleName = "Sedan" } = selected ?? {};
+    // Calculate vehicle surcharge
+    let vehicleSurcharge = 0;
+    switch (vehicleName) {
+      case "Sedan":
+        vehicleSurcharge = 0;
+        break;
+      case "Silver Service":
+        vehicleSurcharge = 11;
+        break;
+      case "SUV":
+      case "Maxi Taxi":
+        vehicleSurcharge = 17.8;
+        break;
+    }
 
-  // Calculate vehicle surcharge
-  let vehicleSurcharge = 0;
-  switch (vehicleName) {
-    case "Sedan":
-      vehicleSurcharge = 0;
-      break;
-    case "Silver Service":
-      vehicleSurcharge = 11;
-      break;
-    case "SUV":
-    case "Maxi Taxi":
-      vehicleSurcharge = 17.8;
-      break;
-  }
+    // Calculate base fare based on timeType
+    let base;
+    if (timeType === 3) {
+      base = 20 + distance * 2.493 + tolls * 17.46 + 7.8;
+    } else if (timeType === 2) {
+      base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
+    } else {
+      base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
+    }
 
-  // Calculate base fare based on timeType
-  let base;
-  if (timeType === 3) {
-    base = 20 + distance * 2.493 + tolls * 17.46 + 7.8;
-  } else if (timeType === 2) {
-    base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
-  } else {
-    base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
-  }
+    // Apply minimum fare
+    let minApplied = base < 40;
+    let fareValue = Math.max(base, 40);
 
-  // Apply minimum fare
-  let minApplied = base < 40;
-  let fareValue = Math.max(base, 40);
+    // Add vehicle surcharge and booking fees
+    fareValue += vehicleSurcharge;
 
-  // Add vehicle surcharge and booking fees
-  fareValue += vehicleSurcharge;
+    fareValue += bookingFees;
 
-  fareValue += bookingFees;
+    // Airport surcharge
+    if (isAirportPickup(pickup)) {
+      fareValue += 4.68;
+    } else {
+    }
 
-  // Airport surcharge
-  if (isAirportPickup(pickup)) {
-    fareValue += 4.68;
-  } else {
-  }
-
-  setFare(fareValue.toFixed(2));
-};
-
-
-
-
+    setFare(fareValue.toFixed(2));
+  };
 
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
   const handlePickupChange = async (e) => {
@@ -390,8 +260,8 @@ const calculateFare = () => {
   };
 
   const handleDeletePickup = () => {
-    setPickup("");          // Clear pickup input
-    setPickupLoc(null);     // Clear location object
+    setPickup(""); // Clear pickup input
+    setPickupLoc(null); // Clear location object
     setPickupSuggestions([]); // Clear any autocomplete suggestions
 
     // Notify parent that pickup is now empty
@@ -400,7 +270,7 @@ const calculateFare = () => {
     // Also reset route if neede
     // d
     updateRoute(null, destinationLocs);
-    };
+  };
 
   const handlePickupSelect = async (s) => {
     setPickup(s.description);
@@ -439,118 +309,112 @@ const calculateFare = () => {
     }
   };
 
-const updateRoute = (pickup, dests) => {
-  console.log("Calling calculate");
-  if (!pickup || dests.length === 0) {
-    setDistanceKm("");
-    setHasToll(false);
-    setFare(null);
-    return;
-  }
-
-  const service = new window.google.maps.DirectionsService();
-
-  service.route(
-    {
-      origin: pickup,
-      destination: dests[dests.length - 1],
-      waypoints: dests.slice(0, -1).map((loc) => ({
-        location: loc,
-        stopover: true,
-      })),
-      travelMode: window.google.maps.TravelMode.DRIVING,
-    },
-    (result, status) => {
-      if (status === "OK" && result.routes.length > 0) {
-        const leg = result.routes[0].legs.reduce(
-          (acc, l) => {
-            acc.distance += l.distance.value;
-            acc.steps.push(...l.steps);
-            return acc;
-          },
-          { distance: 0, steps: [] }
-        );
-
-        const km = (leg.distance / 1000).toFixed(1);
-        setDistanceKm(km);
-
-        const stepsText = leg.steps
-          .map((s) => s.instructions.toLowerCase())
-          .join(" ");
-        const summary = (result.routes[0].summary || "").toLowerCase();
-
-        // Determine toll road usage
-        const usingCitylink =
-          stepsText.includes("citylink") || summary.includes("citylink");
-        const usingEastlink =
-          stepsText.includes("eastlink") || summary.includes("eastlink");
-
-        let tollCost = 0;
-
-        if (usingCitylink) {
-          tollCost = calculateCityLinkToll(stepsText);
-        }
-
-        if (usingEastlink) {
-          tollCost += calculateEastLinkToll(stepsText);
-        }
-
-        setHasToll(usingCitylink || usingEastlink);
-        setFare(tollCost);
-        console.log("Toll Cost:", tollCost);
-
-        calculateFare(); // If you already include tolls in fare calculation
-      } else {
-        console.error("Directions request failed:", status);
-        setDistanceKm("");
-        setHasToll(false);
-        setFare(null);
-      }
+  const updateRoute = (pickup, dests) => {
+    console.log("Calling calculate");
+    if (!pickup || dests.length === 0) {
+      setDistanceKm("");
+      setHasToll(false);
+      setFare(null);
+      return;
     }
-  );
-};
 
-// ---- Helpers ---- //
+    const service = new window.google.maps.DirectionsService();
 
-function calculateCityLinkToll(stepsText) {
-  let total = 0;
+    service.route(
+      {
+        origin: pickup,
+        destination: dests[dests.length - 1],
+        waypoints: dests.slice(0, -1).map((loc) => ({
+          location: loc,
+          stopover: true,
+        })),
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK" && result.routes.length > 0) {
+          const leg = result.routes[0].legs.reduce(
+            (acc, l) => {
+              acc.distance += l.distance.value;
+              acc.steps.push(...l.steps);
+              return acc;
+            },
+            { distance: 0, steps: [] }
+          );
+          const km = (leg.distance / 1000).toFixed(1);
+          setDistanceKm(km);
+          const stepsText = leg.steps
+            .map((s) => s.instructions.toLowerCase())
+            .join(" ");
+          const summary = (result.routes[0].summary || "").toLowerCase();
+          console.log("summary" + " " + summary)
+          // Determine toll road usage
+          const usingCitylink =
+            stepsText.includes("citylink") || summary.includes("citylink");
+          const usingEastlink =
+            stepsText.includes("eastlink") || summary.includes("eastlink");
+
+          let tollCost = 0;
+
+          if (usingCitylink) {
+            tollCost = calculateCityLinkToll(stepsText);
+          }
+
+          if (usingEastlink) {
+            tollCost += calculateEastLinkToll(stepsText);
+          }
+
+          setHasToll(usingCitylink || usingEastlink);
+          setFare(tollCost);
+          console.log("Toll Cost:", tollCost);
+
+          calculateFare(); // If you already include tolls in fare calculation
+        } else {
+          console.error("Directions request failed:", status);
+          setDistanceKm("");
+          setHasToll(false);
+          setFare(null);
+        }
+      }
+    );
+  };
+
+  // ---- Helpers ---- //
+
+const calculateCityLinkTolls = (stepsText) => {
+  let totalCost = 0;
+  let count = 0;
 
   cityLinkTolls.forEach((entry) => {
-    const entryMatch = stepsText.includes(entry.entryPoint);
-    if (entryMatch) {
+    if (stepsText.includes(entry.entryPoint.toLowerCase())) {
       entry.exits.forEach((exit) => {
-        if (stepsText.includes(exit.exitPoint)) {
-          console.log(
-            `Matched CityLink entry: ${entry.entryPoint}, exit: ${exit.exitPoint}, price: ${exit.price}`
-          );
-          total = Math.max(total, exit.price); // use highest price match
+        if (stepsText.includes(exit.exitPoint.toLowerCase())) {
+          totalCost = Math.max(totalCost, exit.price); // highest price match
+          count++;
         }
       });
     }
   });
 
-  return total;
-}
+  return { totalCost, count };
+};
 
-function calculateEastLinkToll(stepsText) {
-  let total = 0;
+const calculateEastLinkTolls = (stepsText) => {
+  let totalCost = 0;
+  let count = 0;
 
   eastLinkTolls.forEach((entry) => {
-    const entryMatch = stepsText.includes(entry.entryPoint);
-    if (entryMatch) {
+    if (stepsText.includes(entry.entryPoint.toLowerCase())) {
       entry.exits.forEach((exit) => {
-        if (stepsText.includes(exit.exitPoint)) {
-          console.log(
-            `Matched EastLink entry: ${entry.entryPoint}, exit: ${exit.exitPoint}, price: ${exit.price}`
-          );
-          total += exit.price;
+        if (stepsText.includes(exit.exitPoint.toLowerCase())) {
+          totalCost += exit.price;
+          count++;
         }
       });
     }
   });
 
-  return total;
-}
+  return { totalCost, count };
+};
 
 
   const isAirportPickup = (pickup) => {
@@ -576,11 +440,6 @@ function calculateEastLinkToll(stepsText) {
     );
   };
 
-  useEffect(() => {
-    if (distanceKm) calculateFare();
-  }, [selected, distanceKm, hasToll, timeType]);
-
-  // ...existing code...
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -634,14 +493,108 @@ function calculateEastLinkToll(stepsText) {
     setContactError("");
     setDestinationSuggestions({});
 
-    onPickupSelect(setPickupLoc)
-    onDestinationsSelect(setDestinationLocs)
+    onPickupSelect(null);
+    onDestinationsSelect([]);
 
-      // Update route with empty destinations
-      // updateRoute(pickupLoc, newLocs);
+    // Update route with empty destinations
+    // updateRoute(pickupLoc, newLocs);
+  };
 
-   };
-  // ...existing code...
+  useEffect(() => {
+    if (distanceKm) calculateFare();
+  }, [selected, distanceKm, hasToll, timeType]);
+
+  // Attach Google Autocomplete once Maps API is ready
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        clearInterval(interval);
+
+        if (pickupInputRef.current) {
+          attachPlacesAutocomplete(pickupInputRef.current, async (place) => {
+            setPickup(place.formatted_address);
+
+            const location = place.geometry?.location
+              ? {
+                  lat: place.geometry.location.lat(),
+                  lng: place.geometry.location.lng(),
+                }
+              : await getGeocode(place);
+
+            if (location) {
+              setPickupLoc(location);
+              onPickupSelect(location);
+            }
+          });
+        }
+      }
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [onPickupSelect]);
+
+  const destinationRefs = useRef([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        clearInterval(interval);
+
+        destinationRefs.current.forEach((input, idx) => {
+          if (input) {
+            const options = {
+              componentRestrictions: { country: "au" },
+              fields: ["formatted_address", "geometry"],
+            };
+            const auto = new window.google.maps.places.Autocomplete(
+              input,
+              options
+            );
+
+            auto.addListener("place_changed", () => {
+              const place = auto.getPlace();
+              if (!place || !place.geometry) return;
+
+              const newDestinations = [...destinations];
+              newDestinations[idx] = place.formatted_address;
+              setDestinations(newDestinations);
+
+              const location = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+              };
+              const newLocs = [...destinationLocs];
+              newLocs[idx] = location;
+              setDestinationLocs(newLocs);
+              onDestinationsSelect(newLocs);
+
+              updateRoute(pickupLoc, newLocs);
+            });
+          }
+        });
+      }
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [destinations, pickupLoc, destinationLocs, onDestinationsSelect]);
+
+  // set initial and later booking time type
+  useEffect(() => {
+    let dateObj;
+
+    if (bookingMode === "now") {
+      dateObj = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
+      );
+    } else if (bookingMode === "later" && dateVal) {
+      const hour = (parseInt(hourVal, 10) % 12) + (ampmVal === "pm" ? 12 : 0);
+      dateObj = new Date(`${dateVal}T${hour}:${minuteVal}:00`);
+    }
+
+    if (dateObj) {
+      setTimeType(determineTimeType(dateObj));
+    }
+  }, [bookingMode, dateVal, hourVal, minuteVal, ampmVal]);
 
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
@@ -675,15 +628,19 @@ function calculateEastLinkToll(stepsText) {
                 endAdornment: (
                   <InputAdornment position="end">
                     {pickup ? (
-                      <IconButton size="small" >
-                        <span onClick={handleDeletePickup} style={{ fontSize: 16 }}>✖</span>
+                      <IconButton size="small">
+                        <span
+                          onClick={handleDeletePickup}
+                          style={{ fontSize: 16 }}
+                        >
+                          ✖
+                        </span>
                       </IconButton>
                     ) : null}
                   </InputAdornment>
                 ),
               }}
             />
-
 
             {pickupSuggestions.length > 0 && (
               <ul className="absolute z-50 bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto w-full">
@@ -959,10 +916,15 @@ function calculateEastLinkToll(stepsText) {
                 }}
                 value={contact}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "");
+                  const value = e.target.value.replace(/\D/g, ""); // only digits
                   setContact(value);
+
+                  if (value.length == 0) {
+                    setContactError(null);
+                  }
+
                   if (value.length === 9 && value.startsWith("4")) {
-                    setContactError("");
+                    setContactError(""); // valid
                   } else {
                     setContactError("Number must be 9 digits and start with 4");
                   }
@@ -1021,7 +983,10 @@ function calculateEastLinkToll(stepsText) {
         </div>
 
         <div className="mt-3">
-          <button type="submit" className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer">
+          <button
+            type="submit"
+            className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer"
+          >
             Request Booking
           </button>
         </div>
