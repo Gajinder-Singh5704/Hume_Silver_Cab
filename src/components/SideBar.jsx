@@ -54,6 +54,9 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [tempHour, setTempHour] = useState(hourVal);
   const [tempMinute, setTempMinute] = useState(minuteVal);
   const [tempAmPm, setTempAmPm] = useState(ampmVal);
+  const [tempTime, setTempTime] = useState(
+    `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
+  );
 
   const [destinationSuggestions, setDestinationSuggestions] = useState({});
 
@@ -582,7 +585,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
         </div>
 
         {/* Booking now/later radio - controlled */}
-        <div className="flex  gap-4 px-4 ml-4 md:ml-0 items-center md:justify-center">
+        <div className="flex  gap-4 px-4 ml-3 md:ml-2 items-center">
           <RadioGroup
             row
             value={bookingMode}
@@ -629,75 +632,92 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
         </div>
 
         {/* If "later", show date/time selects (keeps style minimal) */}
+        {/* // ...existing code... */}
         {bookingMode === "later" && (
-          <div className="px-5 py-2">
-            <div className="mb-3">
-              <label className="block text-sm mb-1">Select date</label>
-              <input
-                type="date"
-                min={new Date().toISOString().split("T")[0]}
-                max={
-                  new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split("T")[0]
-                }
-                className="w-full border rounded px-3 py-2"
-                value={dateVal}
-                onChange={(e) => setDateVal(e.target.value)}
-              />
-            </div>
+          <div className="px-3 py-2">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Pickup Date */}
+              <div className="flex-1">
+                <label className="block text-sm mb-1 font-medium">
+                  Pickup date
+                </label>
+                <input
+                  type="date"
+                  className="w-full border rounded px-3 py-2"
+                  min={new Date().toISOString().split("T")[0]}
+                  max={
+                    new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+                      .toISOString()
+                      .split("T")[0]
+                  }
+                  value={dateVal}
+                  onChange={(e) => setDateVal(e.target.value)}
+                  required
+                />
+              </div>
+              {/* Pickup Time */}
+              {/* Pickup Time */}
+              <div className="flex-1 relative">
+                <label className="block text-sm mb-1 font-medium">
+                  Pickup time
+                </label>
+                <input
+                  type="time"
+                  className="w-full border rounded px-3 py-2"
+                  value={
+                    tempTime ||
+                    (hourVal && minuteVal
+                      ? `${hourVal.padStart(2, "0")}:${minuteVal.padStart(
+                          2,
+                          "0"
+                        )}`
+                      : "")
+                  }
+                  onChange={(e) => setTempTime(e.target.value)}
+                  required
+                  min={
+                    dateVal === new Date().toISOString().split("T")[0]
+                      ? new Date().toTimeString().slice(0, 5)
+                      : "00:00"
+                  }
+                />
 
-            <div className="flex gap-2 items-center">
-              <select
-                value={tempHour}
-                onChange={(e) => setTempHour(e.target.value)}
-                className="border rounded p-2"
-              >
-                {Array.from({ length: 12 }, (_, i) => (i + 1).toString()).map(
-                  (h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  )
-                )}
-              </select>
+                {/* Done button (only visible if tempTime not yet saved) */}
+                {tempTime &&
+                  tempTime !==
+                    `${hourVal.padStart(2, "0")}:${minuteVal.padStart(
+                      2,
+                      "0"
+                    )}` && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const [h, m] = tempTime.split(":");
+                        let newHour = parseInt(h, 10);
+                        let newAmPm = newHour >= 12 ? "pm" : "am";
 
-              <select
-                value={tempMinute}
-                onChange={(e) => setTempMinute(e.target.value)}
-                className="border rounded p-2"
-              >
-                {["00", "15", "30", "45"].map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+                        // convert to 12hr format
+                        if (newHour === 0) {
+                          newHour = 12;
+                        } else if (newHour > 12) {
+                          newHour = newHour - 12;
+                        }
 
-              <select
-                value={tempAmPm}
-                onChange={(e) => setTempAmPm(e.target.value)}
-                className="border rounded p-2"
-              >
-                <option value="am">am</option>
-                <option value="pm">pm</option>
-              </select>
-
-              {/* ✅ Done button */}
-              <button
-                type="button"
-                className="ml-2 px-3 py-1 bg-green-600 text-white rounded"
-                onClick={() => {
-                  setHourVal(tempHour);
-                  setMinuteVal(tempMinute);
-                  setAmpmVal(tempAmPm);
-                }}
-              >
-                Done
-              </button>
+                        setHourVal(String(newHour));
+                        setMinuteVal(m);
+                        setAmpmVal(newAmPm);
+                        setTempTime(""); // clear temp
+                      }}
+                      className="absolute right-2 top-7.5 px-2 py-1 text-sm bg-green-600 text-white rounded"
+                    >
+                      Done
+                    </button>
+                  )}
+              </div>
             </div>
           </div>
         )}
+        {/* // ...existing code... */}
 
         {/* Fixed Price block */}
         <div className="w-full bg-[#F8F6F2] px-4 py-5">
@@ -737,57 +757,56 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
           </h3>
 
           <div className="mb-4">
-  <TextField
-    label="Passenger Name"
-    variant="outlined"
-    fullWidth
-    required
-    placeholder="Passenger name"
-    value={passenger}
-    onChange={(e) => setPassenger(e.target.value)}
-  />
-</div>
+            <TextField
+              label="Passenger Name"
+              variant="outlined"
+              fullWidth
+              required
+              placeholder="Passenger name"
+              value={passenger}
+              onChange={(e) => setPassenger(e.target.value)}
+            />
+          </div>
 
-<div className="flex items-center justify-center gap-2 w-full">
-  <div className="w-[20%] border rounded-sm h-14 flex items-center justify-center gap-1">
-    <img
-      className="h-5"
-      src="https://flagsapi.com/AU/flat/64.png"
-      alt="AU"
-    />
-    +61
-  </div>
-  <div className="flex-grow">
-    <TextField
-      label="Contact Number"
-      variant="outlined"
-      fullWidth
-      required
-      type="tel"
-      inputProps={{
-        pattern: "[0-9]{9}",
-        maxLength: 9,
-      }}
-      value={contact}
-      onChange={(e) => {
-        const value = e.target.value.replace(/\D/g, "");
-        setContact(value);
-        if (value.length === 9 && value.startsWith("4")) {
-          setContactError("");
-        } else {
-          setContactError("Number must be 9 digits and start with 4");
-        }
-      }}
-      error={!!contactError}
-    />
-  </div>
-</div>
+          <div className="flex items-center justify-center gap-2 w-full">
+            <div className="w-[20%] border rounded-sm h-14 flex items-center justify-center gap-1">
+              <img
+                className="h-5"
+                src="https://flagsapi.com/AU/flat/64.png"
+                alt="AU"
+              />
+              +61
+            </div>
+            <div className="flex-grow">
+              <TextField
+                label="Contact Number"
+                variant="outlined"
+                fullWidth
+                required
+                type="tel"
+                inputProps={{
+                  pattern: "[0-9]{9}",
+                  maxLength: 9,
+                }}
+                value={contact}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setContact(value);
+                  if (value.length === 9 && value.startsWith("4")) {
+                    setContactError("");
+                  } else {
+                    setContactError("Number must be 9 digits and start with 4");
+                  }
+                }}
+                error={!!contactError}
+              />
+            </div>
+          </div>
 
-{/* Shared error message below both fields */}
-{contactError && (
-  <p className="text-red-600 text-sm mt-1">{contactError}</p>
-)}
-
+          {/* Shared error message below both fields */}
+          {contactError && (
+            <p className="text-red-600 text-sm mt-1">{contactError}</p>
+          )}
         </div>
 
         {/* Step 3 Payment */}
