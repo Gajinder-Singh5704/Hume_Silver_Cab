@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { cityLinkTolls, eastLinkTolls } from "../assets/tollsData";
 import {
   Box,
   Button,
@@ -236,25 +237,19 @@ function determineTimeType(dateObj) {
   );
 
 const calculateFare = () => {
-  console.log("=== 🟡 Fare Calculation Started ===");
 
   if (!distanceKm) {
-    console.warn("⛔ No distance available. Cannot calculate fare.");
     return null;
   }
 
   const distance = parseInt(distanceKm);
-  console.log(`📏 Distance (km): ${distance} km`);
 
   const tolls = hasToll ? 1 : 0;
-  console.log(`🚧 Toll Detected: ${hasToll ? "YES" : "NO"} | Toll count used in calculation: ${tolls}`);
 
   const bookingFees = 4;
-  console.log(`💰 Booking Fees: $${bookingFees}`);
 
   // Extract selected vehicle safely with fallback
   const { name: vehicleName = "Sedan" } = selected ?? {};
-  console.log(`🚖 Selected Vehicle: ${vehicleName}`);
 
   // Calculate vehicle surcharge
   let vehicleSurcharge = 0;
@@ -270,59 +265,31 @@ const calculateFare = () => {
       vehicleSurcharge = 17.8;
       break;
   }
-  console.log(`➕ Vehicle Surcharge: $${vehicleSurcharge}`);
 
   // Calculate base fare based on timeType
   let base;
   if (timeType === 3) {
     base = 20 + distance * 2.493 + tolls * 17.46 + 7.8;
-    console.log(
-      `⏰ Time Type: Overnight Weekend (3) | Formula: 20 + (${distance} × 2.493) + (${tolls} × 17.46) + 7.8 = $${base.toFixed(
-        2
-      )}`
-    );
   } else if (timeType === 2) {
     base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
-    console.log(
-      `⏰ Time Type: Off-Peak (2) | Formula: 13 + (${distance} × 2.265) + (${tolls} × 17.46) + 6.55 = $${base.toFixed(
-        2
-      )}`
-    );
   } else {
     base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
-    console.log(
-      `⏰ Time Type: Normal (1) | Formula: 8 + (${distance} × 2.037) + (${tolls} × 17.46) + 5.25 = $${base.toFixed(
-        2
-      )}`
-    );
   }
 
   // Apply minimum fare
   let minApplied = base < 40;
   let fareValue = Math.max(base, 40);
-  console.log(
-    minApplied
-      ? `⚠️ Base fare $${base.toFixed(2)} is below minimum $40. Using minimum fare: $40.00`
-      : `✅ Base fare above minimum. Using calculated fare: $${fareValue.toFixed(2)}`
-  );
 
   // Add vehicle surcharge and booking fees
   fareValue += vehicleSurcharge;
-  console.log(`➕ Adding Vehicle Surcharge: +$${vehicleSurcharge} → $${fareValue.toFixed(2)}`);
 
   fareValue += bookingFees;
-  console.log(`➕ Adding Booking Fees: +$${bookingFees} → $${fareValue.toFixed(2)}`);
 
   // Airport surcharge
   if (isAirportPickup(pickup)) {
     fareValue += 4.68;
-    console.log(`🛫 Airport Pickup: +$4.68 → $${fareValue.toFixed(2)}`);
   } else {
-    console.log("🛫 Airport Pickup: NO extra charge applied.");
   }
-
-  console.log("✅ === FINAL FARE CALCULATED ===");
-  console.log(`💵 Final Fare: $${fareValue.toFixed(2)}`);
 
   setFare(fareValue.toFixed(2));
 };
@@ -481,84 +448,119 @@ const calculateFare = () => {
     }
   };
 
-  const updateRoute = (pickup, dests) => {
-    console.log("Calling calculate");
-    if (!pickup || dests.length === 0) {
-      setDistanceKm("");
-      setHasToll(false);
-      setFare(null);
-      return;
-    }
+const updateRoute = (pickup, dests) => {
+  console.log("Calling calculate");
+  if (!pickup || dests.length === 0) {
+    setDistanceKm("");
+    setHasToll(false);
+    setFare(null);
+    return;
+  }
 
-    const service = new window.google.maps.DirectionsService();
+  const service = new window.google.maps.DirectionsService();
 
-    service.route(
-      {
-        origin: pickup,
-        destination: dests[dests.length - 1],
-        waypoints: dests.slice(0, -1).map((loc) => ({
-          location: loc,
-          stopover: true,
-        })),
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === "OK" && result.routes.length > 0) {
-          const leg = result.routes[0].legs.reduce(
-            (acc, l) => {
-              acc.distance += l.distance.value;
-              acc.steps.push(...l.steps);
-              return acc;
-            },
-            { distance: 0, steps: [] }
-          );
+  service.route(
+    {
+      origin: pickup,
+      destination: dests[dests.length - 1],
+      waypoints: dests.slice(0, -1).map((loc) => ({
+        location: loc,
+        stopover: true,
+      })),
+      travelMode: window.google.maps.TravelMode.DRIVING,
+    },
+    (result, status) => {
+      if (status === "OK" && result.routes.length > 0) {
+        const leg = result.routes[0].legs.reduce(
+          (acc, l) => {
+            acc.distance += l.distance.value;
+            acc.steps.push(...l.steps);
+            return acc;
+          },
+          { distance: 0, steps: [] }
+        );
 
-          const km = (leg.distance / 1000).toFixed(1);
-          setDistanceKm(km);
+        const km = (leg.distance / 1000).toFixed(1);
+        setDistanceKm(km);
 
-          const stepsText = leg.steps
-            .map((s) => s.instructions.toLowerCase())
-            .join(" ");
-          const summary = (result.routes[0].summary || "").toLowerCase();
+        const stepsText = leg.steps
+          .map((s) => s.instructions.toLowerCase())
+          .join(" ");
+        const summary = (result.routes[0].summary || "").toLowerCase();
 
-          let pickupAddress = "";
+        // Determine toll road usage
+        const usingCitylink =
+          stepsText.includes("citylink") || summary.includes("citylink");
+        const usingEastlink =
+          stepsText.includes("eastlink") || summary.includes("eastlink");
 
-          // If pickup is string
-          if (typeof pickup === "string") {
-            pickupAddress = pickup;
-          }
-          // If pickup is a Google Places Autocomplete result
-          else if (pickup?.description) {
-            pickupAddress = pickup.description;
-          }
-          // If pickup is an object with `name`
-          else if (pickup?.name) {
-            pickupAddress = pickup.name;
-          }
-          // Otherwise fallback to empty string
-          else {
-            console.warn("Pickup is not a string or place object:", pickup);
-          }
+        let tollCost = 0;
 
-          const toll =
-            stepsText.includes("citylink") ||
-            stepsText.includes("eastlink") ||
-            stepsText.includes("tullamarine fwy") ||
-            stepsText.includes("tollway") ||
-            summary.includes("citylink") ||
-            summary.includes("eastlink") ||
-            summary.includes("tullamarine");
-          setHasToll(toll);
-          calculateFare();
-        } else {
-          console.error("Directions request failed:", status);
-          setDistanceKm("");
-          setHasToll(false);
-          setFare(null);
+        if (usingCitylink) {
+          tollCost = calculateCityLinkToll(stepsText);
         }
+
+        if (usingEastlink) {
+          tollCost += calculateEastLinkToll(stepsText);
+        }
+
+        setHasToll(usingCitylink || usingEastlink);
+        setFare(tollCost);
+        console.log("Toll Cost:", tollCost);
+
+        calculateFare(); // If you already include tolls in fare calculation
+      } else {
+        console.error("Directions request failed:", status);
+        setDistanceKm("");
+        setHasToll(false);
+        setFare(null);
       }
-    );
-  };
+    }
+  );
+};
+
+// ---- Helpers ---- //
+
+function calculateCityLinkToll(stepsText) {
+  let total = 0;
+
+  cityLinkTolls.forEach((entry) => {
+    const entryMatch = stepsText.includes(entry.entryPoint);
+    if (entryMatch) {
+      entry.exits.forEach((exit) => {
+        if (stepsText.includes(exit.exitPoint)) {
+          console.log(
+            `Matched CityLink entry: ${entry.entryPoint}, exit: ${exit.exitPoint}, price: ${exit.price}`
+          );
+          total = Math.max(total, exit.price); // use highest price match
+        }
+      });
+    }
+  });
+
+  return total;
+}
+
+function calculateEastLinkToll(stepsText) {
+  let total = 0;
+
+  eastLinkTolls.forEach((entry) => {
+    const entryMatch = stepsText.includes(entry.entryPoint);
+    if (entryMatch) {
+      entry.exits.forEach((exit) => {
+        if (stepsText.includes(exit.exitPoint)) {
+          console.log(
+            `Matched EastLink entry: ${entry.entryPoint}, exit: ${exit.exitPoint}, price: ${exit.price}`
+          );
+          total += exit.price;
+        }
+      });
+    }
+  });
+
+  return total;
+}
+
 
   const isAirportPickup = (pickup) => {
     let pickupAddress = "";
@@ -882,8 +884,7 @@ const calculateFare = () => {
                         setHourVal(String(newHour));
                         setMinuteVal(m);
                         setAmpmVal(newAmPm);
-                        setTempTime(""); 
-                        calculateFare()
+                        setTempTime(""); // clear temp
                       }}
                       className="absolute right-2 top-7.5 px-2 py-1 text-sm bg-green-600 text-white rounded"
                     >
@@ -1004,6 +1005,7 @@ const calculateFare = () => {
         {/* Step 4 Driver Instruction */}
         <div className="px-5 py-6">
           <h3 className="text-sm mb-4">
+            {" "}
             Step 4 of 4 <b>Driver Instruction</b>
           </h3>
 
