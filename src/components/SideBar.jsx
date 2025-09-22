@@ -304,7 +304,6 @@ const calculateFare = () => {
   setFare(fareValue.toFixed(2));
 };
 
-
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
   const handlePickupChange = async (e) => {
     const value = e.target.value;
