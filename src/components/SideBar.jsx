@@ -29,6 +29,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [tollPrice, setTollPrice] = useState(0)
 
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
@@ -37,6 +38,34 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [destinationLocs, setDestinationLocs] = useState([]);
 
   // Attach Google Autocomplete once Maps API is ready
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     if (window.google && window.google.maps && window.google.maps.places) {
+  //       clearInterval(interval);
+
+  //       if (pickupInputRef.current) {
+  //         attachPlacesAutocomplete(pickupInputRef.current, async (place) => {
+  //           setPickup(place.formatted_address);
+
+  //           const location = place.geometry?.location
+  //             ? {
+  //               lat: place.geometry.location.lat(),
+  //               lng: place.geometry.location.lng(),
+  //             }
+  //             : await getGeocode(place);
+
+  //           if (location) {
+  //             setPickupLoc(location);
+  //             onPickupSelect(location);
+  //           }
+  //         });
+  //       }
+  //     }
+  //   }, 300);
+
+  //   return () => clearInterval(interval);
+  // }, [onPickupSelect]);
+
 
   const destinationRefs = useRef([]);
 
@@ -114,79 +143,74 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
   );
 
-  const calculateFare = () => {
-    console.log("=== Fare Calculation Started ===");
+const calculateFare = () => {
+  console.log("=== Fare Calculation Started ===");
 
-    if (!distanceKm) {
-      console.log("❌ No distance available — aborting fare calculation.");
-      return null;
-    }
+  if (!distanceKm) {
+    console.log("❌ No distance available — aborting fare calculation.");
+    return null;
+  }
 
-    const distance = parseInt(distanceKm);
-    console.log("📏 Distance (km):", distance);
+  const distance = parseInt(distanceKm);
+  console.log("📏 Distance (km):", distance);
 
-    const tollCost = hasToll && fare ? parseFloat(fare) : 0;
-    console.log("💰 Toll cost included:", tollCost);
+  const tollCost = hasToll ? parseFloat(tollPrice) : 0;
+  console.log("💰 Toll cost included:", tollCost);
 
-    const bookingFees = 4;
-    console.log("🧾 Booking fee:", bookingFees);
+  const bookingFees = 4;
+  console.log("🧾 Booking fee:", bookingFees);
 
-    const { name: vehicleName = "Sedan" } = selected ?? {};
-    console.log("🚖 Selected vehicle:", vehicleName);
+  const { name: vehicleName = "Sedan" } = selected ?? {};
+  console.log("🚖 Selected vehicle:", vehicleName);
 
-    // Vehicle surcharge
-    let vehicleSurcharge = 0;
-    switch (vehicleName) {
-      case "Sedan":
-        vehicleSurcharge = 0;
-        break;
-      case "Silver Service":
-        vehicleSurcharge = 11;
-        break;
-      case "SUV":
-      case "Maxi Taxi":
-        vehicleSurcharge = 17.8;
-        break;
-    }
-    console.log("🚘 Vehicle surcharge:", vehicleSurcharge);
+  // Vehicle surcharge
+  let vehicleSurcharge = 0;
+  switch (vehicleName) {
+    case "Sedan":
+      vehicleSurcharge = 0;
+      break;
+    case "Silver Service":
+      vehicleSurcharge = 11;
+      break;
+    case "SUV":
+    case "MAXI TAXI":
+      vehicleSurcharge = 17.8;
+      break;
+  }
+  console.log("🚘 Vehicle surcharge:", vehicleSurcharge);
 
-    // Base fare calculation based on time type
-    let base;
-    if (timeType === 3) {
-      base = 20 + distance * 2.493 + tollCost + 7.8;
-      console.log(
-        "⏰ Time type: Peak (3) → Base fare formula: 20 + distance*2.493 + toll + 7.8"
-      );
-    } else if (timeType === 2) {
-      base = 13 + distance * 2.265 + tollCost + 6.55;
-      console.log(
-        "⏰ Time type: Shoulder (2) → Base fare formula: 13 + distance*2.265 + toll + 6.55"
-      );
-    } else {
-      base = 8 + distance * 2.037 + tollCost + 5.25;
-      console.log(
-        "⏰ Time type: Off-Peak (else) → Base fare formula: 8 + distance*2.037 + toll + 5.25"
-      );
-    }
-    console.log("📊 Base fare before minimum check:", base);
+  // Base fare calculation based on time type
+  let base;
+  if (timeType === 3) {
+    base = 20 + distance * 2.493 + tollCost + 7.8;
+    console.log("⏰ Time type: Peak (3) → Base fare formula: 20 + distance*2.493 + toll + 7.8");
+  } else if (timeType === 2) {
+    base = 13 + distance * 2.265 + tollCost + 6.55;
+    console.log("⏰ Time type: Shoulder (2) → Base fare formula: 13 + distance*2.265 + toll + 6.55");
+  } else {
+    base = 8 + distance * 2.037 + tollCost + 5.25;
+    console.log("⏰ Time type: Off-Peak (else) → Base fare formula: 8 + distance*2.037 + toll + 5.25");
+  }
+  console.log("📊 Base fare before minimum check:", base);
 
-    // Apply minimum fare
-    let fareValue = Math.max(base, 40);
-    console.log("🔎 Applied minimum fare (40 if needed):", fareValue);
+  // Apply minimum fare
+  let fareValue = Math.max(base, 40);
+  console.log("🔎 Applied minimum fare (40 if needed):", fareValue);
 
-    // Add surcharges
-    fareValue += vehicleSurcharge + bookingFees;
-    console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
+  // Add surcharges
+  fareValue += vehicleSurcharge + bookingFees;
+  console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
 
-    // Airport surcharge
-    if (isAirportPickup(pickup)) {
-      fareValue += 4.68;
-      console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
-    }
+  // Airport surcharge
+  if (isAirportPickup(pickup)) {
+    fareValue += 4.68;
+    console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
+  }
 
-    console.log("✅ Final fare calculated:", fareValue.toFixed(2));
-    setFare(fareValue.toFixed(2));
-  };
+  console.log("✅ Final fare calculated:", fareValue.toFixed(2));
+  setFare(fareValue.toFixed(2));
+};
+
 
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
   const handlePickupChange = async (e) => {
@@ -391,7 +415,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
           const toll = calculateToll(stepsText);
 
           setHasToll(toll > 0);
-          setFare(toll);
+          setTollPrice(toll)
           console.log("Toll Cost:", toll);
           calculateFare(); // If you already include tolls in fare calculation
         } else {
