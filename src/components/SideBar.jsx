@@ -529,7 +529,7 @@ const updateRoute = (pickup, dests) => {
         </div>
 
         {/* Booking now/later radio - controlled */}
-        <div className="flex  gap-4 px-4 ml-4 md:ml-0 items-center md:justify-center">
+        <div className="flex  gap-4 px-4 ml-3 md:ml-2 items-center">
           <RadioGroup
             row
             value={bookingMode}
@@ -576,62 +576,46 @@ const updateRoute = (pickup, dests) => {
         </div>
 
         {/* If "later", show date/time selects (keeps style minimal) */}
+        {/* // ...existing code... */}
         {bookingMode === "later" && (
-          <div className="px-5 py-2">
-            <div className="mb-3">
-              <label className="block text-sm mb-1">Select date</label>
-              <input
-                type="date"
-                min={new Date().toISOString().split("T")[0]}
-                max={
-                  new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split("T")[0]
-                } // 15 days from now
-                className="w-full border rounded px-3 py-2"
-                value={dateVal}
-                onChange={(e) => setDateVal(e.target.value)}
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <select
-                value={hourVal}
-                onChange={(e) => setHourVal(e.target.value)}
-                className="border rounded p-2"
-              >
-                {Array.from({ length: 12 }, (_, i) => (i + 1).toString()).map(
-                  (h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  )
-                )}
-              </select>
-
-              <select
-                value={minuteVal}
-                onChange={(e) => setMinuteVal(e.target.value)}
-                className="border rounded p-2"
-              >
-                {["00", "15", "30", "45"].map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={ampmVal}
-                onChange={(e) => setAmpmVal(e.target.value)}
-                className="border rounded p-2"
-              >
-                <option value="am">am</option>
-                <option value="pm">pm</option>
-              </select>
+          <div className="px-3 py-2">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Pickup Date */}
+              <div className="flex-1">
+                <label className="block text-sm mb-1 font-medium">Pickup date</label>
+                <input
+                  type="date"
+                  className="w-full border rounded px-3 py-2"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={dateVal}
+                  onChange={(e) => setDateVal(e.target.value)}
+                  required
+                />
+              </div>
+              {/* Pickup Time */}
+              <div className="flex-1">
+                <label className="block text-sm mb-1 font-medium">Pickup time</label>
+                <input
+                  type="time"
+                  className="w-full border rounded px-3 py-2"
+                  value={hourVal && minuteVal ? `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}` : ""}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(":");
+                    setHourVal(h);
+                    setMinuteVal(m);
+                  }}
+                  required
+                  min={
+                    dateVal === new Date().toISOString().split("T")[0]
+                      ? new Date().toTimeString().slice(0, 5)
+                      : "00:00"
+                  }
+                />
+              </div>
             </div>
           </div>
         )}
+        {/* // ...existing code... */}
 
         {/* Fixed Price block */}
         <div className="w-full bg-[#F8F6F2] px-4 py-5">
