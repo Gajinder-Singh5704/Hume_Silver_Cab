@@ -1,18 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   FormControlLabel,
   Radio,
   RadioGroup,
   TextField,
-  ToggleButton,
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import { CheckIcon, CrossIcon, LockIcon, LockOpen } from "lucide-react";
-import { IoAddCircle } from "react-icons/io5";
+import { LockIcon} from "lucide-react";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
 import { getPlaces, getGeocode, attachPlacesAutocomplete } from "../hooks/map";
@@ -144,13 +141,6 @@ useEffect(() => {
 
   return () => clearInterval(interval);
 }, [destinations, pickupLoc, destinationLocs, onDestinationsSelect]);
-
-  // add new state for map overlays
-  // const [destinationLocs, setDestinationLocs] = useState([]); // array of {lat, lng}
-
-  // internal geo selections
-  // const [pickupLoc, setPickupLoc] = useState(null); // {lat, lng}
-  // const [destinationLoc, setDestinationLoc] = useState(null);
 
   // route & toll
   const [distanceKm, setDistanceKm] = useState("");
