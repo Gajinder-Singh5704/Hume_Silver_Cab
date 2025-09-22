@@ -51,14 +51,9 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
 
-  const [tempHour, setTempHour] = useState(hourVal);
-  const [tempMinute, setTempMinute] = useState(minuteVal);
-  const [tempAmPm, setTempAmPm] = useState(ampmVal);
   const [tempTime, setTempTime] = useState(
     `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
   );
-
-  const [destinationSuggestions, setDestinationSuggestions] = useState({});
 
   // refs for hidden inputs used by external Forminator code
   const distanceRef = useRef(null);
@@ -179,75 +174,6 @@ const calculateFare = () => {
   setFare(fareValue.toFixed(2));
 };
 
-
-  // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
-  const handlePickupChange = async (e) => {
-    const value = e.target.value;
-    setPickup(value);
-    setPickupLoc(null); // reset loc until picked
-
-    if (!value) {
-      setPickupSuggestions([]);
-      return;
-    }
-
-    try {
-      const data = await getPlaces(value);
-      if (data?.predictions) setPickupSuggestions(data.predictions);
-    } catch (err) {
-      console.error("Error fetching pickup places:", err);
-      setPickupSuggestions([]);
-    }
-  };
-
-  const handleDestinationChange = async (e, index) => {
-    const value = e.target.value;
-    const newDestinations = [...destinations];
-    newDestinations[index] = value;
-    setDestinations(newDestinations);
-
-    if (!value) {
-      setDestinationSuggestions((prev) => ({ ...prev, [index]: [] }));
-      return;
-    }
-
-    try {
-      const data = await getPlaces(value);
-      if (data?.predictions) {
-        setDestinationSuggestions((prev) => ({
-          ...prev,
-          [index]: data.predictions,
-        }));
-      }
-    } catch (err) {
-      console.error("Error fetching destination places:", err);
-      setDestinationSuggestions((prev) => ({ ...prev, [index]: [] }));
-    }
-  };
-
-  const handleDestinationSelect = async (s, index) => {
-    const newDestinations = [...destinations];
-    newDestinations[index] = s.description;
-    setDestinations(newDestinations);
-
-    setDestinationSuggestions((prev) => ({ ...prev, [index]: [] }));
-
-    try {
-      const location = await getGeocode(s);
-      if (location) {
-        const newLocs = [...destinationLocs];
-        newLocs[index] = location;
-        setDestinationLocs(newLocs);
-
-        // ✅ send all updated destination locations to parent
-        onDestinationsSelect(newLocs);
-        updateRoute(pickupLoc, newLocs);
-      }
-    } catch (err) {
-      console.error("Failed to select destination", err);
-    }
-  };
-
   const handleDeleteDestination = (index) => {
     // If this is the last remaining field, just clear it
     if (destinations.length === 1) {
@@ -312,12 +238,6 @@ const calculateFare = () => {
   const handlePaymentSelect = (paymentMethod) => {
     setSelectedPayment(paymentMethod);
     console.log("Selected payment:", paymentMethod);
-  };
-
-  const handleChange = (index, value) => {
-    const newDestinations = [...destinations];
-    newDestinations[index] = value;
-    setDestinations(newDestinations);
   };
 
   const handleAdd = () => {
@@ -537,8 +457,6 @@ const calculateFare = () => {
     setHasToll(false);
     setDistanceKm("");
     setContactError("");
-    setDestinationSuggestions({});
-
     onPickupSelect(setPickupLoc);
     onDestinationsSelect(setDestinationLocs);
 

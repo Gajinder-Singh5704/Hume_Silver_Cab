@@ -4,7 +4,7 @@ import images from "../../assets/images";
 import { IoMenu } from "react-icons/io5";
 import SmallScreenNavComponent from "./SmallScreenNavComponent";
 import MdScreenNavComponent from "./MdScreenNavComponent";
-import { navItems } from "../../data/data";
+import { navItems } from "../../data/data.jsx";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

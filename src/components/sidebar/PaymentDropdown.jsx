@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp} from 'lucide-react';
-import { defaultPaymentOptions } from '../../data/data';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { defaultPaymentOptions } from '../../data/data.jsx';
 
 const PaymentDropdown = ({ 
   paymentOptions = [], 

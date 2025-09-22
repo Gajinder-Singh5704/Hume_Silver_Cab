@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Info, Package } from 'lucide-react';
-import { defaultVehicleOptions } from '../../data/data.js';
+import { defaultVehicleOptions } from '../../data/data.jsx';
 
 const CarDropdown = ({ 
   vehicleOptions = [], 

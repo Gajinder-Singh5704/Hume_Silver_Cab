@@ -1,4 +1,4 @@
-import { mdNavItems } from "../../data/data";
+import { mdNavItems } from "../../data/data.jsx";
 export default function MdScreenNavComponent() {
  
   return (
