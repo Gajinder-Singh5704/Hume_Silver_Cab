@@ -15,13 +15,13 @@ import { CheckIcon, CrossIcon, LockIcon, LockOpen } from "lucide-react";
 import { IoAddCircle } from "react-icons/io5";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
-import { getPlaces, getGeocode } from "../hooks/map";
+import { getPlaces, getGeocode, attachPlacesAutocomplete } from "../hooks/map";
 import PaymentDropdown from "./PaymentDropdown";
 
 const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
-  const [pickup, setPickup] = useState("");
+  // const [pickup, setPickup] = useState("");
   const [destinations, setDestinations] = useState([""]);
   const [passenger, setPassenger] = useState("");
   const [contact, setContact] = useState("");
@@ -30,11 +30,126 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [selected, setSelected] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
+  const [pickup, setPickup] = useState("");
+  const pickupInputRef = useRef(null);
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    if (window.google && window.google.maps && window.google.maps.places) {
+      clearInterval(interval);
+
+      if (pickupInputRef.current) {
+        const options = {
+          componentRestrictions: { country: "au" },
+          fields: ["formatted_address", "geometry"],
+        };
+
+        const pickupAuto = new window.google.maps.places.Autocomplete(
+          pickupInputRef.current,
+          options
+        );
+
+        pickupAuto.addListener("place_changed", () => {
+          const place = pickupAuto.getPlace();
+          if (!place || !place.geometry) return;
+
+          setPickup(place.formatted_address);
+
+          const location = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          };
+          setPickupLoc(location);
+          onPickupSelect(location);
+        });
+      }
+    }
+  }, 300);
+
+  return () => clearInterval(interval);
+}, [onPickupSelect]);
+
+
+  const [pickupLoc, setPickupLoc] = useState(null);
+  const [destinationLocs, setDestinationLocs] = useState([]);
+
+  // Attach Google Autocomplete once Maps API is ready
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        clearInterval(interval);
+
+        if (pickupInputRef.current) {
+          attachPlacesAutocomplete(pickupInputRef.current, async (place) => {
+            setPickup(place.formatted_address);
+
+            const location = place.geometry?.location
+              ? {
+                  lat: place.geometry.location.lat(),
+                  lng: place.geometry.location.lng(),
+                }
+              : await getGeocode(place);
+
+            if (location) {
+              setPickupLoc(location);
+              onPickupSelect(location);
+            }
+          });
+        }
+      }
+    }, 300);
+
+    return () => clearInterval(interval); 
+  }, [onPickupSelect]);
+
+
+  const destinationRefs = useRef([]);
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    if (window.google && window.google.maps && window.google.maps.places) {
+      clearInterval(interval);
+
+      destinationRefs.current.forEach((input, idx) => {
+        if (input) {
+          const options = {
+            componentRestrictions: { country: "au" },
+            fields: ["formatted_address", "geometry"],
+          };
+          const auto = new window.google.maps.places.Autocomplete(input, options);
+
+          auto.addListener("place_changed", () => {
+            const place = auto.getPlace();
+            if (!place || !place.geometry) return;
+
+            const newDestinations = [...destinations];
+            newDestinations[idx] = place.formatted_address;
+            setDestinations(newDestinations);
+
+            const location = {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            };
+            const newLocs = [...destinationLocs];
+            newLocs[idx] = location;
+            setDestinationLocs(newLocs);
+            onDestinationsSelect(newLocs);
+
+            updateRoute(pickupLoc, newLocs);
+          });
+        }
+      });
+    }
+  }, 300);
+
+  return () => clearInterval(interval);
+}, [destinations, pickupLoc, destinationLocs, onDestinationsSelect]);
+
   // add new state for map overlays
-  const [destinationLocs, setDestinationLocs] = useState([]); // array of {lat, lng}
+  // const [destinationLocs, setDestinationLocs] = useState([]); // array of {lat, lng}
 
   // internal geo selections
-  const [pickupLoc, setPickupLoc] = useState(null); // {lat, lng}
+  // const [pickupLoc, setPickupLoc] = useState(null); // {lat, lng}
   // const [destinationLoc, setDestinationLoc] = useState(null);
 
   // route & toll
@@ -471,18 +586,19 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
           <div className="mb-4 relative">
             <TextField
+              inputRef={pickupInputRef} // attach ref here
               label="Add pickup (required)"
               variant="outlined"
               fullWidth
               required
               placeholder="Add your pickup location"
               value={pickup}
-              onChange={handlePickupChange}
+              onChange={(e) => setPickup(e.target.value)} // just update local state
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     {pickup ? (
-                      <IconButton size="small">
+                      <IconButton size="small" onClick={() => setPickup("")}>
                         <span style={{ fontSize: 16 }}>✖</span>
                       </IconButton>
                     ) : null}
@@ -490,6 +606,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                 ),
               }}
             />
+
 
             {pickupSuggestions.length > 0 && (
               <ul className="absolute z-50 bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto w-full">
@@ -519,16 +636,21 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                   variant="outlined"
                   fullWidth
                   value={destination}
-                  onChange={(e) => handleDestinationChange(e, index)}
+                  onChange={(e) => {
+                    const newDestinations = [...destinations];
+                    newDestinations[index] = e.target.value;
+                    setDestinations(newDestinations);
+                  }}
                   required
                   disabled={!pickup}
+                  inputRef={(el) => (destinationRefs.current[index] = el)}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
                         {destination && (
                           <IconButton
                             size="small"
-                            onClick={() => handleDeleteDestination(index)} // clear input but keep field
+                            onClick={() => handleDeleteDestination(index)}
                           >
                             <span style={{ fontSize: 16 }}>✖</span>
                           </IconButton>
@@ -537,36 +659,6 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                     ),
                   }}
                 />
-
-                {/* Delete button for the entire field */}
-                {destinations.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteDestination(index)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-red-500 text-white rounded"
-                  >
-                    Delete
-                  </button>
-                )}
-
-                {destinationSuggestions[index]?.length > 0 && (
-                  <ul className="absolute z-50 bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto w-full">
-                    {destinationSuggestions[index].map((s) => (
-                      <li
-                        key={s.place_id}
-                        className="p-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleDestinationSelect(s, index)}
-                      >
-                        <span className="font-medium">
-                          {s.structured_formatting.main_text}
-                        </span>
-                        <span className="text-gray-500 ml-2 text-sm">
-                          {s.structured_formatting.secondary_text}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
             ))}
 

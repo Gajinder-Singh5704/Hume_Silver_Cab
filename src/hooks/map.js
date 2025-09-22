@@ -26,6 +26,34 @@ export const getPlaces = async (input) => {
   });
 };
 
+
+// hooks/map.js
+export const attachPlacesAutocomplete = (inputElement, onPlaceSelected) => {
+  if (!window.google || !window.google.maps || !window.google.maps.places) {
+    console.warn("Google Maps SDK not loaded yet");
+    return null;
+  }
+
+  const options = {
+    types: ["(cities)"], // optional
+    componentRestrictions: { country: "au" },
+    fields: ["formatted_address", "geometry", "place_id"],
+  };
+
+  const autocomplete = new window.google.maps.places.Autocomplete(
+    inputElement,
+    options
+  );
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (onPlaceSelected) onPlaceSelected(place);
+  });
+
+  return autocomplete;
+};
+
+
 // get lat lon 
 export const getGeocode = (s) => {
   return new Promise((resolve, reject) => {
