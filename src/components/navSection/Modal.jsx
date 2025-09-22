@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { getPlaces , getGeocode } from "../../hooks/map";
+import { getGeocode } from "../../hooks/map";
 
 export default function Modal({ onClose , onPlaceSelect}) {
   const [query, setQuery] = useState("");

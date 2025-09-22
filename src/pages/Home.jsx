@@ -1,7 +1,7 @@
 import MapSection from "../components/map/MapSection.jsx";
 import Navbar from "../components/navbar/Navbar.jsx";
 import NavSection from "../components/navSection/NavSection.jsx";
-import SideBar from "../components/sidebar/SideBar.jsx"
+import SideBar from "../components/sidebar/SideBar.jsx";
 import { useState } from "react";
 
 const Home = () => {
@@ -14,34 +14,23 @@ const Home = () => {
       <Navbar />
       <NavSection onPlaceSelect={setSelectedPlace} />
 
-      <div className="hidden md:flex w-full h-[calc(100vh-100px)]">
-        <div className="w-[380px] border-r">
+      {/* Wrapper handles both sm & lg */}
+      <div className="flex flex-col md:flex-row w-full h-[calc(100vh-100px)]">
+        
+        {/* Sidebar */}
+        <div className="md:w-[380px] md:border-r order-2 md:order-1 h-[50vh] md:h-auto border-t md:border-t-0 overflow-y-auto">
           <SideBar
             onPickupSelect={setSelectedPickup}
             onDestinationsSelect={setSelectedDestinations}
           />
         </div>
-        <div className="flex-1">
-          <MapSection
-            selectedPlace={selectedPlace}
-            selectedPickup={selectedPickup}
-            destinations={destinations}
-          />
-        </div>
-      </div>
 
-      <div className="flex flex-col md:hidden w-full h-[calc(100vh-100px)]">
-        <div className="h-[50vh]">
+        {/* Map Section */}
+        <div className="flex-1 order-1 md:order-2 h-[50vh] md:h-auto">
           <MapSection
             selectedPlace={selectedPlace}
             selectedPickup={selectedPickup}
             destinations={destinations}
-          />
-        </div>
-        <div className="h-[50vh] overflow-y-auto border-t">
-          <SideBar
-            onPickupSelect={setSelectedPickup}
-            onDestinationsSelect={setSelectedDestinations}
           />
         </div>
       </div>

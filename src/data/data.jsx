@@ -1,6 +1,6 @@
-import React from "react";
 import images from "../assets/images";
 import { CreditCard, Wallet} from 'lucide-react';
+
 // navbar 
 export const navItems = [
     // { label: "Fare estimate", path: "/fare-estimate" },

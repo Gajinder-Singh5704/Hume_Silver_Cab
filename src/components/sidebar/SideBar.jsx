@@ -10,10 +10,12 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import {  LockIcon } from "lucide-react";
+import { LockIcon } from "lucide-react";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
-import { getPlaces, getGeocode, attachPlacesAutocomplete } from "../../hooks/map";
+import {
+  getGeocode,
+} from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
 
 const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
@@ -27,14 +29,14 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const [tollPrice, setTollPrice] = useState(0)
+  const [tollPrice, setTollPrice] = useState(0);
 
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
 
   const [pickupLoc, setPickupLoc] = useState(null);
   const [destinationLocs, setDestinationLocs] = useState([]);
-  
+
   const destinationRefs = useRef([]);
 
   // route & toll
@@ -106,73 +108,79 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
   );
 
-const calculateFare = () => {
-  console.log("=== Fare Calculation Started ===");
+  const calculateFare = () => {
+    console.log("=== Fare Calculation Started ===");
 
-  if (!distanceKm) {
-    console.log("❌ No distance available — aborting fare calculation.");
-    return null;
-  }
+    if (!distanceKm) {
+      console.log("❌ No distance available — aborting fare calculation.");
+      return null;
+    }
 
-  const distance = parseInt(distanceKm);
-  console.log("📏 Distance (km):", distance);
+    const distance = parseInt(distanceKm);
+    console.log("📏 Distance (km):", distance);
 
-  const tollCost = hasToll ? parseFloat(tollPrice) : 0;
-  console.log("💰 Toll cost included:", tollCost);
+    const tollCost = hasToll ? parseFloat(tollPrice) : 0;
+    console.log("💰 Toll cost included:", tollCost);
 
-  const bookingFees = 4;
-  console.log("🧾 Booking fee:", bookingFees);
+    const bookingFees = 4;
+    console.log("🧾 Booking fee:", bookingFees);
 
-  const { name: vehicleName = "Sedan" } = selected ?? {};
-  console.log("🚖 Selected vehicle:", vehicleName);
+    const { name: vehicleName = "Sedan" } = selected ?? {};
+    console.log("🚖 Selected vehicle:", vehicleName);
 
-  // Vehicle surcharge
-  let vehicleSurcharge = 0;
-  switch (vehicleName) {
-    case "Sedan":
-      vehicleSurcharge = 0;
-      break;
-    case "Silver Service":
-      vehicleSurcharge = 11;
-      break;
-    case "SUV":
-    case "MAXI TAXI":
-      vehicleSurcharge = 17.8;
-      break;
-  }
-  console.log("🚘 Vehicle surcharge:", vehicleSurcharge);
+    // Vehicle surcharge
+    let vehicleSurcharge = 0;
+    switch (vehicleName) {
+      case "Sedan":
+        vehicleSurcharge = 0;
+        break;
+      case "Silver Service":
+        vehicleSurcharge = 11;
+        break;
+      case "SUV":
+      case "MAXI TAXI":
+        vehicleSurcharge = 17.8;
+        break;
+    }
+    console.log("🚘 Vehicle surcharge:", vehicleSurcharge);
 
-  // Base fare calculation based on time type
-  let base;
-  if (timeType === 3) {
-    base = 20 + distance * 2.493 + tollCost + 7.8;
-    console.log("⏰ Time type: Peak (3) → Base fare formula: 20 + distance*2.493 + toll + 7.8");
-  } else if (timeType === 2) {
-    base = 13 + distance * 2.265 + tollCost + 6.55;
-    console.log("⏰ Time type: Shoulder (2) → Base fare formula: 13 + distance*2.265 + toll + 6.55");
-  } else {
-    base = 8 + distance * 2.037 + tollCost + 5.25;
-    console.log("⏰ Time type: Off-Peak (else) → Base fare formula: 8 + distance*2.037 + toll + 5.25");
-  }
-  console.log("📊 Base fare before minimum check:", base);
+    // Base fare calculation based on time type
+    let base;
+    if (timeType === 3) {
+      base = 20 + distance * 2.493 + tollCost + 7.8;
+      console.log(
+        "⏰ Time type: Peak (3) → Base fare formula: 20 + distance*2.493 + toll + 7.8"
+      );
+    } else if (timeType === 2) {
+      base = 13 + distance * 2.265 + tollCost + 6.55;
+      console.log(
+        "⏰ Time type: Shoulder (2) → Base fare formula: 13 + distance*2.265 + toll + 6.55"
+      );
+    } else {
+      base = 8 + distance * 2.037 + tollCost + 5.25;
+      console.log(
+        "⏰ Time type: Off-Peak (else) → Base fare formula: 8 + distance*2.037 + toll + 5.25"
+      );
+    }
+    console.log("📊 Base fare before minimum check:", base);
 
-  // Apply minimum fare
-  let fareValue = Math.max(base, 40);
-  console.log("🔎 Applied minimum fare (40 if needed):", fareValue);
+    // Apply minimum fare
+    let fareValue = Math.max(base, 40);
+    console.log("🔎 Applied minimum fare (40 if needed):", fareValue);
 
-  // Add surcharges
-  fareValue += vehicleSurcharge + bookingFees;
-  console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
+    // Add surcharges
+    fareValue += vehicleSurcharge + bookingFees;
+    console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
 
-  // Airport surcharge
-  if (isAirportPickup(pickup)) {
-    fareValue += 4.68;
-    console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
-  }
+    // Airport surcharge
+    if (isAirportPickup(pickup)) {
+      fareValue += 4.68;
+      console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
+    }
 
-  console.log("✅ Final fare calculated:", fareValue.toFixed(2));
-  setFare(fareValue.toFixed(2));
-};
+    console.log("✅ Final fare calculated:", fareValue.toFixed(2));
+    setFare(fareValue.toFixed(2));
+  };
 
   const handleDeleteDestination = (index) => {
     // If this is the last remaining field, just clear it
@@ -211,12 +219,16 @@ const calculateFare = () => {
     setPickupLoc(null); // Clear location object
     setPickupSuggestions([]); // Clear any autocomplete suggestions
 
+    setDestinations([""]);
+    setDestinationLocs(null);
+
     // Notify parent that pickup is now empty
+    onDestinationsSelect([]);
     onPickupSelect(null);
 
     // Also reset route if neede
     // d
-    updateRoute(null, destinationLocs);
+    updateRoute(null, null);
   };
 
   const handlePickupSelect = async (s) => {
@@ -264,8 +276,7 @@ const calculateFare = () => {
 
     const service = new window.google.maps.DirectionsService();
 
-    service.route(
-      {
+    service.route({
         origin: pickup,
         destination: dests[dests.length - 1],
         waypoints: dests.slice(0, -1).map((loc) => ({
@@ -303,7 +314,7 @@ const calculateFare = () => {
           const toll = calculateToll(stepsText);
 
           setHasToll(toll > 0);
-          setTollPrice(toll)
+          setTollPrice(toll);
           console.log("Toll Cost:", toll);
           calculateFare(); // If you already include tolls in fare calculation
         } else {
@@ -465,80 +476,80 @@ const calculateFare = () => {
   };
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        clearInterval(interval);
+  const interval = setInterval(() => {
+    if (window.google && window.google.maps && window.google.maps.places) {
+      clearInterval(interval);
 
-        if (pickupInputRef.current) {
-          attachPlacesAutocomplete(pickupInputRef.current, async (place) => {
-            setPickup(place.formatted_address);
+      // Attach destination autocomplete
+      destinationRefs.current.forEach((input, idx) => {
+        if (input) {
+          const options = {
+            componentRestrictions: { country: "au" },
+            fields: ["formatted_address", "geometry"],
+          };
+          const auto = new window.google.maps.places.Autocomplete(input, options);
 
-            const location = place.geometry?.location
-              ? {
-                  lat: place.geometry.location.lat(),
-                  lng: place.geometry.location.lng(),
-                }
-              : await getGeocode(place);
+          auto.addListener("place_changed", () => {
+            const place = auto.getPlace();
+            if (!place || !place.geometry) return;
 
-            if (location) {
-              setPickupLoc(location);
-              onPickupSelect(location);
-            }
+            const newDestinations = [...destinations];
+            newDestinations[idx] = place.formatted_address;
+            setDestinations(newDestinations);
+
+            const location = {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            };
+            const newLocs = [...destinationLocs];
+            newLocs[idx] = location;
+            setDestinationLocs(newLocs);
+            onDestinationsSelect(newLocs);
+
+            updateRoute(pickupLoc, newLocs);
           });
         }
-      }
-    }, 300);
+      });
 
-    return () => clearInterval(interval);
-  }, [onPickupSelect]);
+      // Attach pickup autocomplete
+      if (pickupInputRef.current) {
+        const options = {
+          componentRestrictions: { country: "au" },
+          fields: ["formatted_address", "geometry"],
+        };
+        const autoPickup = new window.google.maps.places.Autocomplete(
+          pickupInputRef.current,
+          options
+        );
+
+        autoPickup.addListener("place_changed", () => {
+          const place = autoPickup.getPlace();
+          if (!place || !place.geometry) return;
+
+          setPickup(place.formatted_address);
+
+          const location = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          };
+          setPickupLoc(location);
+          onPickupSelect(location);
+
+          // ✅ Make behavior consistent: trigger route update
+          updateRoute(location, destinationLocs);
+        });
+      }
+    }
+  }, 300);
+
+  return () => clearInterval(interval);
+}, [destinations, pickupLoc, destinationLocs, onDestinationsSelect, onPickupSelect]);
 
   useEffect(() => {
     if (distanceKm) calculateFare();
   }, [selected, distanceKm, hasToll, timeType]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        clearInterval(interval);
-
-        destinationRefs.current.forEach((input, idx) => {
-          if (input) {
-            const options = {
-              componentRestrictions: { country: "au" },
-              fields: ["formatted_address", "geometry"],
-            };
-            const auto = new window.google.maps.places.Autocomplete(
-              input,
-              options
-            );
-
-            auto.addListener("place_changed", () => {
-              const place = auto.getPlace();
-              if (!place || !place.geometry) return;
-
-              const newDestinations = [...destinations];
-              newDestinations[idx] = place.formatted_address;
-              setDestinations(newDestinations);
-
-              const location = {
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng(),
-              };
-              const newLocs = [...destinationLocs];
-              newLocs[idx] = location;
-              setDestinationLocs(newLocs);
-              onDestinationsSelect(newLocs);
-
-              updateRoute(pickupLoc, newLocs);
-            });
-          }
-        });
-      }
-    }, 300);
-
-    return () => clearInterval(interval);
-  }, [destinations, pickupLoc, destinationLocs, onDestinationsSelect]);
-
+ 
   useEffect(() => {
     let dateObj;
 
