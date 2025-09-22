@@ -58,12 +58,15 @@ const CarDropdown = ({
 
   const handleOptionSelect = (option) => {
     onOptionSelect(option); // Notify parent component
+    // console.log("Option is : " + option.name)
     setIsOpen(false);
   };
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
+
+  
 
   return (
     <div className={`w-full max-w-md mx-auto bg-white rounded-lg shadow-lg ${className}`}>
@@ -80,7 +83,7 @@ const CarDropdown = ({
         )}
       </button>
 
-      {/* Selected Option (when closed) */}
+      {/* Selected Option (when closed) */}      
       {!isOpen && currentSelection && (
         <div className={`px-4 py-4 ${currentSelection.color || 'bg-gray-50'} rounded-b-lg`}>
           <div className="flex items-center justify-between">
