@@ -37,7 +37,7 @@ const PaymentDropdown = ({
       id: 'CabCharge FastCard',
       name: 'CabCharge FastCard',
       description: 'Saved payment method',
-      icon: <Smartphone className="w-6 h-6 text-blue-500" />,
+      icon: <img src={cabchargeLogo} alt="Cabcharge" className="w-6 h-6 object-contain" />,
       type: 'Digital',
       status: 'Available',
       color: 'bg-blue-50',

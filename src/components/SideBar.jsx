@@ -105,7 +105,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
     const distance = parseFloat(distanceKm);
     const tolls = hasToll ? 1 : 0;
-
+    const bookingFees = 4
     // vehicle surcharges
     let vehicleSurcharge = 0;
     switch (selected) {
@@ -116,24 +116,23 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
         vehicleSurcharge = 11;
         break;
       case "SUV":
-        vehicleSurcharge = 17.35;
+        vehicleSurcharge = 17.80;
         break;
       case "Maxi Taxi":
-        vehicleSurcharge = 17.35;
+        vehicleSurcharge = 17.80;
         break;
     }
 
     let base;
-
     // 🔑 Apply time type multiplier/surcharge
     if (timeType === 3) {
-      base = 20 + distance * 2.426 + tolls * 17.46;
+      base = 20 + distance * 2.493 + tolls * 17.46 + 7.80;
     } else if (timeType === 2) {
-      base = 13 + distance * 2.204 + tolls * 17.46;
+      base = 13 + distance * 2.265 + tolls * 17.46 + 6.55;
     } else {
-      base = 8 + distance * 2.204 + tolls * 17.46;
+      base = 8 + distance * 2.037 + tolls * 17.46 + 5.25;
     }
-    let fareValue = Math.max(base, 40) + vehicleSurcharge;
+    let fareValue = Math.max(base, 40) + vehicleSurcharge + bookingFees;
     setFare(fareValue.toFixed(2));
   };
 

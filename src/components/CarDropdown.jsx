@@ -34,7 +34,7 @@ const CarDropdown = ({
     {
       id: 'suv',
       name: 'SUV',
-      passengers: '1 - 7 passengers',
+      passengers: '1 - 6 passengers',
       image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg1SpUuRbiMmaQOiQx4xg4ksi0gwexn2_xFw&s',
       fareEstimate: 'Fare Estimate',
       destRequired: 'Dest required',
