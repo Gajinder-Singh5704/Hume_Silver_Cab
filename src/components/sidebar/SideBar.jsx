@@ -1,22 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { tolls, normalizeRoad, roadAliases } from "../assets/tollsData";
+import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
 import {
   Box,
   Button,
-  Checkbox,
   FormControlLabel,
   Radio,
   RadioGroup,
   TextField,
-  ToggleButton,
   InputAdornment,
   IconButton,
 } from "@mui/material";
 import {  LockIcon } from "lucide-react";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
-import { getPlaces, getGeocode, attachPlacesAutocomplete } from "../hooks/map";
-import PaymentDropdown from "./PaymentDropdown";
+import { getPlaces, getGeocode, attachPlacesAutocomplete } from "../../hooks/map";
+import PaymentDropdown from "./PaymentDropdown.jsx";
 
 const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   // form fields
@@ -36,37 +34,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
   const [pickupLoc, setPickupLoc] = useState(null);
   const [destinationLocs, setDestinationLocs] = useState([]);
-
-  // Attach Google Autocomplete once Maps API is ready
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (window.google && window.google.maps && window.google.maps.places) {
-  //       clearInterval(interval);
-
-  //       if (pickupInputRef.current) {
-  //         attachPlacesAutocomplete(pickupInputRef.current, async (place) => {
-  //           setPickup(place.formatted_address);
-
-  //           const location = place.geometry?.location
-  //             ? {
-  //               lat: place.geometry.location.lat(),
-  //               lng: place.geometry.location.lng(),
-  //             }
-  //             : await getGeocode(place);
-
-  //           if (location) {
-  //             setPickupLoc(location);
-  //             onPickupSelect(location);
-  //           }
-  //         });
-  //       }
-  //     }
-  //   }, 300);
-
-  //   return () => clearInterval(interval);
-  // }, [onPickupSelect]);
-
-
+  
   const destinationRefs = useRef([]);
 
   // route & toll

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, CreditCard, Smartphone, Wallet, Building } from 'lucide-react';
-import cabchargeLogo from '../assets/cabcharge.png';
+import { ChevronDown, ChevronUp} from 'lucide-react';
+import { defaultPaymentOptions } from '../../data/data';
 
 const PaymentDropdown = ({ 
   paymentOptions = [], 
@@ -10,41 +10,6 @@ const PaymentDropdown = ({
   className = ""
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  // Default payment options if none provided
-  const defaultPaymentOptions = [
-    {
-      id: 'card',
-      name: 'Credit Card / Debit Card',
-      description: '**** **** **** 4567',
-      icon: <CreditCard className="w-6 h-6 text-blue-600" />,
-      type: 'Primary',
-      status: 'Default',
-      color: 'bg-blue-50',
-      brand: 'Visa,MasterCard'
-    },
-    {
-      id: 'pay-driver-directly',
-      name: 'Pay Driver Directly',
-      description: 'Cash or card to driver',
-      icon: <Wallet className="w-6 h-6 text-orange-600" />,
-      type: 'Direct',
-      status: 'Available',
-      color: 'bg-orange-50',
-      brand: 'Direct'
-    },
-    {
-      id: 'CabCharge FastCard',
-      name: 'CabCharge FastCard',
-      description: 'Saved payment method',
-      icon: <img src={cabchargeLogo} alt="Cabcharge" className="w-6 h-6 object-contain" />,
-      type: 'Digital',
-      status: 'Available',
-      color: 'bg-blue-50',
-      brand: 'FastCard'
-    }
-  ];
-
   const options = paymentOptions.length > 0 ? paymentOptions : defaultPaymentOptions;
   const currentSelection = selectedOption || options[0];
 

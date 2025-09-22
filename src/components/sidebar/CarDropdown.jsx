@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Info, Package } from 'lucide-react';
-import images from '../assets/images.js';
+import { defaultVehicleOptions } from '../../data/data.js';
 
 const CarDropdown = ({ 
   vehicleOptions = [], 
@@ -11,46 +11,6 @@ const CarDropdown = ({
   label
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  // Default vehicle options if none provided
-  const defaultVehicleOptions = [
-    {
-      id: 'sedan',
-      name: 'Sedan',
-      passengers: '1 - 4 passengers',
-      image: images.sedan,
-      fareEstimate: 'Fare Estimate',
-      destRequired: 'Dest required',
-      color: 'bg-gray-100'
-    },
-    {
-      id: 'silver-service',
-      name: 'Silver Service',
-      passengers: '1 - 4 passengers',
-      image: images.silver,
-      fareEstimate: 'Fare Estimate',
-      destRequired: 'Dest required',
-      color: 'bg-gray-100'
-    },
-    {
-      id: 'suv',
-      name: 'SUV',
-      passengers: '1 - 6 passengers',
-      image: images.suv,
-      fareEstimate: 'Fare Estimate',
-      destRequired: 'Dest required',
-      color: 'bg-gray-50'
-    },
-    {
-      id: 'maxi-taxi',
-      name: 'MAXI TAXI',
-      passengers: '1 - 11 passengers',
-      image: images.maxi,
-      fareEstimate: 'Fare Estimate',
-      destRequired: 'Dest required',
-      color: 'bg-gray-100'
-    }
-  ];
 
   const options = vehicleOptions.length > 0 ? vehicleOptions : defaultVehicleOptions;
   
@@ -73,6 +33,7 @@ const CarDropdown = ({
     <div className={`w-full  mx-auto bg-white rounded-lg shadow-lg ${className} mt-4`}>
       {/* Dropdown Header */}
       <button
+      type="button"
         onClick={toggleDropdown}
         className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 rounded-t-lg border-b hover:bg-gray-100 transition-colors"
       >

@@ -4,6 +4,7 @@ import images from "../../assets/images";
 import { IoMenu } from "react-icons/io5";
 import SmallScreenNavComponent from "./SmallScreenNavComponent";
 import MdScreenNavComponent from "./MdScreenNavComponent";
+import { navItems } from "../../data/data";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,13 +12,6 @@ const Navbar = () => {
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
-
-  const navItems = [
-    // { label: "Fare estimate", path: "/fare-estimate" },
-    // { label: "Book a taxi", path: "/book-taxi" },
-    { label: "Company website", path: "/company" },
-    { label: "Contact us", path: "/contact" },
-  ];
 
   return (
     <header className="bg-[#f9f6f3] relative">

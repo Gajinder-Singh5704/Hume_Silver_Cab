@@ -6,7 +6,6 @@ import Modal from "./Modal";
 
 const NavSection = ({onPlaceSelect}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState("Map View");
   const [selectedPlace, setSelectedPlace] = useState(""); 
 
   const items = [{ label: "Map View", icon: FaMap }];

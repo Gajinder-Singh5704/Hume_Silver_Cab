@@ -1,7 +1,7 @@
 import MapSection from "../components/map/MapSection.jsx";
 import Navbar from "../components/navbar/Navbar.jsx";
 import NavSection from "../components/navSection/NavSection.jsx";
-import SideBar from "../components/SideBar.jsx";
+import SideBar from "../components/sidebar/SideBar.jsx"
 import { useState } from "react";
 
 const Home = () => {
