@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { tolls, eastLinkTolls } from "../assets/tollsData";
+import { tolls, normalizeRoad, roadAliases } from "../assets/tollsData";
 import {
   Box,
   Button,
@@ -290,11 +290,6 @@ const calculateFare = () => {
   setFare(fareValue.toFixed(2));
 };
 
-
-
-
-
-
   // ---- Autocomplete / places handling (using your existing getPlaces/getGeocode hooks) ----
   const handlePickupChange = async (e) => {
     const value = e.target.value;
@@ -489,7 +484,6 @@ const calculateFare = () => {
           const stepsText = leg.steps
             .map((s) => s.instructions.toLowerCase())
             .join(" ");
-          const summary = (result.routes[0].summary || "").toLowerCase();
 
           // Determine toll road usage
           // ---- Toll calculation ---- //
@@ -511,41 +505,61 @@ const calculateFare = () => {
   };
 
   // ---- Helpers ---- //
-  function calculateToll(stepsText) {
-    let toll = 0;
+function calculateToll(stepsText) {
+  let toll = 0;
 
-    // Strip HTML tags and lowercase for easier matching
-    const plainText = stepsText.replace(/<[^>]*>?/gm, "").toLowerCase();
-    console.log("=== Toll Calculation ===");
-    console.log("Cleaned steps text:", plainText);
+  // Strip HTML tags and lowercase
+  let plainText = stepsText.replace(/<[^>]*>?/gm, "").toLowerCase();
 
-    tolls.forEach((entry) => {
-      const entryIndex = plainText.indexOf(entry.entryPoint.toLowerCase());
-      if (entryIndex !== -1) {
-        console.log(`Entry point found: ${entry.entryPoint} at index ${entryIndex}`);
+  // Normalize each known road alias inside the text
+  Object.keys(roadAliases).forEach((alias) => {
+    if (plainText.includes(alias)) {
+      console.log(`Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`);
+      plainText = plainText.replaceAll(alias, roadAliases[alias]);
+    }
+  });
 
-        // Track the farthest exit matched
-        let farthestExitPrice = 0;
-        entry.exits.forEach((exit) => {
-          const exitIndex = plainText.indexOf(exit.exitPoint.toLowerCase());
-          if (exitIndex !== -1 && exitIndex > entryIndex) {
-            console.log(`  Exit point matched: ${exit.exitPoint} at index ${exitIndex}, price: ${exit.price}`);
-            farthestExitPrice = Math.max(farthestExitPrice, exit.price);
+  console.log("=== Toll Calculation ===");
+  console.log("Normalized steps text:", plainText);
+
+  tolls.forEach((entry) => {
+    const normalizedEntry = normalizeRoad(entry.entryPoint);
+    const entryIndex = plainText.indexOf(normalizedEntry);
+
+    if (entryIndex !== -1) {
+      console.log(`✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`);
+
+      // Track farthest exit match
+      let farthestExit = null;
+      let farthestExitIndex = -1;
+
+      entry.exits.forEach((exit) => {
+        const normalizedExit = normalizeRoad(exit.exitPoint);
+        const exitIndex = plainText.indexOf(normalizedExit);
+
+        if (exitIndex !== -1 && exitIndex > entryIndex) {
+          console.log(`   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`);
+          if (exitIndex > farthestExitIndex) {
+            farthestExitIndex = exitIndex;
+            farthestExit = exit;
           }
-        });
-
-        if (farthestExitPrice > 0) {
-          console.log(`  Farthest exit price for entry ${entry.entryPoint}: ${farthestExitPrice}`);
-          toll = Math.max(toll, farthestExitPrice);
         }
-      } else {
-        console.log(`Entry point not found: ${entry.entryPoint}`);
-      }
-    });
+      });
 
-    console.log("Total calculated toll:", toll);
-    return toll;
-  }
+      if (farthestExit) {
+        console.log(`   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`);
+        toll = Math.max(toll, farthestExit.price);
+      } else {
+        console.log(`   ⚠ No exits matched after entry point: ${normalizedEntry}`);
+      }
+    } else {
+      console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
+    }
+  });
+
+  console.log("💰 Final calculated toll:", toll);
+  return toll;
+}
 
 
   const isAirportPickup = (pickup) => {

@@ -1,3 +1,19 @@
+export const roadAliases = {
+  "w gate fwy": "west gate fwy",
+  "w. gate fwy": "west gate fwy",
+  "bolte br": "bolte bridge",
+  "footscray rd": "footscray rd",
+  "dynon rd": "dynon rd",
+  "monash fwy": "monash fwy",
+  "burnley st": "burnley st"
+  // Add more aliases as you encounter them
+};
+
+export function normalizeRoad(name) {
+  const lowerName = name.toLowerCase();
+  return roadAliases[lowerName] || lowerName;
+}
+
 export const tolls = [
     {
         entryPoint: "tullamarine fwy",
