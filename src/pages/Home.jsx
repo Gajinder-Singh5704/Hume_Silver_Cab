@@ -2,12 +2,15 @@ import MapSection from "../components/map/MapSection.jsx";
 import Navbar from "../components/navbar/Navbar.jsx";
 import NavSection from "../components/navSection/NavSection.jsx";
 import SideBar from "../components/sidebar/SideBar.jsx";
+import SeatDetails from "../components/sidebar/SeatDetails.jsx"
 import { useState } from "react";
+import { Outlet } from "react-router-dom";
 
 const Home = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedPickup, setSelectedPickup] = useState(null);
   const [destinations, setSelectedDestinations] = useState([]);
+  const [selectedCar ,setSelectedCar] = useState(null)
 
   return (
     <>
@@ -19,10 +22,7 @@ const Home = () => {
         
         {/* Sidebar */}
         <div className="md:w-[380px] md:border-r order-2 md:order-1 h-[50vh] md:h-auto border-t md:border-t-0 overflow-y-auto">
-          <SideBar
-            onPickupSelect={setSelectedPickup}
-            onDestinationsSelect={setSelectedDestinations}
-          />
+         <Outlet/>
         </div>
 
         {/* Map Section */}

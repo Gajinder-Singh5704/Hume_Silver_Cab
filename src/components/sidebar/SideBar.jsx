@@ -15,6 +15,11 @@ import ToggleSwitch from "./ToggleSwich.jsx";
 import CarDropdown from "./CarDropdown.jsx";
 import { getGeocode } from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
+import LuggageModal from "./LuggageModal.jsx";
+
+const melbourneNow = new Date(
+  new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
+);
 
 const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   // form fields
@@ -27,6 +32,9 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [selected, setSelected] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [tollPrice, setTollPrice] = useState(0);
+
+  const [isLuggageModalOpen,setIsLuggageModalOpen] = useState(false)
+  const bookingData = location.state?.bookingData;
 
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
@@ -42,10 +50,16 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
   // booking time
   const [bookingMode, setBookingMode] = useState("now"); // "now" | "later"
-  const [dateVal, setDateVal] = useState(""); // yyyy-mm-dd (native date input)
-  const [hourVal, setHourVal] = useState("9");
-  const [minuteVal, setMinuteVal] = useState("00");
-  const [ampmVal, setAmpmVal] = useState("am");
+  const [dateVal, setDateVal] = useState(
+    melbourneNow.toISOString().split("T")[0] // yyyy-mm-dd
+  );
+  const [hourVal, setHourVal] = useState(
+    melbourneNow.getHours().toString().padStart(2, "0")
+  );
+  const [minuteVal, setMinuteVal] = useState(
+    melbourneNow.getMinutes().toString().padStart(2, "0")
+  );
+
   const [timeType, setTimeType] = useState(2); // number-3
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
@@ -59,40 +73,29 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
     const hour24 = dateObj.getHours();
     const minute = dateObj.getMinutes();
-    let timeType = 2; // default off-peak
-
-    // Convert to 12-hour format for logging
-    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-    const ampm = hour24 >= 12 ? "PM" : "AM";
+    let timeType = 2; // default shoulder
 
     if (
       (day === 5 && hour24 >= 22) || // Friday 22:00–23:59
-      (day === 6 && hour24 < 4) || // Saturday 00:00–03:59
+      (day === 6 && hour24 < 4) ||   // Saturday 00:00–03:59
       (day === 6 && hour24 >= 22) || // Saturday 22:00–23:59
-      (day === 0 && hour24 < 4) // Sunday 00:00–03:59
+      (day === 0 && hour24 < 4)      // Sunday 00:00–03:59
     ) {
       timeType = 3; // Overnight Weekend
     } else if (hour24 >= 9 && hour24 < 17) {
       timeType = 1; // Normal
     }
 
-    const dayNames = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     console.log(
-      `Calculated time type: ${timeType} | Day: ${
-        dayNames[day]
-      } | Time: ${hour12}:${minute.toString().padStart(2, "0")} ${ampm}`
+      `Calculated time type: ${timeType} | Day: ${dayNames[day]} | Time: ${hour24.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`
     );
 
     return timeType;
   };
+
+
+  // set initial and later booking time type
 
   const calculateFare = () => {
     console.log("=== Fare Calculation Started ===");
@@ -262,16 +265,15 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
     const service = new window.google.maps.DirectionsService();
 
-    service.route(
-      {
-        origin: pickup,
-        destination: dests[dests.length - 1],
-        waypoints: dests.slice(0, -1).map((loc) => ({
-          location: loc,
-          stopover: true,
-        })),
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
+    service.route({
+      origin: pickup,
+      destination: dests[dests.length - 1],
+      waypoints: dests.slice(0, -1).map((loc) => ({
+        location: loc,
+        stopover: true,
+      })),
+      travelMode: window.google.maps.TravelMode.DRIVING,
+    },
       (result, status) => {
         if (status === "OK" && result.routes.length > 0) {
           const leg = result.routes[0].legs.reduce(
@@ -423,7 +425,6 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
       dateVal,
       hourVal,
       minuteVal,
-      ampmVal,
       timeType,
       fare,
       hasToll,
@@ -449,7 +450,6 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     setDateVal("");
     setHourVal("9");
     setMinuteVal("00");
-    setAmpmVal("am");
     setTimeType(2);
     setFare(null);
     setHasToll(false);
@@ -474,10 +474,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
               componentRestrictions: { country: "au" },
               fields: ["formatted_address", "geometry"],
             };
-            const auto = new window.google.maps.places.Autocomplete(
-              input,
-              options
-            );
+            const auto = new window.google.maps.places.Autocomplete(input, options);
 
             auto.addListener("place_changed", () => {
               const place = auto.getPlace();
@@ -533,13 +530,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     }, 300);
 
     return () => clearInterval(interval);
-  }, [
-    destinations,
-    pickupLoc,
-    destinationLocs,
-    onDestinationsSelect,
-    onPickupSelect,
-  ]);
+  }, [destinations, pickupLoc, destinationLocs, onDestinationsSelect, onPickupSelect]);
 
   useEffect(() => {
     if (distanceKm) calculateFare();
@@ -553,14 +544,22 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
         new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
       );
     } else if (bookingMode === "later" && dateVal) {
-      const hour = (parseInt(hourVal, 10) % 12) + (ampmVal === "pm" ? 12 : 0);
-      dateObj = new Date(`${dateVal}T${hour}:${minuteVal}:00`);
+      const hour = parseInt(hourVal, 10);
+      dateObj = new Date(`${dateVal}T${hour.toString().padStart(2, "0")}:${minuteVal}:00`);
     }
+
 
     if (dateObj) {
       setTimeType(determineTimeType(dateObj));
     }
-  }, [bookingMode, dateVal, hourVal, minuteVal, ampmVal]);
+  }, [bookingMode, dateVal, hourVal, minuteVal]);
+
+    useEffect(() => {
+    if (bookingData) {
+      console.log("Received bookingData:", bookingData);
+      setSelected(bookingData);
+    }
+  }, [bookingData]);
 
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
@@ -734,79 +733,41 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                 <input
                   type="date"
                   className="w-full border rounded px-3 py-2"
-                  min={new Date().toISOString().split("T")[0]}
-                  max={
-                    new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-                      .toISOString()
-                      .split("T")[0]
-                  }
                   value={dateVal}
                   onChange={(e) => setDateVal(e.target.value)}
                   required
+                  min={new Date().toISOString().split("T")[0]}
                 />
               </div>
+
               {/* Pickup Time */}
-              {/* Pickup Time */}
-              <div className="flex-1 relative">
+              <div className="flex-1">
                 <label className="block text-sm mb-1 font-medium">
                   Pickup time
                 </label>
                 <input
                   type="time"
                   className="w-full border rounded px-3 py-2"
-                  value={
-                    tempTime ||
-                    (hourVal && minuteVal
-                      ? `${hourVal.padStart(2, "0")}:${minuteVal.padStart(
-                          2,
-                          "0"
-                        )}`
-                      : "")
-                  }
-                  onChange={(e) => setTempTime(e.target.value)}
+                  value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(":");
+                    setHourVal(h);
+                    setMinuteVal(m);
+                  }}
                   required
+                  step="60" // optional
                   min={
                     dateVal === new Date().toISOString().split("T")[0]
-                      ? new Date().toTimeString().slice(0, 5)
+                      ? new Date().toTimeString().slice(0, 5) // current local time
                       : "00:00"
                   }
                 />
 
-                {/* Done button (only visible if tempTime not yet saved) */}
-                {tempTime &&
-                  tempTime !==
-                    `${hourVal.padStart(2, "0")}:${minuteVal.padStart(
-                      2,
-                      "0"
-                    )}` && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const [h, m] = tempTime.split(":");
-                        let newHour = parseInt(h, 10);
-                        let newAmPm = newHour >= 12 ? "pm" : "am";
-
-                        // convert to 12hr format
-                        if (newHour === 0) {
-                          newHour = 12;
-                        } else if (newHour > 12) {
-                          newHour = newHour - 12;
-                        }
-
-                        setHourVal(String(newHour));
-                        setMinuteVal(m);
-                        setAmpmVal(newAmPm);
-                        setTempTime(""); // clear temp
-                      }}
-                      className="absolute right-2 top-7.5 px-2 py-1 text-sm bg-green-600 text-white rounded"
-                    >
-                      Done
-                    </button>
-                  )}
               </div>
             </div>
           </div>
         )}
+
         {/* // ...existing code... */}
 
         {/* Fixed Price block */}
@@ -831,10 +792,11 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                 ? isOn
                   ? `Fare: $${fare}`
                   : `Fare: $${(fare - 5).toFixed(2)} - $${(
-                      parseFloat(fare) + 5
-                    ).toFixed(2)}`
+                    parseFloat(fare) + 5
+                  ).toFixed(2)}`
                 : "Dest Required"
             }
+            isLuggageModal={setIsLuggageModalOpen}
             className="w-full" // <- pass this down
           />
         </div>
