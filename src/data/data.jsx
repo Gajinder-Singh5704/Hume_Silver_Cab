@@ -20,7 +20,7 @@ export const mdNavItems = [
 export const defaultVehicleOptions = [
     {
       id: 'sedan',
-      name: 'Sedan',
+      name: 'Next Available',
       passengers: '1 - 4 passengers',
       image: images.sedan,
       fareEstimate: 'Fare Estimate',
