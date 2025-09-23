@@ -11,17 +11,14 @@ import {
   IconButton,
 } from "@mui/material";
 import { LockIcon } from "lucide-react";
-import ToggleSwitch from "./ToggleSwich";
-import CarDropdown from "./CarDropdown";
-import {
-  getGeocode,
-} from "../../hooks/map.js";
+import ToggleSwitch from "./ToggleSwich.jsx";
+import CarDropdown from "./CarDropdown.jsx";
+import { getGeocode } from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
 
 const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
-  // const [pickup, setPickup] = useState("");
   const [destinations, setDestinations] = useState([""]);
   const [passenger, setPassenger] = useState("");
   const [contact, setContact] = useState("");
@@ -56,11 +53,6 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [tempTime, setTempTime] = useState(
     `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
   );
-
-  // refs for hidden inputs used by external Forminator code
-  const distanceRef = useRef(null);
-  const tollRef = useRef(null);
-  const timeTypeRef = useRef(null);
 
   // determine time type (helper stays the same)
   const determineTimeType = (dateObj) => {
@@ -101,12 +93,6 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
     return timeType;
   };
-
-  // set initial and later booking time type
-
-  const melbourneNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
-  );
 
   const calculateFare = () => {
     console.log("=== Fare Calculation Started ===");
@@ -276,7 +262,8 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
     const service = new window.google.maps.DirectionsService();
 
-    service.route({
+    service.route(
+      {
         origin: pickup,
         destination: dests[dests.length - 1],
         waypoints: dests.slice(0, -1).map((loc) => ({
@@ -476,80 +463,88 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   };
 
   useEffect(() => {
-  const interval = setInterval(() => {
-    if (window.google && window.google.maps && window.google.maps.places) {
-      clearInterval(interval);
+    const interval = setInterval(() => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        clearInterval(interval);
 
-      // Attach destination autocomplete
-      destinationRefs.current.forEach((input, idx) => {
-        if (input) {
+        // Attach destination autocomplete
+        destinationRefs.current.forEach((input, idx) => {
+          if (input) {
+            const options = {
+              componentRestrictions: { country: "au" },
+              fields: ["formatted_address", "geometry"],
+            };
+            const auto = new window.google.maps.places.Autocomplete(
+              input,
+              options
+            );
+
+            auto.addListener("place_changed", () => {
+              const place = auto.getPlace();
+              if (!place || !place.geometry) return;
+
+              const newDestinations = [...destinations];
+              newDestinations[idx] = place.formatted_address;
+              setDestinations(newDestinations);
+
+              const location = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+              };
+              const newLocs = [...destinationLocs];
+              newLocs[idx] = location;
+              setDestinationLocs(newLocs);
+              onDestinationsSelect(newLocs);
+
+              updateRoute(pickupLoc, newLocs);
+            });
+          }
+        });
+
+        // Attach pickup autocomplete
+        if (pickupInputRef.current) {
           const options = {
             componentRestrictions: { country: "au" },
             fields: ["formatted_address", "geometry"],
           };
-          const auto = new window.google.maps.places.Autocomplete(input, options);
+          const autoPickup = new window.google.maps.places.Autocomplete(
+            pickupInputRef.current,
+            options
+          );
 
-          auto.addListener("place_changed", () => {
-            const place = auto.getPlace();
+          autoPickup.addListener("place_changed", () => {
+            const place = autoPickup.getPlace();
             if (!place || !place.geometry) return;
 
-            const newDestinations = [...destinations];
-            newDestinations[idx] = place.formatted_address;
-            setDestinations(newDestinations);
+            setPickup(place.formatted_address);
 
             const location = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-            const newLocs = [...destinationLocs];
-            newLocs[idx] = location;
-            setDestinationLocs(newLocs);
-            onDestinationsSelect(newLocs);
+            setPickupLoc(location);
+            onPickupSelect(location);
 
-            updateRoute(pickupLoc, newLocs);
+            // ✅ Make behavior consistent: trigger route update
+            updateRoute(location, destinationLocs);
           });
         }
-      });
-
-      // Attach pickup autocomplete
-      if (pickupInputRef.current) {
-        const options = {
-          componentRestrictions: { country: "au" },
-          fields: ["formatted_address", "geometry"],
-        };
-        const autoPickup = new window.google.maps.places.Autocomplete(
-          pickupInputRef.current,
-          options
-        );
-
-        autoPickup.addListener("place_changed", () => {
-          const place = autoPickup.getPlace();
-          if (!place || !place.geometry) return;
-
-          setPickup(place.formatted_address);
-
-          const location = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          };
-          setPickupLoc(location);
-          onPickupSelect(location);
-
-          // ✅ Make behavior consistent: trigger route update
-          updateRoute(location, destinationLocs);
-        });
       }
-    }
-  }, 300);
+    }, 300);
 
-  return () => clearInterval(interval);
-}, [destinations, pickupLoc, destinationLocs, onDestinationsSelect, onPickupSelect]);
+    return () => clearInterval(interval);
+  }, [
+    destinations,
+    pickupLoc,
+    destinationLocs,
+    onDestinationsSelect,
+    onPickupSelect,
+  ]);
 
   useEffect(() => {
     if (distanceKm) calculateFare();
   }, [selected, distanceKm, hasToll, timeType]);
 
- 
   useEffect(() => {
     let dateObj;
 
@@ -570,8 +565,6 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
       <form onSubmit={handleSubmit}>
-        {/* Step 1 */}
-
         {/* Step 1 */}
         <div className="px-5 py-6">
           <h3 className="text-sm mb-4 hidden md:flex">
