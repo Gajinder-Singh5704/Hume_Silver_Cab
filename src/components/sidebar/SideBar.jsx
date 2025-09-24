@@ -571,11 +571,11 @@ const SideBar = () => {
               }
 
               // valid: set location and notify parent & map
-              setPickupLoc(location);
+              // setPickupLoc(location);
               onPickupSelect(location);
 
               // Update route now that pickup is valid
-              updateRoute(location, destinationLocs);
+              // updateRoute(location, destinationLocs);
             } catch (err) {
               console.error("Failed to validate pickup location:", err);
               // optionally revert UI
