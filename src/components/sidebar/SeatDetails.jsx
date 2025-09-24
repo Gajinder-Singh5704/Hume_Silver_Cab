@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import images from "../../assets/images.js";
 import { useNavigate ,useLocation} from "react-router-dom";
 import LuggageModal from "./LuggageModal.jsx";

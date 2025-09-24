@@ -25,6 +25,7 @@ const melbourneNow = new Date(
 const SideBar = () => {
 
   const { onPickupSelect, onDestinationsSelect } = useOutletContext();
+  const [show,setShow] = useState(true)
 
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -230,8 +231,11 @@ const SideBar = () => {
     setPickupSuggestions([]);
 
     try {
+       console.log("location pickup 1 ")
       const location = await getGeocode(s);
+     
       if (location) {
+        console.log("location pickup "+ location)
         setPickupLoc(location);
         onPickupSelect(location);
       }
@@ -571,6 +575,8 @@ useEffect(() => {
 
   if (bookingData) {
     // restore other fields
+
+    console.log("object",bookingData)
     setPickup(bookingData.pickup || "");
     setPickupLoc(bookingData.pickupLoc || null);
     setDestinations(bookingData.destinations || [""]);
@@ -582,13 +588,15 @@ useEffect(() => {
     setIsOn(bookingData.isOn ?? true);
   }
 
+  calculateFare()
   
 }, [location]);
 
 
 
   return (
-    <section className=" w-full  h-[83.4vh] overflow-y-scroll">
+   <>
+   {show &&  <section className=" w-full  h-[83.4vh] overflow-y-scroll">
       <form onSubmit={handleSubmit}>
         {/* Step 1 */}
         <div className="px-5 py-6">
@@ -899,7 +907,7 @@ useEffect(() => {
         </div>
 
         {/* Step 3 Payment */}
-        <div className="px-5 py-6">
+        <div className="px-5 py-6" onClick={()=>setShow(false)}>
           <h3 className="text-sm mt-2 mb-4">
             {" "}
             Step 3 of 4 <b>Payment</b>
@@ -949,7 +957,11 @@ useEffect(() => {
           </button>
         </div>
       </form>
-    </section>
+    </section>} 
+    {!show && <div onClick={()=> setShow(true)}>
+      back
+      </div>}
+   </>
   );
 };
 

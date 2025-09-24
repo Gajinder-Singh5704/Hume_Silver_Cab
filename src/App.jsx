@@ -1,16 +1,17 @@
 import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home.jsx";
 import SideBar from "./components/sidebar/SideBar.jsx";
 import Seatdetails from "./components/sidebar/SeatDetails.jsx";
 import { seatDetails } from "./data/data.jsx";
+import Home from "./pages/home.jsx";
 
 function App() {
 
   console.log("object", seatDetails["MAXI TAXI"])
   return (
     <>
+    
       <Routes>
-        <Route path="/" element={<Home />}>
+        <Route path="/" element={<Home/>}>
           <Route index element={<SideBar />} />
           <Route
             path="Next-Available"

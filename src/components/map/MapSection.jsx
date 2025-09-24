@@ -93,8 +93,8 @@ const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
       map.fitBounds(bounds, 80);
     } else {
       // Case 3: Neither → reset to default
-      map.panTo({ lat: 53.54, lng: 10 });
-      map.setZoom(10);
+      map.panTo({ lat: -37.6708716, lng: 144.8430578 });
+      map.setZoom(12);
     }
   }, [map, selectedPlace, selectedPickup, destinations]);
 

@@ -1,8 +1,6 @@
 import MapSection from "../components/map/MapSection.jsx";
 import Navbar from "../components/navbar/Navbar.jsx";
 import NavSection from "../components/navSection/NavSection.jsx";
-import SideBar from "../components/sidebar/SideBar.jsx";
-import SeatDetails from "../components/sidebar/SeatDetails.jsx"
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
