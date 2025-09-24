@@ -15,10 +15,10 @@ const Home = () => {
       <NavSection onPlaceSelect={setSelectedPlace} />
 
       {/* Wrapper handles both sm & lg */}
-      <div className="flex flex-col md:flex-row w-full h-[calc(100vh-100px)]">
+      <div className="flex flex-col md:flex-row w-full h-[calc(100vh-125px)]">
         
         {/* Sidebar */}
-        <div className="md:w-[380px] md:border-r order-2 md:order-1 h-[50vh] md:h-auto border-t md:border-t-0 overflow-y-auto">
+        <div className="md:w-[410px] md:border-r order-2 md:order-1 h-[50vh] md:h-auto border-t md:border-t-0 overflow-y-auto">
           <SideBar
             onPickupSelect={setSelectedPickup}
             onDestinationsSelect={setSelectedDestinations}

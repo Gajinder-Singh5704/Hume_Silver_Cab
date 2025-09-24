@@ -17,6 +17,7 @@ import {
   getGeocode,
 } from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
+import {SeatDetails} from "../../data/data.js"
 
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
@@ -62,6 +63,8 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [timeType, setTimeType] = useState(2); // number-3
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
+
+  const [vehicleText , setVehicleText] = useState(""); 
 
   const [tempTime, setTempTime] = useState(
     `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
@@ -559,8 +562,13 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     }
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
+
+
   return (
-    <section className=" w-full  h-[83.4vh] overflow-y-scroll">
+
+    <>
+      {!vehicleText && (
+        <section className=" w-full  h-[83.4vh] overflow-y-scroll">
       <form onSubmit={handleSubmit}>
         {/* Step 1 */}
 
@@ -787,6 +795,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
           <CarDropdown
             selectedOption={selected}
             onOptionSelect={setSelected}
+            isFixedPrice={isOn}
             label={
               fare
                 ? isOn
@@ -794,7 +803,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
                   : `Fare: $${(fare - 5).toFixed(2)} - $${(
                     parseFloat(fare) + 5
                   ).toFixed(2)}`
-                : "Dest Required"
+                : "Dest required"
             }
             className="w-full" // <- pass this down
           />
@@ -911,7 +920,13 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
           </button>
         </div>
       </form>
-    </section>
+        </section>
+      )}
+
+      { vehicleText === "Next Available"}
+
+    </>
+    
   );
 };
 

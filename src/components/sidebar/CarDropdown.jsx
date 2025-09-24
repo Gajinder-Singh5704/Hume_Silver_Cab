@@ -1,40 +1,53 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Info, Package } from 'lucide-react';
-import { defaultVehicleOptions } from '../../data/data.jsx';
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp, Info, LockIcon } from "lucide-react";
+import { defaultVehicleOptions } from "../../data/data.jsx";
+import { useNavigate } from "react-router-dom";
 
-const CarDropdown = ({ 
-  vehicleOptions = [], 
-  selectedOption = null, 
+
+const CarDropdown = ({
+  vehicleOptions = [],
+  selectedOption = null,
+  isFixedPrice,
   onOptionSelect = () => {},
   title = "More vehicle/service options",
   className = "",
-  label
+  label,
+  isLuggageModal
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  
 
   const options = vehicleOptions.length > 0 ? vehicleOptions : defaultVehicleOptions;
-  
-  // Use the first option as default if no selectedOption is provided
-  const currentSelection = selectedOption || options[0];
 
-  const handleOptionSelect = (option) => {
-    onOptionSelect(option); // Notify parent component
-    // console.log("Option is : " + option.name)
+  const currentSelection = selectedOption
+    ? options.find((o) => o.id === selectedOption.id) ?? selectedOption
+    : options[0];
+
+  const toggleDropdown = () => setIsOpen(v => !v);
+
+  const handleSelect = (option) => {
+    onOptionSelect(option);
     setIsOpen(false);
   };
 
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
+  const handleInfoClick = (e, id) => {
+    e.stopPropagation();
+    if (id === "maxi-taxi") {
+      isLuggageModal(true);
+      return;
+    }
+    if (id) navigate(`/${id}`);
+    else console.warn("No route defined for this option");
   };
 
-  
-
   return (
-    <div className={`w-full  mx-auto bg-white rounded-lg shadow-lg ${className} mt-4`}>
-      {/* Dropdown Header */}
+    <div className={`w-full mx-auto bg-white rounded-lg shadow-lg ${className} mt-4`}>
+      {/* Header (clickable) */}
       <button
-      type="button"
+        type="button"
         onClick={toggleDropdown}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDropdown(); }}
         className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 rounded-t-lg border-b hover:bg-gray-100 transition-colors"
       >
         <span className="text-gray-700 font-medium">{title}</span>
@@ -45,63 +58,125 @@ const CarDropdown = ({
         )}
       </button>
 
-      {/* Selected Option (when closed) */}      
-      {!isOpen && currentSelection && (
-        <div className={`px-4 py-4 ${currentSelection.color || 'bg-gray-50'} rounded-b-lg`}>
+      {/* WHEN CLOSED: show selected card (highlighted) */}
+      {!isOpen && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={toggleDropdown}
+          className="relative px-2 py-4 cursor-pointer bg-orange-50"
+        >
+          {/* left strip (overlay, doesn’t shift content) */}
+          <div className="absolute top-0 left-0 h-full w-2 bg-orange-500" />
+
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="text-2xl">
-                {typeof currentSelection.icon === 'string' ? <img src={currentSelection.image} className='h-10'/> : <img src={currentSelection.image} className='h-10'/>}
-              </div>
+              {currentSelection?.image && (
+                <img src={currentSelection.image} alt={currentSelection.name} className="h-10" />
+              )}
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="font-semibold text-gray-800">{currentSelection.name}</h3>
-                  <Info className="w-4 h-4 text-gray-400" />
+                  <h3 className="font-semibold text-sm text-gray-800">{currentSelection?.name}</h3>
+                  <Info
+                    className="w-4 h-4 text-gray-400"
+                    onClick={(e) => handleInfoClick(e, currentSelection?.id)}
+                  />
                 </div>
-                <p className="text-sm text-gray-600">{currentSelection.passengers}</p>
+                <p className="text-sm text-gray-600">{currentSelection?.passengers}</p>
               </div>
             </div>
+
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-800">{currentSelection.fareEstimate}</p>
-              <p className="text-sm text-gray-600">{label}</p>
+              <p className="text-sm font-medium text-gray-800">
+                {isFixedPrice ? "Fixed Price" : currentSelection?.fareEstimate}
+              </p>
+              <p className="text-sm flex items-center text-gray-600">
+                {isFixedPrice ? (
+                  <>
+                    <LockIcon className="mr-1" color="orange" size={12} /> {label}
+                  </>
+                ) : (
+                  label
+                )}
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Dropdown Options */}
+      {/* WHEN OPEN: show all options in sequence, highlight selected */}
       {isOpen && (
-        <div className="">
-          {options.map((option, index) => (
-            <button
-              key={option.id}
-              onClick={() => handleOptionSelect(option)}
-              className={`w-full px-4 py-4 ${option.color} hover:opacity-80 transition-opacity border-b border-gray-200 last:border-b-0 ${
-                index === options.length - 1 ? 'rounded-b-lg' : ''
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">
-                    {typeof option.icon === 'string' ? <img src={option.image} className='h-10'/> : <img src={option.image} className='h-10'/>}
-                  </div>
-                  <div className="text-left">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold text-gray-800">{option.name}</h3>
-                      <Info className="w-4 h-4 text-gray-400" />
-                    </div>
-                    <p className="text-sm text-gray-600">{option.passengers}</p>
-                  </div>
+  <div>
+    {options.map((option, idx) => {
+      const isSelected = option.id === currentSelection?.id;
+      const isSUV = option.name?.toLowerCase() === "suv";
+      const isMaxiTaxi = option.name?.toUpperCase() === "MAXI TAXI";
+
+      return (
+        <button
+          type="button"
+          key={option.id}
+          onClick={() => {
+            if (isSUV) {
+              navigate('/suv');
+            } else if (isMaxiTaxi) {
+              navigate('/maxi-taxi');
+            } else {
+              handleSelect(option);
+            }
+          }}
+          className={`relative w-full px-2 py-4 text-left transition border-b border-gray-200
+            ${idx === options.length - 1 ? "last:border-b-0 rounded-b-lg" : ""}
+            ${
+              isSelected
+                ? "bg-orange-50" // keep selected highlighted
+                : "hover:bg-orange-100" // new hover tint for others
+            }`}
+        >
+          {/* overlay strip only if selected */}
+          {isSelected && <div className="absolute top-0 left-0 h-full w-2 bg-orange-500" />}
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              {option.image && (
+                <img src={option.image} alt={option.name} className="h-10 w-18" />
+              )}
+              <div className="text-left">
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-semibold text-sm text-gray-800">{option.name}</h3>
+                  <Info
+                    className="w-4 h-4 text-gray-400"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleInfoClick(e, option.id);
+                    }}
+                  />
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-800">{option.fareEstimate}</p>
-                  <p className="text-sm text-gray-600">{option.destRequired}</p>
-                </div>
+                <p className="text-sm text-gray-600">{option.passengers}</p>
               </div>
-            </button>
-          ))}
-        </div>
-      )}
+            </div>
+
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-800">
+                {isFixedPrice ? "Fixed Price" : option.fareEstimate}
+              </p>
+              <p className="text-sm text-gray-600 flex items-center">
+                {isFixedPrice ? (
+                  <>
+                    <LockIcon className="mr-1" color="orange" size={12} /> {option.destRequired}
+                  </>
+                ) : (
+                  option.destRequired
+                )}
+              </p>
+            </div>
+          </div>
+        </button>
+      );
+    })}
+  </div>
+)}
+
     </div>
   );
 };
