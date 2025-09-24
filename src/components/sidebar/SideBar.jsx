@@ -820,7 +820,7 @@ const SideBar = () => {
                   : `Fare: $${(fare - 5).toFixed(2)} - $${(
                     parseFloat(fare) + 5
                   ).toFixed(2)}`
-                : "Dest Required"
+                : "Dest required"
             }
             isLuggageModal={setIsLuggageModalOpen}
             className="w-full" // <- pass this down
