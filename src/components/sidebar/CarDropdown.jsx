@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Info, Lock, LockIcon, Package } from "lucide-react";
 import { defaultVehicleOptions } from "../../data/data.jsx";
 import { useNavigate,useLocation } from "react-router-dom";
+import { useBooking } from "../../context/BookingContext.jsx";
 
 const CarDropdown = ({
   vehicleOptions = [],
@@ -11,11 +12,11 @@ const CarDropdown = ({
   title = "More vehicle/service options",
   className = "",
   label,
-  isLuggageModal,
-  bookingData
+  isLuggageModal
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const {bookingData, setBookingData} = useBooking();
 
   const options =
     vehicleOptions.length > 0 ? vehicleOptions : defaultVehicleOptions;
@@ -24,6 +25,7 @@ const CarDropdown = ({
   const currentSelection = selectedOption || options[0];
 
   const handleOptionSelect = (option) => {
+    setBookingData({...bookingData, selectedCar: option});
     onOptionSelect(option); // Notify parent component
     // console.log("Option is : " + option.name)
     setIsOpen(false);
@@ -40,12 +42,7 @@ const CarDropdown = ({
   }
   console.log("Navigating to:", id);
   if (id) {
-    navigate(`/${id}`,{  state: {
-          bookingData: {
-            ...bookingData, // previous booking info if any
-            selectedCar: selectedOption
-          }
-        },});
+    navigate(`/${id}`);
   } else {
     console.warn("No route defined for this option");
   }
