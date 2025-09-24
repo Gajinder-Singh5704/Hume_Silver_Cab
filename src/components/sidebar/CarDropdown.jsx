@@ -1,20 +1,22 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, Info, Package } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, Lock, LockIcon, Package } from "lucide-react";
 import { defaultVehicleOptions } from "../../data/data.jsx";
 import { useNavigate,useLocation } from "react-router-dom";
+import { useBooking } from "../../context/BookingContext.jsx";
 
 const CarDropdown = ({
   vehicleOptions = [],
   selectedOption = null,
+  isFixedPrice,
   onOptionSelect = () => {},
   title = "More vehicle/service options",
   className = "",
   label,
-  isLuggageModal,
-  bookingData
+  isLuggageModal
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const {bookingData, setBookingData} = useBooking();
 
   const options =
     vehicleOptions.length > 0 ? vehicleOptions : defaultVehicleOptions;
@@ -23,6 +25,7 @@ const CarDropdown = ({
   const currentSelection = selectedOption || options[0];
 
   const handleOptionSelect = (option) => {
+    setBookingData({...bookingData, selectedCar: option});
     onOptionSelect(option); // Notify parent component
     // console.log("Option is : " + option.name)
     setIsOpen(false);
@@ -39,12 +42,7 @@ const CarDropdown = ({
   }
   console.log("Navigating to:", id);
   if (id) {
-    navigate(`/${id}`,{  state: {
-          bookingData: {
-            ...bookingData, // previous booking info if any
-            selectedCar: selectedOption
-          }
-        },});
+    navigate(`/${id}`);
   } else {
     console.warn("No route defined for this option");
   }
@@ -71,7 +69,7 @@ const CarDropdown = ({
       {/* Selected Option (when closed) */}
       {!isOpen && currentSelection && (
         <div
-          className={`px-4 py-4 ${
+          className={`px-2 py-4 ${
             currentSelection.color || "bg-gray-50"
           } rounded-b-lg`}
         >
@@ -86,7 +84,7 @@ const CarDropdown = ({
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="font-semibold text-gray-800">
+                  <h3 className="font-semibold text-sm text-gray-800">
                     {currentSelection.name}
                   </h3>
                   <Info
@@ -104,9 +102,9 @@ const CarDropdown = ({
             </div>
             <div className="text-right">
               <p className="text-sm font-medium text-gray-800">
-                {currentSelection.fareEstimate}
+                {isFixedPrice? "Fixed Price" : currentSelection.fareEstimate}
               </p>
-              <p className="text-sm text-gray-600">{label}</p>
+              <p className="text-sm text-gray-600">{isFixedPrice ? <> <LockIcon color="orange" size={12}/>  {label} </> : label}</p>
             </div>
           </div>
         </div>
@@ -147,7 +145,7 @@ const CarDropdown = ({
                   handleOptionSelect(option)
                 }
               }}
-              className={`w-full px-4 py-4 ${
+              className={`w-full px-2 py-4 ${
                 option.color
               } hover:opacity-80 transition-opacity border-b border-gray-200 last:border-b-0 ${
                 index === options.length - 1 ? "rounded-b-lg" : ""
@@ -164,7 +162,7 @@ const CarDropdown = ({
                   </div>
                   <div className="text-left">
                     <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold text-gray-800">
+                      <h3 className="font-semibold text-sm text-gray-800">
                         {option.name}
                       </h3>
                       <Info
@@ -180,13 +178,13 @@ const CarDropdown = ({
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-800">
-                    {option.fareEstimate}
+                    {isFixedPrice ? "Fixed Price" : option.fareEstimate}
                   </p>
-                  <p className="text-sm text-gray-600">{option.destRequired}</p>
+                  <p className="text-sm text-gray-600">{isFixedPrice ?<> <LockIcon color="orange" size={12}/>  {option.destRequired} </> : option.destRequired}</p>
                 </div>
               </div>
             </button>
-  })}
+        })}
         </div>
       )}
     </div>

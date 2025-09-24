@@ -2,6 +2,7 @@ import { useState } from "react";
 import images from "../../assets/images.js";
 import { useNavigate ,useLocation} from "react-router-dom";
 import LuggageModal from "./LuggageModal.jsx";
+import { useBooking } from "../../context/BookingContext.jsx";
 
 const SeatDetails = ({ data }) => {
   const [seats, setSeats] = useState(6);
@@ -24,44 +25,39 @@ const SeatDetails = ({ data }) => {
     });
   };
 
-    const location = useLocation();
-  const bookingData = location.stat
+  const { bookingData, setBookingData } = useBooking();
 
- const handleSelectService = () => {
-  let id = null; switch (data.name) { case "next available": id = "Next-Available"; break; case "Suv": id = "Suv"; break; case "Maxi Taxi": id = "Maxi-Taxi"; break; case "Silver Service": id = "Silver-Service"; break; }
-  const carData = {
-    id: id,
-    name: data.name,
-    passengers: isShow ? seats + " passengers" : "1 - 4 passengers",
-    image: images[data.image],
-    fareEstimate: "Fare Estimate",
-    destRequired: "Dest required",
-    color: "bg-gray-100",
-    seatCount: isShow ? seats : 4
-  };
+    const handleSelectService = () => {
+        let id = null; switch (data.name) { case "next available": id = "Next-Available"; break; case "Suv": id = "Suv"; break; case "Maxi Taxi": id = "Maxi-Taxi"; break; case "Silver Service": id = "Silver-Service"; break; }
+        const carData = {
+        id: id,
+        name: data.name,
+        passengers: isShow ? seats + " passengers" : "1 - 4 passengers",
+        image: images[data.image],
+        fareEstimate: "Fare Estimate",
+        destRequired: "Dest required",
+        color: "bg-gray-100",
+        seatCount: isShow ? seats : 4
+        };
 
-  const formData = {
-    ...location.state?.bookingData, // previous booking info if any
-    selectedCar: carData,
-    seatCount: isShow ? seats : 4
-  };
+        setBookingData({
+        ...bookingData,
+        selectedCar: carData,
+        seatCount: isShow ? seats : 4
+        });
 
-  navigate("/", {
-    state: {
-      bookingData: formData,
-    },
-  });
-};
-
+        navigate("/");
+    };
 
 
   const handleBackClick = (e) => {
     e.preventDefault();
-    navigate("/", {
-        state: {
-            bookingData: location.state?.bookingData, // previous booking info if any
-        }
+    setBookingData({
+        ...bookingData,
+        selectedCar: carData,
+        seatCount: isShow ? seats : 4
     })
+    navigate(-1)
   };
 
   return (
