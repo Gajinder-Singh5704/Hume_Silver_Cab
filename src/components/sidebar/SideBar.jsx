@@ -184,10 +184,10 @@ const SideBar = () => {
     // If this is the last remaining field, just clear it
     if (bookingData.destinations.length === 1) {
       const newDestinations = [""];
-      setBookingData({ ...bookingData, destinations: newDestinations });
+      setBookingData(prev => ({ ...prev, destinations: newDestinations }));
 
       const newLocs = []; // remove any location
-      setBookingData({ ...bookingData, destinationLocs: newLocs });
+      setBookingData(prev => ({ ...prev, destinationLocs: newLocs }));
 
       // Notify parent about updated destinations
       onDestinationsSelect(newLocs);
@@ -212,46 +212,37 @@ const SideBar = () => {
     updateRoute(pickupLoc, newLocs);
   };
 
+  const handlePickupChange = (e) => {
+    setBookingData(prev => ({ ...prev, pickup: e.target.value }));
+  };
+
   const handleDeletePickup = () => {
-    setBookingData({ ...bookingData, pickup: "" }); // Clear pickup input
-    setBookingData({ ...bookingData, pickupLoc: null }); // Clear location object
-    setBookingData({ ...bookingData, pickupSuggestions: [] }); // Clear any autocomplete suggestions
-
-    setBookingData({ ...bookingData, destinations: [""] });
-    setBookingData({ ...bookingData, destinationLocs: null });
-
-    // Notify parent that pickup is now empty
-    setBookingData({ ...bookingData, destinations: [] });
-    onPickupSelect(null);
-
-    // Also reset route if needed
-    updateRoute(null, null);
+  setBookingData({
+    ...bookingData,
+    pickup: "",
+    pickupLoc: null,
+    pickupSuggestions: [],
+    destinations: [""],
+    destinationLocs: [],
+  });
+  onPickupSelect(null);
+  updateRoute(null, []);
   };
 
   const handlePickupSelect = async (s) => {
-    // setBookingData({ ...bookingData, pickup: s.description });
-    // setBookingData({ ...bookingData, pickupSuggestions: [] });
-
-    try {
-       console.log("location pickup 1 ")
-      const location = await getGeocode(s);
-     
-      if (location) {
-        setBookingData({ ...bookingData, pickupLoc: location });
-        onPickupSelect(location);
-      }
-
-      // All good — set pickup location and notify parent
-      setPickupLoc(location);
-      onPickupSelect(location);
-
-      // Trigger route update if there are destinations already
-      updateRoute(location, destinationLocs);
-    } catch (err) {
-      console.error("Failed to select pickup", err);
-    }
-  };
-
+  try {
+    const location = await getGeocode(s);
+    setBookingData({
+      ...bookingData,
+      pickup: s.description,
+      pickupLoc: location,
+      pickupSuggestions: [],
+    });
+    onPickupSelect(location);
+  } catch (err) {
+    console.error("Failed to select pickup", err);
+  }
+};
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
@@ -272,14 +263,12 @@ const SideBar = () => {
   const updateRoute = (pickup, dests) => {
     console.log("Calling calculate");
     if (!pickup || dests.length === 0) {
-      setBookingData({ ...bookingData, distanceKm: "" });
-      setBookingData({ ...bookingData, hasToll: false });
-      setBookingData({ ...bookingData, fare: null });
+      setBookingData(prev => ({ ...prev, distanceKm: "", hasToll: false, fare: null }));
       return;
     }
 
-    setBookingData({ ...bookingData, hasToll: false });
-    setBookingData({ ...bookingData, fare: null });
+    setBookingData(prev => ({ ...prev, hasToll: false, fare: null }));
+    
 
     const service = new window.google.maps.DirectionsService();
 
@@ -490,49 +479,20 @@ const SideBar = () => {
               const place = auto.getPlace();
               if (!place || !place.geometry) return;
 
-              // Keep a friendly label immediately (optional)
-              const formatted = place.formatted_address;
-              const newDestinations = [...destinations];
-
+              const newDestinations = [...bookingData.destinations];
               newDestinations[idx] = place.formatted_address;
-              setBookingData({ ...bookingData, destinations: newDestinations });
+              setBookingData(prev => ({ ...prev, destinations: newDestinations }));
 
               const location = {
                 lat: place.geometry.location.lat(),
                 lng: place.geometry.location.lng(),
               };
-              const newLocs = [...destinationLocs];
+              const newLocs = [...bookingData.destinationLocs];
               newLocs[idx] = location;
-              setBookingData({ ...bookingData, destinationLocs: newLocs });
+              setBookingData(prev => ({ ...prev, destinationLocs: newLocs }));
               onDestinationsSelect(newLocs);
 
-              try {
-                // Validate destination is inside Victoria
-                const insideVIC = await isInVictoria(location);
-                if (!insideVIC) {
-                  alert(`Destination ${idx + 1} must be within Victoria, Australia.`);
-                  // revert the visible label (optional)
-                  const reverted = [...destinations];
-                  reverted[idx] = "";
-                  setDestinations(reverted);
-                  return; // STOP further processing for this destination
-                }
-
-                // valid: save location and notify parent
-                const newLocs = [...destinationLocs];
-                newLocs[idx] = location;
-                setDestinationLocs(newLocs);
-                onDestinationsSelect(newLocs);
-
-                // Update route now that we have a valid destination
-                updateRoute(pickupLoc, newLocs);
-              } catch (err) {
-                console.error("Failed to validate destination:", err);
-                // revert label on error
-                const reverted = [...destinations];
-                reverted[idx] = "";
-                setDestinations(reverted);
-              }
+              updateRoute(pickupLoc, newLocs);
             });
 
           }
@@ -553,34 +513,19 @@ const SideBar = () => {
             const place = autoPickup.getPlace();
             if (!place || !place.geometry) return;
 
-
             const location = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
 
-
-            try {
-              // Validate using your helper
-              const insideVIC = await isInVictoria(location);
-              if (!insideVIC) {
-                alert("Pickup must be within Victoria, Australia.");
-                // revert the visible input (optional) so user knows selection failed
-                setPickup("");
-                return; // STOP: do not set pickupLoc, do not update route
-              }
-
-              // valid: set location and notify parent & map
-              // setPickupLoc(location);
-              onPickupSelect(location);
-
-              // Update route now that pickup is valid
-              // updateRoute(location, destinationLocs);
-            } catch (err) {
-              console.error("Failed to validate pickup location:", err);
-              // optionally revert UI
-              setPickup("");
-            }
+            setBookingData(prev => ({
+              ...prev,
+              pickup: place.formatted_address,
+              pickupLoc: location,
+              // Don't reset other fields here!
+            }));
+            onPickupSelect(location);
+            updateRoute(location, bookingData.destinationLocs);
           });
 
         }
@@ -613,7 +558,6 @@ const SideBar = () => {
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
 
-
 // useEffect(() => {
 //   setBookingData({ ...bookingData,
 //     seatCount: bookingData.seatCount || 4
@@ -638,8 +582,7 @@ const SideBar = () => {
 
 //   calculateFare()
   
-// }, [bookingData]);
-
+// }, []);
 
 
 
@@ -669,7 +612,7 @@ const SideBar = () => {
               required
               placeholder="Add your pickup location"
               value={bookingData.pickup}
-              onChange={(e) => setBookingData({...bookingData, pickup: e.target.value})} // update context
+              onChange={(e) => handlePickupChange(e)} // update context
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">

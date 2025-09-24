@@ -54,7 +54,7 @@ const SeatDetails = ({ data }) => {
     e.preventDefault();
     setBookingData({
         ...bookingData,
-        selectedCar: carData,
+        // selectedCar: carData,
         seatCount: isShow ? seats : 4
     })
     navigate(-1)
