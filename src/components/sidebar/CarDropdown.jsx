@@ -10,7 +10,6 @@ const CarDropdown = ({
   isFixedPrice,
   onOptionSelect = () => {},
   title = "More vehicle/service options",
-  className = "",
   label,
   isLuggageModal,
   changeVehicleText,
@@ -55,7 +54,7 @@ const CarDropdown = ({
   };
 
   return (
-    <div className={`w-full mx-auto bg-white rounded-lg shadow-lg ${className} mt-4`}>
+    <div className={`w-full  bg-white rounded-lg shadow-lg mt-4`}>
       {/* Header (clickable) */}
       <button
         type="button"

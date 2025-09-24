@@ -1,7 +1,7 @@
 import { X, Mail, UserPlus } from "lucide-react"; // icons
 import { FiZap } from "react-icons/fi"; // lightning icon
-import image from "../../assets/menuCar.jpeg"
-import logo from "../../assets/logo.png"
+import images from  "../../assets/images"
+
 
 export default function SmallScreenNavComponent({ onClose }) {
   return (
@@ -17,7 +17,7 @@ export default function SmallScreenNavComponent({ onClose }) {
       {/* Profile Section */}
       <div className="flex flex-col  mt-12 space-y-4 border-b pb-6">
         <img
-          src={image} 
+          src={images.menuCar} 
           alt="Profile"
           className="w-24 h-24 rounded-full object-cover ml-4"
         />
@@ -65,7 +65,7 @@ export default function SmallScreenNavComponent({ onClose }) {
            
           </div>
           <img
-            src={logo} // replace with Silver Service logo
+            src={images.logo} // replace with Silver Service logo
             alt="Silver Service"
             className="h-8"
           />

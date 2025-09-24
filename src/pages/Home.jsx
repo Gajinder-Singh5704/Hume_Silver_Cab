@@ -8,11 +8,13 @@ const Home = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedPickup, setSelectedPickup] = useState(null);
   const [destinations, setSelectedDestinations] = useState([]);
+  const [isVehicleDetailOpen,setIsVehicleDetailOpen] = useState(false)
 
   return (
     <>
-      <Navbar />
-      <NavSection onPlaceSelect={setSelectedPlace} />
+      {!isVehicleDetailOpen && <Navbar/>}
+      
+       {!isVehicleDetailOpen && <NavSection onPlaceSelect={setSelectedPlace} />}
 
       {/* Wrapper handles both sm & lg */}
       <div className="flex flex-col md:flex-row w-full h-[calc(100vh-125px)]">
@@ -27,11 +29,11 @@ const Home = () => {
 
         {/* Map Section */}
         <div className="flex-1 order-1 md:order-2 h-[50vh] md:h-auto">
-          <MapSection
+          {!isVehicleDetailOpen && <MapSection
             selectedPlace={selectedPlace}
             selectedPickup={selectedPickup}
             destinations={destinations}
-          />
+          />}
         </div>
       </div>
     </>
