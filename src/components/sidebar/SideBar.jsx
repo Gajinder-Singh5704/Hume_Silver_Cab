@@ -16,12 +16,16 @@ import CarDropdown from "./CarDropdown.jsx";
 import { getGeocode } from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
 import LuggageModal from "./LuggageModal.jsx";
+import { useLocation ,useOutletContext} from "react-router-dom";
 
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
 );
 
-const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
+const SideBar = () => {
+
+  const { onPickupSelect, onDestinationsSelect } = useOutletContext();
+
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [destinations, setDestinations] = useState([""]);
@@ -34,7 +38,8 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   const [tollPrice, setTollPrice] = useState(0);
 
   const [isLuggageModalOpen,setIsLuggageModalOpen] = useState(false)
-  const bookingData = location.state?.bookingData;
+  const location = useLocation(); // React Router location
+  let bookingData = location.state?.bookingData;
 
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
@@ -455,6 +460,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     setHasToll(false);
     setDistanceKm("");
     setContactError("");
+    bookingData = null
     onPickupSelect(setPickupLoc);
     onDestinationsSelect(setDestinationLocs);
 
@@ -554,12 +560,29 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
     }
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
-    useEffect(() => {
-    if (bookingData) {
-      console.log("Received bookingData:", bookingData);
-      setSelected(bookingData);
-    }
-  }, [bookingData]);
+
+useEffect(() => {
+  const bookingData = location.state?.bookingData;
+
+  if (bookingData?.selectedCar) {
+    setSelected(bookingData.selectedCar);
+  }
+
+  if (bookingData) {
+    // restore other fields
+    setPickup(bookingData.pickup || "");
+    setPickupLoc(bookingData.pickupLoc || null);
+    setDestinations(bookingData.destinations || [""]);
+    setDestinationLocs(bookingData.destinationLocs || []);
+    setPassenger(bookingData.passenger || "");
+    setContact(bookingData.contact || "");
+    setInstruction(bookingData.instruction || "");
+    setSelectedPayment(bookingData.selectedPayment || null);
+    setIsOn(bookingData.isOn ?? true);
+  }
+}, [location]);
+
+
 
   return (
     <section className=" w-full  h-[83.4vh] overflow-y-scroll">
@@ -798,6 +821,17 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
             }
             isLuggageModal={setIsLuggageModalOpen}
             className="w-full" // <- pass this down
+              bookingData={{
+    pickup,
+    pickupLoc,
+    destinations,
+    destinationLocs,
+    passenger,
+    contact,
+    instruction,
+    selectedPayment,
+    isOn,
+  }}
           />
         </div>
 

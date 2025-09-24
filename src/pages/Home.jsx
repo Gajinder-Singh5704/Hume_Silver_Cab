@@ -22,7 +22,8 @@ const Home = () => {
         
         {/* Sidebar */}
         <div className="md:w-[380px] md:border-r order-2 md:order-1 h-[50vh] md:h-auto border-t md:border-t-0 overflow-y-auto">
-         <Outlet/>
+        <Outlet context={{ onPickupSelect: setSelectedPickup, onDestinationsSelect: setSelectedDestinations }} />
+
         </div>
 
         {/* Map Section */}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Info, Package } from "lucide-react";
 import { defaultVehicleOptions } from "../../data/data.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
 
 const CarDropdown = ({
   vehicleOptions = [],
@@ -10,7 +10,8 @@ const CarDropdown = ({
   title = "More vehicle/service options",
   className = "",
   label,
-  isLuggageModal
+  isLuggageModal,
+  bookingData
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -38,7 +39,11 @@ const CarDropdown = ({
   }
   console.log("Navigating to:", id);
   if (id) {
-    navigate(`/${id}`);
+    navigate(`/${id}`,{  state: {
+          ...bookingData,    // <-- pass all booking data from SideBar
+          selectedCar: selectedOption,
+          carId: id,
+        },});
   } else {
     console.warn("No route defined for this option");
   }
@@ -123,9 +128,9 @@ const CarDropdown = ({
                 <div className="flex items-center space-x-3">
                   <div className="text-2xl">
                     {typeof option.icon === "string" ? (
-                      <img src={option.image} className="h-10" />
+                      <img src={option.image} className="h-10 w-18" />
                     ) : (
-                      <img src={option.image} className="h-10" />
+                      <img src={option.image} className="h-10 w-18" />
                     )}
                   </div>
                   <div className="text-left">
