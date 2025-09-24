@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, Info, LockIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, Lock, LockIcon, Package } from "lucide-react";
 import { defaultVehicleOptions } from "../../data/data.jsx";
 import { useNavigate } from "react-router-dom";
 
@@ -12,7 +12,8 @@ const CarDropdown = ({
   title = "More vehicle/service options",
   className = "",
   label,
-  isLuggageModal
+  isLuggageModal,
+  changeVehicleText,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -35,10 +36,22 @@ const CarDropdown = ({
     e.stopPropagation();
     if (id === "maxi-taxi") {
       isLuggageModal(true);
-      return;
+    } 
+    console.log("id:",id)
+    switch (id) {
+      case "Next-Available":
+        changeVehicleText("Next Available")
+        break;
+      case "silver-service":
+        changeVehicleText("Silver Service")
+        break;
+      case "suv":
+        changeVehicleText("Suv")
+        break;
+      case "maxi-taxi":
+        changeVehicleText("Maxi Taxi")
+        break;
     }
-    if (id) navigate(`/${id}`);
-    else console.warn("No route defined for this option");
   };
 
   return (

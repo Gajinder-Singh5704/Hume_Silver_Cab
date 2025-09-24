@@ -11,46 +11,45 @@ import {
   IconButton,
 } from "@mui/material";
 import { LockIcon } from "lucide-react";
-import ToggleSwitch from "./ToggleSwich.jsx";
-import CarDropdown from "./CarDropdown.jsx";
-import { getGeocode } from "../../hooks/map.js";
+import ToggleSwitch from "./ToggleSwich";
+import CarDropdown from "./CarDropdown";
+import {
+  getGeocode,
+} from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
-import {SeatDetails} from "../../data/data.js"
+import { seatDetails } from "../../data/data.jsx";
+import SeatDetails from "./SeatDetails.jsx"
+import LuggageModal from "./LuggageModal.jsx";
 
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
 );
 
-const SideBar = () => {
-
-  const { onPickupSelect, onDestinationsSelect } = useOutletContext();
-  const [show,setShow] = useState(true)
-
+const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
-  // const [destinations, setDestinations] = useState([""]);
-  // const [passenger, setPassenger] = useState("");
-  // const [contact, setContact] = useState("");
-  // const [instruction, setInstruction] = useState("");
+  // const [pickup, setPickup] = useState("");
+  const [destinations, setDestinations] = useState([""]);
+  const [passenger, setPassenger] = useState("");
+  const [contact, setContact] = useState("");
+  const [instruction, setInstruction] = useState("");
   const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(null);
-  // const [selectedPayment, setSelectedPayment] = useState(null);
-  // const [tollPrice, setTollPrice] = useState(0);
-
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [tollPrice, setTollPrice] = useState(0);
   const [isLuggageModalOpen,setIsLuggageModalOpen] = useState(false)
-  
 
-  // const [pickup, setPickup] = useState("");
+  const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
 
-  // const [pickupLoc, setPickupLoc] = useState(null);
-  // const [destinationLocs, setDestinationLocs] = useState([]);
+  const [pickupLoc, setPickupLoc] = useState(null);
+  const [destinationLocs, setDestinationLocs] = useState([]);
 
   const destinationRefs = useRef([]);
 
   // route & toll
-  // const [distanceKm, setDistanceKm] = useState("");
-  // const [hasToll, setHasToll] = useState(false);
+  const [distanceKm, setDistanceKm] = useState("");
+  const [hasToll, setHasToll] = useState(false);
 
   // booking time
   const [bookingMode, setBookingMode] = useState("now"); // "now" | "later"
@@ -68,13 +67,17 @@ const SideBar = () => {
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
 
-  const [vehicleText , setVehicleText] = useState(""); 
+  const [vehicleText,setVehicleText] = useState("")
+  
 
   const [tempTime, setTempTime] = useState(
     `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
   );
 
-  const { resetBooking, bookingData, setBookingData } = useBooking();
+  // refs for hidden inputs used by external Forminator code
+  const distanceRef = useRef(null);
+  const tollRef = useRef(null);
+  const timeTypeRef = useRef(null);
 
   // determine time type (helper stays the same)
   const determineTimeType = (dateObj) => {
@@ -108,15 +111,15 @@ const SideBar = () => {
   const calculateFare = () => {
     console.log("=== Fare Calculation Started ===");
 
-    if (!bookingData.distanceKm) {
+    if (!distanceKm) {
       console.log("❌ No distance available — aborting fare calculation.");
       return null;
     }
 
-    const distance = parseInt(bookingData.distanceKm);
+    const distance = parseInt(distanceKm);
     console.log("📏 Distance (km):", distance);
 
-    const tollCost = bookingData.hasToll ? parseFloat(bookingData.tollPrice) : 0;
+    const tollCost = hasToll ? parseFloat(tollPrice) : 0;
     console.log("💰 Toll cost included:", tollCost);
 
     const bookingFees = 4;
@@ -170,7 +173,7 @@ const SideBar = () => {
     console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
 
     // Airport surcharge
-    if (isAirportPickup(bookingData.pickup)) {
+    if (isAirportPickup(pickup)) {
       fareValue += 4.68;
       console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
     }
@@ -180,99 +183,102 @@ const SideBar = () => {
   };
 
   const handleDeleteDestination = (index) => {
-    setBookingData(prev => {
-      // If this is the last remaining field, just clear it
-      if (prev.destinations.length === 1) {
-        return {
-          ...prev,
-          destinations: [""],
-          destinationLocs: [],
-        };
-      }
-      // Otherwise, remove the field normally
-      const newDestinations = [...prev.destinations];
-      newDestinations.splice(index, 1);
+    // If this is the last remaining field, just clear it
+    if (destinations.length === 1) {
+      const newDestinations = [""];
+      setDestinations(newDestinations);
 
-      const newLocs = [...prev.destinationLocs];
-      newLocs.splice(index, 1);
+      const newLocs = []; // remove any location
+      setDestinationLocs(newLocs);
 
       // Notify parent about updated destinations
       onDestinationsSelect(newLocs);
 
       // Update route with empty destinations
-      updateRoute(prev.pickupLoc, newLocs);
+      updateRoute(pickupLoc, newLocs);
+      return;
+    }
 
-      return {
-        ...prev,
-        destinations: newDestinations,
-        destinationLocs: newLocs,
-      };
-    });
-  };
+    // Otherwise, remove the field normally
+    const newDestinations = [...destinations];
+    newDestinations.splice(index, 1);
+    setDestinations(newDestinations);
 
-  const handlePickupChange = (e) => {
-    setBookingData(prev => ({ ...prev, pickup: e.target.value }));
+    const newLocs = [...destinationLocs];
+    newLocs.splice(index, 1);
+    setDestinationLocs(newLocs);
+
+    // Notify parent about updated destinations
+    onDestinationsSelect(newLocs);
+
+    updateRoute(pickupLoc, newLocs);
   };
 
   const handleDeletePickup = () => {
-  setBookingData({
-    ...bookingData,
-    pickup: "",
-    pickupLoc: null,
-    pickupSuggestions: [],
-    destinations: [""],
-    destinationLocs: [],
-  });
-  onPickupSelect(null);
-  updateRoute(null, []);
+    setPickup(""); // Clear pickup input
+    setPickupLoc(null); // Clear location object
+    setPickupSuggestions([]); // Clear any autocomplete suggestions
+
+    setDestinations([""]);
+    setDestinationLocs([]);
+
+
+    // Notify parent that pickup is now empty
+    onDestinationsSelect([]);
+    onPickupSelect(null);
+
+    // Also reset route if neede
+    // d
+    updateRoute(null, []);
   };
 
   const handlePickupSelect = async (s) => {
-  try {
-    const location = await getGeocode(s);
-    setBookingData({
-      ...bookingData,
-      pickup: s.description,
-      pickupLoc: location,
-      pickupSuggestions: [],
-    });
-    onPickupSelect(location);
-  } catch (err) {
-    console.error("Failed to select pickup", err);
-  }
-};
+    setPickup(s.description);
+    setPickupSuggestions([]);
+
+    try {
+      const location = await getGeocode(s);
+      if (location) {
+        setPickupLoc(location);
+        onPickupSelect(location);
+      }
+    } catch (err) {
+      console.error("Failed to select pickup", err);
+    }
+  };
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
-    setBookingData({ ...bookingData, selectedPayment: paymentMethod });
+    setSelectedPayment(paymentMethod);
     console.log("Selected payment:", paymentMethod);
   };
 
   const handleAdd = () => {
-  setBookingData(prev => {
-    const dests = prev.destinations;
-    // Only add if less than 4 and last is not empty
-    if (dests.length < 4 && dests[dests.length - 1].trim() !== "") {
-      return { ...prev, destinations: [...dests, ""] };
+    if (
+      destinations.length < 4 &&
+      typeof destinations[destinations.length - 1] === "string" &&
+      destinations[destinations.length - 1].trim() !== ""
+    ) {
+      setDestinations([...destinations, ""]);
     }
-    return prev;
-  });
-};
+  };
 
   const updateRoute = (pickup, dests) => {
     console.log("Calling calculate");
     if (!pickup || dests.length === 0) {
-      setBookingData(prev => ({ ...prev, distanceKm: "", hasToll: false, fare: null }));
+      setDistanceKm("");
+      setHasToll(false);
+      setFare(null);
       return;
     }
 
-    setBookingData(prev => ({ ...prev, hasToll: false, fare: null }));
-    
+    setHasToll(false);
+    setFare(null);
 
     const service = new window.google.maps.DirectionsService();
 
     service.route({
-      origin: bookingData.pickup,
+      origin: pickup,
       destination: dests[dests.length - 1],
       waypoints: dests.slice(0, -1).map((loc) => ({
         location: loc,
@@ -292,7 +298,7 @@ const SideBar = () => {
           );
 
           const km = (leg.distance / 1000).toFixed(1);
-          setBookingData({ ...bookingData, distanceKm: km });
+          setDistanceKm(km);
 
           // --- DEBUG: log each instruction separately ---
           console.log("Route Instructions:");
@@ -308,15 +314,15 @@ const SideBar = () => {
           // ---- Toll calculation ---- //
           const toll = calculateToll(stepsText);
 
-          setBookingData({ ...bookingData, hasToll: toll > 0 });
-          setBookingData({ ...bookingData, tollPrice: toll });
+          setHasToll(toll > 0);
+          setTollPrice(toll);
           console.log("Toll Cost:", toll);
           calculateFare(); // If you already include tolls in fare calculation
         } else {
           console.error("Directions request failed:", status);
-          setBookingData({ ...bookingData, distanceKm: "" });
-          setBookingData({ ...bookingData, hasToll: false });
-          setBookingData({ ...bookingData, fare: null });
+          setDistanceKm("");
+          setHasToll(false);
+          setFare(null);
         }
       }
     );
@@ -388,39 +394,6 @@ const SideBar = () => {
     console.log("💰 Final calculated toll:", toll);
     return toll;
   };
-  // Validate if a place is in Victoria (AU)
-  const isInVictoria = async (location) => {
-    return new Promise((resolve) => {
-      if (!window.google || !window.google.maps) {
-        console.warn("Google Maps not loaded yet");
-        return resolve(false);
-      }
-
-      const geocoder = new window.google.maps.Geocoder();
-
-      geocoder.geocode({ location }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          const addressComponents = results[0].address_components;
-          const stateComp = addressComponents.find((c) =>
-            c.types.includes("administrative_area_level_1")
-          );
-          const countryComp = addressComponents.find((c) =>
-            c.types.includes("country")
-          );
-
-          // Must be Victoria, Australia
-          if (stateComp?.short_name === "VIC" && countryComp?.short_name === "AU") {
-            resolve(true);
-          } else {
-            resolve(false);
-          }
-        } else {
-          console.error("Geocode failed:", status);
-          resolve(false);
-        }
-      });
-    });
-  };
 
   const isAirportPickup = (pickup) => {
     let pickupAddress = "";
@@ -449,12 +422,53 @@ const SideBar = () => {
     e.preventDefault();
 
     // Gather all form data
+    const formData = {
+      pickup,
+      pickupLoc,
+      destinations,
+      destinationLocs,
+      passenger,
+      contact,
+      instruction,
+      isOn,
+      selected,
+      selectedPayment,
+      bookingMode,
+      dateVal,
+      hourVal,
+      minuteVal,
+      timeType,
+      fare,
+      hasToll,
+      distanceKm,
+    };
 
     alert("Booking requested");
-    console.log("Booking Data:", bookingData);
+    console.log("Booking Data:", formData);
 
     // Reset all fields
-    resetBooking();
+    setPickup("");
+    setPickupLoc(null);
+    setPickupSuggestions([]);
+    setDestinations([""]);
+    setDestinationLocs([]);
+    setPassenger("");
+    setContact("");
+    setInstruction("");
+    setIsOn(true);
+    setSelected(null);
+    setSelectedPayment(null);
+    setBookingMode("now");
+    setDateVal("");
+    setHourVal("9");
+    setMinuteVal("00");
+    setTimeType(2);
+    setFare(null);
+    setHasToll(false);
+    setDistanceKm("");
+    setContactError("");
+    onPickupSelect(setPickupLoc);
+    onDestinationsSelect(setDestinationLocs);
 
     // Update route with empty destinations
     // updateRoute(pickupLoc, newLocs);
@@ -474,26 +488,25 @@ const SideBar = () => {
             };
             const auto = new window.google.maps.places.Autocomplete(input, options);
 
-            auto.addListener("place_changed", async () => {
+            auto.addListener("place_changed", () => {
               const place = auto.getPlace();
               if (!place || !place.geometry) return;
 
-              const newDestinations = [...bookingData.destinations];
+              const newDestinations = [...destinations];
               newDestinations[idx] = place.formatted_address;
-              setBookingData(prev => ({ ...prev, destinations: newDestinations }));
+              setDestinations(newDestinations);
 
               const location = {
                 lat: place.geometry.location.lat(),
                 lng: place.geometry.location.lng(),
               };
-              const newLocs = [...bookingData.destinationLocs];
+              const newLocs = [...destinationLocs];
               newLocs[idx] = location;
-              setBookingData(prev => ({ ...prev, destinationLocs: newLocs }));
+              setDestinationLocs(newLocs);
               onDestinationsSelect(newLocs);
 
               updateRoute(pickupLoc, newLocs);
             });
-
           }
         });
 
@@ -508,35 +521,33 @@ const SideBar = () => {
             options
           );
 
-          autoPickup.addListener("place_changed", async () => {
+          autoPickup.addListener("place_changed", () => {
             const place = autoPickup.getPlace();
             if (!place || !place.geometry) return;
+
+            setPickup(place.formatted_address);
 
             const location = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-
-            setBookingData(prev => ({
-              ...prev,
-              pickup: place.formatted_address,
-              pickupLoc: location,
-              // Don't reset other fields here!
-            }));
+            setPickupLoc(location);
             onPickupSelect(location);
-            updateRoute(location, bookingData.destinationLocs);
-          });
 
+            // ✅ Make behavior consistent: trigger route update
+            updateRoute(location, destinationLocs);
+          });
         }
       }
     }, 300);
 
     return () => clearInterval(interval);
-  }, [bookingData.destinations, bookingData.pickupLoc, bookingData.destinationLocs, onDestinationsSelect, onPickupSelect]);
+  }, [destinations, pickupLoc, destinationLocs, onDestinationsSelect, onPickupSelect]);
 
   useEffect(() => {
-    if (bookingData.distanceKm) calculateFare();
-  }, [selected, bookingData.distanceKm, bookingData.hasToll, timeType]);
+    if (distanceKm) calculateFare();
+  }, [selected, distanceKm, hasToll, timeType]);
+
 
   useEffect(() => {
     let dateObj;
@@ -556,14 +567,12 @@ const SideBar = () => {
     }
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
-
-
   return (
-
-    <>
-      {!vehicleText && (
-        <section className=" w-full  h-[83.4vh] overflow-y-scroll">
+  <>
+  {!vehicleText && (  <section className=" w-full  h-[83.4vh] overflow-y-scroll">
       <form onSubmit={handleSubmit}>
+        {/* Step 1 */}
+
         {/* Step 1 */}
         <div className="px-5 py-6">
           <h3 className="text-sm mb-4 hidden md:flex">
@@ -585,12 +594,12 @@ const SideBar = () => {
               fullWidth
               required
               placeholder="Add your pickup location"
-              value={bookingData.pickup}
-              onChange={(e) => handlePickupChange(e)} // update context
+              value={pickup}
+              onChange={(e) => setPickup(e.target.value)} // just update local state
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    {bookingData.pickup ? (
+                    {pickup ? (
                       <IconButton size="small">
                         <span
                           onClick={handleDeletePickup}
@@ -626,7 +635,7 @@ const SideBar = () => {
           </div>
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {bookingData.destinations.map((destination, index) => (
+            {destinations.map((destination, index) => (
               <div key={index} className="relative">
                 <TextField
                   label={`Destination ${index + 1}`}
@@ -634,17 +643,17 @@ const SideBar = () => {
                   fullWidth
                   value={destination}
                   onChange={(e) => {
-                    const newDestinations = [...bookingData.destinations];
+                    const newDestinations = [...destinations];
                     newDestinations[index] = e.target.value;
-                    setBookingData({ ...bookingData, destinations: newDestinations });
+                    setDestinations(newDestinations);
                   }}
                   required
-                  disabled={!bookingData.pickup}
+                  disabled={!pickup}
                   inputRef={(el) => (destinationRefs.current[index] = el)}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        {bookingData.destinations[index] && (
+                        {destination && (
                           <IconButton
                             size="small"
                             onClick={() => handleDeleteDestination(index)}
@@ -663,9 +672,9 @@ const SideBar = () => {
               variant="outlined"
               onClick={handleAdd}
               disabled={
-                bookingData.destinations.length >= 4 ||
-                !bookingData.destinations[bookingData.destinations.length - 1] || // check for undefined/null
-                bookingData.destinations[bookingData.destinations.length - 1].trim() === ""
+                destinations.length >= 4 ||
+                !destinations[destinations.length - 1] || // check for undefined/null
+                destinations[destinations.length - 1].trim() === ""
               }
             >
               + Add Destination
@@ -734,7 +743,7 @@ const SideBar = () => {
                   type="date"
                   className="w-full border rounded px-3 py-2"
                   value={dateVal}
-                  onChange={(e) => setBookingData({...bookingData, dateVal: e.target.value})}
+                  onChange={(e) => setDateVal(e.target.value)}
                   required
                   min={new Date().toISOString().split("T")[0]}
                 />
@@ -751,7 +760,8 @@ const SideBar = () => {
                   value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`}
                   onChange={(e) => {
                     const [h, m] = e.target.value.split(":");
-                    setBookingData({...bookingData, hourVal: h, minuteVal: m});
+                    setHourVal(h);
+                    setMinuteVal(m);
                   }}
                   required
                   step="60" // optional
@@ -777,16 +787,15 @@ const SideBar = () => {
               <p className="text-xl text-[#145389] font-bold">Fixed Price</p>
             </div>
 
-            <ToggleSwitch enabled={isOn} onToggle={setIsOn} />
+            <ToggleSwitch enabled={isOn} onToggle={setIsOn}/>
           </div>
 
           <p className="mt-2">Lock in a price with no additional charges.</p>
         </div>
-        <div className="w-full px-2">
+        <div className="w-full px-5">
           <CarDropdown
             selectedOption={selected}
             onOptionSelect={setSelected}
-            isFixedPrice={isOn}
             label={
               fare
                 ? isOn
@@ -794,13 +803,12 @@ const SideBar = () => {
                   : `Fare: $${(fare - 5).toFixed(2)} - $${(
                     parseFloat(fare) + 5
                   ).toFixed(2)}`
-                : "Dest required"
+                : "Dest Required"
             }
+            className="w-full"
+            changeVehicleText={setVehicleText}
             isLuggageModal={setIsLuggageModalOpen}
-            className="w-full" // <- pass this down
-
-            bookingData={bookingData}
-            setBookingData={setBookingData}
+            isFixedPrice = {isOn}
           />
         </div>
 
@@ -818,8 +826,8 @@ const SideBar = () => {
               fullWidth
               required
               placeholder="Passenger name"
-              value={bookingData.passenger}
-              onChange={(e) => setBookingData({...bookingData, passenger: e.target.value})}
+              value={passenger}
+              onChange={(e) => setPassenger(e.target.value)}
             />
           </div>
 
@@ -843,10 +851,10 @@ const SideBar = () => {
                   pattern: "[0-9]{9}",
                   maxLength: 9,
                 }}
-                value={bookingData.contact}
+                value={contact}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "");
-                  setBookingData({...bookingData, contact: value});
+                  setContact(value);
                   if (value.length === 9 && value.startsWith("4")) {
                     setContactError("");
                   } else {
@@ -865,14 +873,14 @@ const SideBar = () => {
         </div>
 
         {/* Step 3 Payment */}
-        <div className="px-5 py-6" onClick={()=>setShow(false)}>
+        <div className="px-5 py-6">
           <h3 className="text-sm mt-2 mb-4">
             {" "}
             Step 3 of 4 <b>Payment</b>
           </h3>
 
           <PaymentDropdown
-            selectedOption={bookingData.selectedPayment}
+            selectedOption={selectedPayment}
             onOptionSelect={handlePaymentSelect}
             title="Select payment method"
             className="mb-4"
@@ -896,10 +904,10 @@ const SideBar = () => {
               inputProps={{
                 maxLength: 350,
               }}
-              value={bookingData.instruction}
+              value={instruction}
               onChange={(e) => {
                 const value = e.target.value;
-                setBookingData({ ...bookingData, instruction: value });
+                setInstruction(value);
               }}
               placeholder="e.g. Unit, Gate and floor numbers"
             />
@@ -915,13 +923,14 @@ const SideBar = () => {
           </button>
         </div>
       </form>
-        </section>
-      )}
+    </section>)}
+    {vehicleText === "Next Available" && (<SeatDetails data={seatDetails["Next Available"]} changeVehicleText={setVehicleText} onSelect={setSelected} />)}
+    {vehicleText === "Silver Service" && (<SeatDetails data={seatDetails["Silver Service"]} changeVehicleText={setVehicleText} onSelect={setSelected} />)}
+    {vehicleText === "Suv" && (<SeatDetails data={seatDetails["Suv"]} changeVehicleText={setVehicleText} onSelect={setSelected} />)}
+    {vehicleText === "Maxi Taxi" && (<SeatDetails data={seatDetails["Maxi Taxi"]} changeVehicleText={setVehicleText} onSelect={setSelected} />)}
 
-      { vehicleText === "Next Available"}
-
-    </>
-    
+    {isLuggageModalOpen && (<LuggageModal/>)}
+  </>
   );
 };
 

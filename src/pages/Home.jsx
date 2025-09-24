@@ -2,13 +2,12 @@ import MapSection from "../components/map/MapSection.jsx";
 import Navbar from "../components/navbar/Navbar.jsx";
 import NavSection from "../components/navSection/NavSection.jsx";
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import SideBar from "../components/sidebar/SideBar.jsx";
 
 const Home = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedPickup, setSelectedPickup] = useState(null);
   const [destinations, setSelectedDestinations] = useState([]);
-  const [selectedCar ,setSelectedCar] = useState(null)
 
   return (
     <>

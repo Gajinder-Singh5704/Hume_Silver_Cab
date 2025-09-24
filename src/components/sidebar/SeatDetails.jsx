@@ -1,16 +1,12 @@
 import { useState } from "react";
 import images from "../../assets/images.js";
-import { useNavigate ,useLocation} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import LuggageModal from "./LuggageModal.jsx";
-import { useBooking } from "../../context/BookingContext.jsx";
 
-const SeatDetails = ({ data }) => {
+const SeatDetails = ({ data , changeVehicleText , onSelect }) => {
   const [seats, setSeats] = useState(6);
   const navigate = useNavigate();
   const isShow = data.name == "Suv" || data.name == "Maxi Taxi";
-  const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(
-    data.name == "Maxi Taxi"
-  );
   console.log(isShow, "isShow");
   const handleSeatsChange = (delta) => {
     setSeats((prev) => {
@@ -25,7 +21,6 @@ const SeatDetails = ({ data }) => {
     });
   };
 
-  const { bookingData, setBookingData } = useBooking();
 
     const handleSelectService = () => {
         let id = null; switch (data.name) { case "next available": id = "Next-Available"; break; case "Suv": id = "Suv"; break; case "Maxi Taxi": id = "Maxi-Taxi"; break; case "Silver Service": id = "Silver-Service"; break; }
@@ -40,24 +35,14 @@ const SeatDetails = ({ data }) => {
         seatCount: isShow ? seats : 4
         };
 
-        setBookingData({
-        ...bookingData,
-        selectedCar: carData,
-        seatCount: isShow ? seats : 4
-        });
-
-        navigate("/");
+        onSelect(carData)
+        changeVehicleText("")
     };
 
 
   const handleBackClick = (e) => {
     e.preventDefault();
-    setBookingData({
-        ...bookingData,
-        // selectedCar: carData,
-        seatCount: isShow ? seats : 4
-    })
-    navigate(-1)
+    changeVehicleText("")
   };
 
   return (
@@ -132,8 +117,6 @@ const SeatDetails = ({ data }) => {
       </div>
       {/* Footer (optional) */}
       <div className="h-6"></div>
-
-      {isLuggageModalOpen && <LuggageModal />}
     </div>
   );
 };
