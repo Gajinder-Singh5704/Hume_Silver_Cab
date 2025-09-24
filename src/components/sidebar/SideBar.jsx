@@ -16,7 +16,8 @@ import CarDropdown from "./CarDropdown.jsx";
 import { getGeocode } from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
 import LuggageModal from "./LuggageModal.jsx";
-import { useLocation ,useOutletContext} from "react-router-dom";
+import { useOutletContext} from "react-router-dom";
+import { useBooking } from "../../context/BookingContext";
 
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
@@ -28,30 +29,30 @@ const SideBar = () => {
 
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
-  const [destinations, setDestinations] = useState([""]);
-  const [passenger, setPassenger] = useState("");
-  const [contact, setContact] = useState("");
-  const [instruction, setInstruction] = useState("");
+  // const [destinations, setDestinations] = useState([""]);
+  // const [passenger, setPassenger] = useState("");
+  // const [contact, setContact] = useState("");
+  // const [instruction, setInstruction] = useState("");
   const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(null);
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [tollPrice, setTollPrice] = useState(0);
+  // const [selectedPayment, setSelectedPayment] = useState(null);
+  // const [tollPrice, setTollPrice] = useState(0);
 
   const [isLuggageModalOpen,setIsLuggageModalOpen] = useState(false)
-  const location = useLocation(); // React Router location
-  let bookingData = location.state?.bookingData;
+  
+  
 
-  const [pickup, setPickup] = useState("");
+  // const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
 
-  const [pickupLoc, setPickupLoc] = useState(null);
-  const [destinationLocs, setDestinationLocs] = useState([]);
+  // const [pickupLoc, setPickupLoc] = useState(null);
+  // const [destinationLocs, setDestinationLocs] = useState([]);
 
   const destinationRefs = useRef([]);
 
   // route & toll
-  const [distanceKm, setDistanceKm] = useState("");
-  const [hasToll, setHasToll] = useState(false);
+  // const [distanceKm, setDistanceKm] = useState("");
+  // const [hasToll, setHasToll] = useState(false);
 
   // booking time
   const [bookingMode, setBookingMode] = useState("now"); // "now" | "later"
@@ -72,6 +73,8 @@ const SideBar = () => {
   const [tempTime, setTempTime] = useState(
     `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
   );
+
+  const { resetBooking, bookingData, setBookingData } = useBooking();
 
   // determine time type (helper stays the same)
   const determineTimeType = (dateObj) => {
@@ -105,15 +108,15 @@ const SideBar = () => {
   const calculateFare = () => {
     console.log("=== Fare Calculation Started ===");
 
-    if (!distanceKm) {
+    if (!bookingData.distanceKm) {
       console.log("❌ No distance available — aborting fare calculation.");
       return null;
     }
 
-    const distance = parseInt(distanceKm);
+    const distance = parseInt(bookingData.distanceKm);
     console.log("📏 Distance (km):", distance);
 
-    const tollCost = hasToll ? parseFloat(tollPrice) : 0;
+    const tollCost = bookingData.hasToll ? parseFloat(bookingData.tollPrice) : 0;
     console.log("💰 Toll cost included:", tollCost);
 
     const bookingFees = 4;
@@ -167,7 +170,7 @@ const SideBar = () => {
     console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
 
     // Airport surcharge
-    if (isAirportPickup(pickup)) {
+    if (isAirportPickup(bookingData.pickup)) {
       fareValue += 4.68;
       console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
     }
@@ -178,12 +181,12 @@ const SideBar = () => {
 
   const handleDeleteDestination = (index) => {
     // If this is the last remaining field, just clear it
-    if (destinations.length === 1) {
+    if (bookingData.destinations.length === 1) {
       const newDestinations = [""];
-      setDestinations(newDestinations);
+      setBookingData({ ...bookingData, destinations: newDestinations });
 
       const newLocs = []; // remove any location
-      setDestinationLocs(newLocs);
+      setBookingData({ ...bookingData, destinationLocs: newLocs });
 
       // Notify parent about updated destinations
       onDestinationsSelect(newLocs);
@@ -194,13 +197,13 @@ const SideBar = () => {
     }
 
     // Otherwise, remove the field normally
-    const newDestinations = [...destinations];
+    const newDestinations = [...bookingData.destinations];
     newDestinations.splice(index, 1);
-    setDestinations(newDestinations);
+    setBookingData({ ...bookingData, destinations: newDestinations });
 
-    const newLocs = [...destinationLocs];
+    const newLocs = [...bookingData.destinationLocs];
     newLocs.splice(index, 1);
-    setDestinationLocs(newLocs);
+    setBookingData({ ...bookingData, destinationLocs: newLocs });
 
     // Notify parent about updated destinations
     onDestinationsSelect(newLocs);
@@ -209,30 +212,29 @@ const SideBar = () => {
   };
 
   const handleDeletePickup = () => {
-    setPickup(""); // Clear pickup input
-    setPickupLoc(null); // Clear location object
-    setPickupSuggestions([]); // Clear any autocomplete suggestions
+    setBookingData({ ...bookingData, pickup: "" }); // Clear pickup input
+    setBookingData({ ...bookingData, pickupLoc: null }); // Clear location object
+    setBookingData({ ...bookingData, pickupSuggestions: [] }); // Clear any autocomplete suggestions
 
-    setDestinations([""]);
-    setDestinationLocs(null);
+    setBookingData({ ...bookingData, destinations: [""] });
+    setBookingData({ ...bookingData, destinationLocs: null });
 
     // Notify parent that pickup is now empty
-    onDestinationsSelect([]);
+    setBookingData({ ...bookingData, destinations: [] });
     onPickupSelect(null);
 
-    // Also reset route if neede
-    // d
+    // Also reset route if needed
     updateRoute(null, null);
   };
 
   const handlePickupSelect = async (s) => {
-    setPickup(s.description);
-    setPickupSuggestions([]);
+    setBookingData({ ...bookingData, pickup: s.description });
+    setBookingData({ ...bookingData, pickupSuggestions: [] });
 
     try {
       const location = await getGeocode(s);
       if (location) {
-        setPickupLoc(location);
+        setBookingData({ ...bookingData, pickupLoc: location });
         onPickupSelect(location);
       }
     } catch (err) {
@@ -242,36 +244,36 @@ const SideBar = () => {
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
-    setSelectedPayment(paymentMethod);
+    setBookingData({ ...bookingData, selectedPayment: paymentMethod });
     console.log("Selected payment:", paymentMethod);
   };
 
   const handleAdd = () => {
     if (
-      destinations.length < 4 &&
-      typeof destinations[destinations.length - 1] === "string" &&
-      destinations[destinations.length - 1].trim() !== ""
+      bookingData.destinations.length < 4 &&
+      typeof bookingData.destinations[bookingData.destinations.length - 1] === "string" &&
+      bookingData.destinations[bookingData.destinations.length - 1].trim() !== ""
     ) {
-      setDestinations([...destinations, ""]);
+      setBookingData({ ...bookingData, destinations: [...bookingData.destinations, ""] });
     }
   };
 
   const updateRoute = (pickup, dests) => {
     console.log("Calling calculate");
     if (!pickup || dests.length === 0) {
-      setDistanceKm("");
-      setHasToll(false);
-      setFare(null);
+      setBookingData({ ...bookingData, distanceKm: "" });
+      setBookingData({ ...bookingData, hasToll: false });
+      setBookingData({ ...bookingData, fare: null });
       return;
     }
 
-    setHasToll(false);
-    setFare(null);
+    setBookingData({ ...bookingData, hasToll: false });
+    setBookingData({ ...bookingData, fare: null });
 
     const service = new window.google.maps.DirectionsService();
 
     service.route({
-      origin: pickup,
+      origin: bookingData.pickup,
       destination: dests[dests.length - 1],
       waypoints: dests.slice(0, -1).map((loc) => ({
         location: loc,
@@ -291,7 +293,7 @@ const SideBar = () => {
           );
 
           const km = (leg.distance / 1000).toFixed(1);
-          setDistanceKm(km);
+          setBookingData({ ...bookingData, distanceKm: km });
 
           // --- DEBUG: log each instruction separately ---
           console.log("Route Instructions:");
@@ -307,15 +309,15 @@ const SideBar = () => {
           // ---- Toll calculation ---- //
           const toll = calculateToll(stepsText);
 
-          setHasToll(toll > 0);
-          setTollPrice(toll);
+          setBookingData({ ...bookingData, hasToll: toll > 0 });
+          setBookingData({ ...bookingData, tollPrice: toll });
           console.log("Toll Cost:", toll);
           calculateFare(); // If you already include tolls in fare calculation
         } else {
           console.error("Directions request failed:", status);
-          setDistanceKm("");
-          setHasToll(false);
-          setFare(null);
+          setBookingData({ ...bookingData, distanceKm: "" });
+          setBookingData({ ...bookingData, hasToll: false });
+          setBookingData({ ...bookingData, fare: null });
         }
       }
     );
@@ -415,54 +417,12 @@ const SideBar = () => {
     e.preventDefault();
 
     // Gather all form data
-    const formData = {
-      pickup,
-      pickupLoc,
-      destinations,
-      destinationLocs,
-      passenger,
-      contact,
-      instruction,
-      isOn,
-      selected,
-      selectedPayment,
-      bookingMode,
-      dateVal,
-      hourVal,
-      minuteVal,
-      timeType,
-      fare,
-      hasToll,
-      distanceKm,
-    };
 
     alert("Booking requested");
-    console.log("Booking Data:", formData);
+    console.log("Booking Data:", bookingData);
 
     // Reset all fields
-    setPickup("");
-    setPickupLoc(null);
-    setPickupSuggestions([]);
-    setDestinations([""]);
-    setDestinationLocs([]);
-    setPassenger("");
-    setContact("");
-    setInstruction("");
-    setIsOn(true);
-    setSelected(null);
-    setSelectedPayment(null);
-    setBookingMode("now");
-    setDateVal("");
-    setHourVal("9");
-    setMinuteVal("00");
-    setTimeType(2);
-    setFare(null);
-    setHasToll(false);
-    setDistanceKm("");
-    setContactError("");
-    bookingData = null
-    onPickupSelect(setPickupLoc);
-    onDestinationsSelect(setDestinationLocs);
+    resetBooking();
 
     // Update route with empty destinations
     // updateRoute(pickupLoc, newLocs);
@@ -488,7 +448,7 @@ const SideBar = () => {
 
               const newDestinations = [...destinations];
               newDestinations[idx] = place.formatted_address;
-              setDestinations(newDestinations);
+              setBookingData({ ...bookingData, destinations: newDestinations });
 
               const location = {
                 lat: place.geometry.location.lat(),
@@ -496,7 +456,7 @@ const SideBar = () => {
               };
               const newLocs = [...destinationLocs];
               newLocs[idx] = location;
-              setDestinationLocs(newLocs);
+              setBookingData({ ...bookingData, destinationLocs: newLocs });
               onDestinationsSelect(newLocs);
 
               updateRoute(pickupLoc, newLocs);
@@ -519,28 +479,28 @@ const SideBar = () => {
             const place = autoPickup.getPlace();
             if (!place || !place.geometry) return;
 
-            setPickup(place.formatted_address);
+            setBookingData({ ...bookingData, pickup: place.formatted_address });
 
             const location = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-            setPickupLoc(location);
+            setBookingData({ ...bookingData, pickupLoc: location });
             onPickupSelect(location);
 
             // ✅ Make behavior consistent: trigger route update
-            updateRoute(location, destinationLocs);
+            updateRoute(location, bookingData.destinationLocs);
           });
         }
       }
     }, 300);
 
     return () => clearInterval(interval);
-  }, [destinations, pickupLoc, destinationLocs, onDestinationsSelect, onPickupSelect]);
+  }, [bookingData.destinations, bookingData.pickupLoc, bookingData.destinationLocs, onDestinationsSelect, onPickupSelect]);
 
   useEffect(() => {
-    if (distanceKm) calculateFare();
-  }, [selected, distanceKm, hasToll, timeType]);
+    if (bookingData.distanceKm) calculateFare();
+  }, [selected, bookingData.distanceKm, bookingData.hasToll, timeType]);
 
   useEffect(() => {
     let dateObj;
@@ -562,28 +522,29 @@ const SideBar = () => {
 
 
 useEffect(() => {
-  const bookingData = location.state?.bookingData;
+  setBookingData({ ...bookingData,
+    seatCount: bookingData.seatCount || 4
 
-  if (bookingData?.selectedCar) {
-    setSelected(bookingData.selectedCar);
-    setPassenger(bookingData.seatCount ? bookingData.seatCount.toString() : "");
-  }
+  }); // ensure bookingData is defined
 
-  if (bookingData) {
-    // restore other fields
-    setPickup(bookingData.pickup || "");
-    setPickupLoc(bookingData.pickupLoc || null);
-    setDestinations(bookingData.destinations || [""]);
-    setDestinationLocs(bookingData.destinationLocs || []);
-    setPassenger(bookingData.passenger || "");
-    setContact(bookingData.contact || "");
-    setInstruction(bookingData.instruction || "");
-    setSelectedPayment(bookingData.selectedPayment || null);
-    setIsOn(bookingData.isOn ?? true);
-  }
+  // if (bookingData) {
+  //   // restore other fields
+  //   setPickup(bookingData.pickup || "");
+  //   setPickupLoc(bookingData.pickupLoc || null);
+  //   setDestinations(bookingData.destinations || [""]);
+  //   setDestinationLocs(bookingData.destinationLocs || []);
+  //   setPassenger(bookingData.passenger || "");
+  //   setContact(bookingData.contact || "");
+  //   setInstruction(bookingData.instruction || "");
+  //   setSelectedPayment(bookingData.selectedPayment || null);
+  //   setIsOn(bookingData.isOn ?? true);
+  //   setSelected(bookingData.selectedCar || null);
+  //   setTollPrice(bookingData.tollPrice || 0);
+    
+  // }
 
   
-}, [location]);
+}, [bookingData]);
 
 
 
@@ -611,12 +572,12 @@ useEffect(() => {
               fullWidth
               required
               placeholder="Add your pickup location"
-              value={pickup}
-              onChange={(e) => setPickup(e.target.value)} // just update local state
+              value={bookingData.pickup}
+              onChange={(e) => setBookingData({...bookingData, pickup: e.target.value})} // update context
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    {pickup ? (
+                    {bookingData.pickup ? (
                       <IconButton size="small">
                         <span
                           onClick={handleDeletePickup}
@@ -652,7 +613,7 @@ useEffect(() => {
           </div>
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {destinations.map((destination, index) => (
+            {bookingData.destinations.map((destination, index) => (
               <div key={index} className="relative">
                 <TextField
                   label={`Destination ${index + 1}`}
@@ -660,17 +621,17 @@ useEffect(() => {
                   fullWidth
                   value={destination}
                   onChange={(e) => {
-                    const newDestinations = [...destinations];
+                    const newDestinations = [...bookingData.destinations, destination];
                     newDestinations[index] = e.target.value;
-                    setDestinations(newDestinations);
+                    setBookingData({ ...bookingData, destinations: newDestinations });
                   }}
                   required
-                  disabled={!pickup}
+                  disabled={!bookingData.pickup}
                   inputRef={(el) => (destinationRefs.current[index] = el)}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        {destination && (
+                        {bookingData.destinations[index] && (
                           <IconButton
                             size="small"
                             onClick={() => handleDeleteDestination(index)}
@@ -689,9 +650,9 @@ useEffect(() => {
               variant="outlined"
               onClick={handleAdd}
               disabled={
-                destinations.length >= 4 ||
-                !destinations[destinations.length - 1] || // check for undefined/null
-                destinations[destinations.length - 1].trim() === ""
+                bookingData.destinations.length >= 4 ||
+                !bookingData.destinations[bookingData.destinations.length - 1] || // check for undefined/null
+                bookingData.destinations[bookingData.destinations.length - 1].trim() === ""
               }
             >
               + Add Destination
@@ -760,7 +721,7 @@ useEffect(() => {
                   type="date"
                   className="w-full border rounded px-3 py-2"
                   value={dateVal}
-                  onChange={(e) => setDateVal(e.target.value)}
+                  onChange={(e) => setBookingData({...bookingData, dateVal: e.target.value})}
                   required
                   min={new Date().toISOString().split("T")[0]}
                 />
@@ -777,8 +738,7 @@ useEffect(() => {
                   value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`}
                   onChange={(e) => {
                     const [h, m] = e.target.value.split(":");
-                    setHourVal(h);
-                    setMinuteVal(m);
+                    setBookingData({...bookingData, hourVal: h, minuteVal: m});
                   }}
                   required
                   step="60" // optional
@@ -825,17 +785,8 @@ useEffect(() => {
             }
             isLuggageModal={setIsLuggageModalOpen}
             className="w-full" // <- pass this down
-              bookingData={{
-              pickup,
-              pickupLoc,
-              destinations,
-              destinationLocs,
-              passenger,
-              contact,
-              instruction,
-              selectedPayment,
-              isOn,
-            }}
+            bookingData={bookingData}
+            setBookingData={setBookingData}
           />
         </div>
 
@@ -853,8 +804,8 @@ useEffect(() => {
               fullWidth
               required
               placeholder="Passenger name"
-              value={passenger}
-              onChange={(e) => setPassenger(e.target.value)}
+              value={bookingData.passenger}
+              onChange={(e) => setBookingData({...bookingData, passenger: e.target.value})}
             />
           </div>
 
@@ -878,10 +829,10 @@ useEffect(() => {
                   pattern: "[0-9]{9}",
                   maxLength: 9,
                 }}
-                value={contact}
+                value={bookingData.contact}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "");
-                  setContact(value);
+                  setBookingData({...bookingData, contact: value});
                   if (value.length === 9 && value.startsWith("4")) {
                     setContactError("");
                   } else {
@@ -907,7 +858,7 @@ useEffect(() => {
           </h3>
 
           <PaymentDropdown
-            selectedOption={selectedPayment}
+            selectedOption={bookingData.selectedPayment}
             onOptionSelect={handlePaymentSelect}
             title="Select payment method"
             className="mb-4"
@@ -931,10 +882,10 @@ useEffect(() => {
               inputProps={{
                 maxLength: 350,
               }}
-              value={instruction}
+              value={bookingData.instruction}
               onChange={(e) => {
                 const value = e.target.value;
-                setInstruction(value);
+                setBookingData({ ...bookingData, instruction: value });
               }}
               placeholder="e.g. Unit, Gate and floor numbers"
             />
