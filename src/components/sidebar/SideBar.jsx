@@ -15,10 +15,7 @@ import ToggleSwitch from "./ToggleSwich.jsx";
 import CarDropdown from "./CarDropdown.jsx";
 import { getGeocode } from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
-import LuggageModal from "./LuggageModal.jsx";
-import { useOutletContext} from "react-router-dom";
-import { useBooking } from "../../context/BookingContext";
-
+import {SeatDetails} from "../../data/data.js"
 
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
@@ -70,6 +67,8 @@ const SideBar = () => {
   const [timeType, setTimeType] = useState(2); // number-3
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
+
+  const [vehicleText , setVehicleText] = useState(""); 
 
   const [tempTime, setTempTime] = useState(
     `${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`
@@ -558,37 +557,12 @@ const SideBar = () => {
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
 
-// useEffect(() => {
-//   setBookingData({ ...bookingData,
-//     seatCount: bookingData.seatCount || 4
-
-//   }); // ensure bookingData is defined
-
-//   // if (bookingData) {
-//   //   // restore other fields
-//   //   setPickup(bookingData.pickup || "");
-//   //   setPickupLoc(bookingData.pickupLoc || null);
-//   //   setDestinations(bookingData.destinations || [""]);
-//   //   setDestinationLocs(bookingData.destinationLocs || []);
-//   //   setPassenger(bookingData.passenger || "");
-//   //   setContact(bookingData.contact || "");
-//   //   setInstruction(bookingData.instruction || "");
-//   //   setSelectedPayment(bookingData.selectedPayment || null);
-//   //   setIsOn(bookingData.isOn ?? true);
-//   //   setSelected(bookingData.selectedCar || null);
-//   //   setTollPrice(bookingData.tollPrice || 0);
-    
-//   // }
-
-//   calculateFare()
-  
-// }, []);
-
-
 
   return (
-   <>
-   {show &&  <section className=" w-full  h-[83.4vh] overflow-y-scroll">
+
+    <>
+      {!vehicleText && (
+        <section className=" w-full  h-[83.4vh] overflow-y-scroll">
       <form onSubmit={handleSubmit}>
         {/* Step 1 */}
         <div className="px-5 py-6">
@@ -941,11 +915,13 @@ const SideBar = () => {
           </button>
         </div>
       </form>
-    </section>} 
-    {!show && <div onClick={()=> setShow(true)}>
-      back
-      </div>}
-   </>
+        </section>
+      )}
+
+      { vehicleText === "Next Available"}
+
+    </>
+    
   );
 };
 
