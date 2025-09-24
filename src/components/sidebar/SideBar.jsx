@@ -19,6 +19,7 @@ import LuggageModal from "./LuggageModal.jsx";
 import { useOutletContext} from "react-router-dom";
 import { useBooking } from "../../context/BookingContext";
 
+
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
 );
@@ -39,7 +40,6 @@ const SideBar = () => {
   // const [tollPrice, setTollPrice] = useState(0);
 
   const [isLuggageModalOpen,setIsLuggageModalOpen] = useState(false)
-  
   
 
   // const [pickup, setPickup] = useState("");
@@ -237,10 +237,18 @@ const SideBar = () => {
         setBookingData({ ...bookingData, pickupLoc: location });
         onPickupSelect(location);
       }
+
+      // All good — set pickup location and notify parent
+      setPickupLoc(location);
+      onPickupSelect(location);
+
+      // Trigger route update if there are destinations already
+      updateRoute(location, destinationLocs);
     } catch (err) {
       console.error("Failed to select pickup", err);
     }
   };
+
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
@@ -389,6 +397,39 @@ const SideBar = () => {
     console.log("💰 Final calculated toll:", toll);
     return toll;
   };
+  // Validate if a place is in Victoria (AU)
+  const isInVictoria = async (location) => {
+    return new Promise((resolve) => {
+      if (!window.google || !window.google.maps) {
+        console.warn("Google Maps not loaded yet");
+        return resolve(false);
+      }
+
+      const geocoder = new window.google.maps.Geocoder();
+
+      geocoder.geocode({ location }, (results, status) => {
+        if (status === "OK" && results[0]) {
+          const addressComponents = results[0].address_components;
+          const stateComp = addressComponents.find((c) =>
+            c.types.includes("administrative_area_level_1")
+          );
+          const countryComp = addressComponents.find((c) =>
+            c.types.includes("country")
+          );
+
+          // Must be Victoria, Australia
+          if (stateComp?.short_name === "VIC" && countryComp?.short_name === "AU") {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        } else {
+          console.error("Geocode failed:", status);
+          resolve(false);
+        }
+      });
+    });
+  };
 
   const isAirportPickup = (pickup) => {
     let pickupAddress = "";
@@ -442,11 +483,14 @@ const SideBar = () => {
             };
             const auto = new window.google.maps.places.Autocomplete(input, options);
 
-            auto.addListener("place_changed", () => {
+            auto.addListener("place_changed", async () => {
               const place = auto.getPlace();
               if (!place || !place.geometry) return;
 
+              // Keep a friendly label immediately (optional)
+              const formatted = place.formatted_address;
               const newDestinations = [...destinations];
+
               newDestinations[idx] = place.formatted_address;
               setBookingData({ ...bookingData, destinations: newDestinations });
 
@@ -459,8 +503,35 @@ const SideBar = () => {
               setBookingData({ ...bookingData, destinationLocs: newLocs });
               onDestinationsSelect(newLocs);
 
-              updateRoute(pickupLoc, newLocs);
+              try {
+                // Validate destination is inside Victoria
+                const insideVIC = await isInVictoria(location);
+                if (!insideVIC) {
+                  alert(`Destination ${idx + 1} must be within Victoria, Australia.`);
+                  // revert the visible label (optional)
+                  const reverted = [...destinations];
+                  reverted[idx] = "";
+                  setDestinations(reverted);
+                  return; // STOP further processing for this destination
+                }
+
+                // valid: save location and notify parent
+                const newLocs = [...destinationLocs];
+                newLocs[idx] = location;
+                setDestinationLocs(newLocs);
+                onDestinationsSelect(newLocs);
+
+                // Update route now that we have a valid destination
+                updateRoute(pickupLoc, newLocs);
+              } catch (err) {
+                console.error("Failed to validate destination:", err);
+                // revert label on error
+                const reverted = [...destinations];
+                reverted[idx] = "";
+                setDestinations(reverted);
+              }
             });
+
           }
         });
 
@@ -475,22 +546,40 @@ const SideBar = () => {
             options
           );
 
-          autoPickup.addListener("place_changed", () => {
+          autoPickup.addListener("place_changed", async () => {
             const place = autoPickup.getPlace();
             if (!place || !place.geometry) return;
 
-            setBookingData({ ...bookingData, pickup: place.formatted_address });
 
             const location = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-            setBookingData({ ...bookingData, pickupLoc: location });
-            onPickupSelect(location);
 
-            // ✅ Make behavior consistent: trigger route update
-            updateRoute(location, bookingData.destinationLocs);
+
+            try {
+              // Validate using your helper
+              const insideVIC = await isInVictoria(location);
+              if (!insideVIC) {
+                alert("Pickup must be within Victoria, Australia.");
+                // revert the visible input (optional) so user knows selection failed
+                setPickup("");
+                return; // STOP: do not set pickupLoc, do not update route
+              }
+
+              // valid: set location and notify parent & map
+              setPickupLoc(location);
+              onPickupSelect(location);
+
+              // Update route now that pickup is valid
+              updateRoute(location, destinationLocs);
+            } catch (err) {
+              console.error("Failed to validate pickup location:", err);
+              // optionally revert UI
+              setPickup("");
+            }
           });
+
         }
       }
     }, 300);
@@ -521,6 +610,7 @@ const SideBar = () => {
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
 
+
 useEffect(() => {
   setBookingData({ ...bookingData,
     seatCount: bookingData.seatCount || 4
@@ -545,6 +635,7 @@ useEffect(() => {
 
   
 }, [bookingData]);
+
 
 
 
@@ -773,7 +864,7 @@ useEffect(() => {
           <CarDropdown
             selectedOption={selected}
             onOptionSelect={setSelected}
-            isFixedPrice = {isOn}
+            isFixedPrice={isOn}
             label={
               fare
                 ? isOn
@@ -785,6 +876,7 @@ useEffect(() => {
             }
             isLuggageModal={setIsLuggageModalOpen}
             className="w-full" // <- pass this down
+
             bookingData={bookingData}
             setBookingData={setBookingData}
           />
