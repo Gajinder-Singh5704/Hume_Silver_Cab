@@ -26,7 +26,7 @@ const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
 );
 
-const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
+const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenChange }) => {
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   // const [pickup, setPickup] = useState("");
@@ -642,7 +642,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
 
   return (
   <>
-  {!vehicleText && (  <section className=" w-full   h-[83.4vh] overflow-y-scroll">
+  {!vehicleText && (  <section className=" w-full md:overflow-y-scroll">
       <form onSubmit={handleSubmit}>
         {/* Step 1 */}
 
@@ -879,6 +879,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
             changeVehicleText={setVehicleText}
             isLuggageModal={setIsLuggageModalOpen}
             isFixedPrice = {isOn}
+            onVehicleDetailOpenChange = {onVehicleDetailOpenChange}
           />
         </div>
 
@@ -994,10 +995,10 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect }) => {
         </div>
       </form>
     </section>)}
-    {vehicleText === "Next Available" && (<SeatDetails data={seatDetails["Next Available"]} changeVehicleText={setVehicleText} onSelect={setSelected} />)}
-    {vehicleText === "Silver Service" && (<SeatDetails data={seatDetails["Silver Service"]} changeVehicleText={setVehicleText} onSelect={setSelected} />)}
-    {vehicleText === "Suv" && (<SeatDetails data={seatDetails["Suv"]} changeVehicleText={setVehicleText} onSelect={setSelected} />)}
-    {vehicleText === "Maxi Taxi" && (<SeatDetails data={seatDetails["Maxi Taxi"]} changeVehicleText={setVehicleText} onSelect={setSelected} />)}
+    {vehicleText === "Next Available" && (<SeatDetails data={seatDetails["Next Available"]} changeVehicleText={setVehicleText} onSelect={setSelected} onVehicleDetailOpenChange={onVehicleDetailOpenChange} />)}
+    {vehicleText === "Silver Service" && (<SeatDetails data={seatDetails["Silver Service"]} changeVehicleText={setVehicleText} onSelect={setSelected} onVehicleDetailOpenChange={onVehicleDetailOpenChange} />)}
+    {vehicleText === "Suv" && (<SeatDetails data={seatDetails["Suv"]} changeVehicleText={setVehicleText} onSelect={setSelected}  onVehicleDetailOpenChange={onVehicleDetailOpenChange}/>)}
+    {vehicleText === "Maxi Taxi" && (<SeatDetails data={seatDetails["Maxi Taxi"]} changeVehicleText={setVehicleText} onSelect={setSelected}  onVehicleDetailOpenChange={onVehicleDetailOpenChange}/>)}
 
     {isLuggageModalOpen && (<LuggageModal/>)}
     {/* show modal — pass open and onClose */}

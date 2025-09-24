@@ -13,6 +13,7 @@ const CarDropdown = ({
   label,
   isLuggageModal,
   changeVehicleText,
+  onVehicleDetailOpenChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const CarDropdown = ({
 
   const handleInfoClick = (e, id) => {
     e.stopPropagation();
+    onVehicleDetailOpenChange(true)
     if (id === "maxi-taxi") {
       isLuggageModal(true);
     } 
@@ -130,9 +132,9 @@ const CarDropdown = ({
           key={option.id}
           onClick={() => {
             if (isSUV) {
-              navigate('/suv');
+               changeVehicleText("Suv")
             } else if (isMaxiTaxi) {
-              navigate('/maxi-taxi');
+               changeVehicleText("Maxi Taxi")
             } else {
               handleSelect(option);
             }

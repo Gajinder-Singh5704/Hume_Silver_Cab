@@ -1,11 +1,9 @@
 import { useState } from "react";
 import images from "../../assets/images.js";
-import { useNavigate } from "react-router-dom";
-import LuggageModal from "./LuggageModal.jsx";
 
-const SeatDetails = ({ data , changeVehicleText , onSelect }) => {
+
+const SeatDetails = ({ data , changeVehicleText , onSelect ,onVehicleDetailOpenChange }) => {
   const [seats, setSeats] = useState(6);
-  const navigate = useNavigate();
   const isShow = data.name == "Suv" || data.name == "Maxi Taxi";
   console.log(isShow, "isShow");
   const handleSeatsChange = (delta) => {
@@ -37,12 +35,14 @@ const SeatDetails = ({ data , changeVehicleText , onSelect }) => {
 
         onSelect(carData)
         changeVehicleText("")
+        onVehicleDetailOpenChange(false)
     };
 
 
   const handleBackClick = (e) => {
     e.preventDefault();
     changeVehicleText("")
+    onVehicleDetailOpenChange(false)
   };
 
   return (
