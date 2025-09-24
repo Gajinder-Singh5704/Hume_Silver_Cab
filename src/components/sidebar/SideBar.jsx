@@ -102,7 +102,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
 
   // set initial and later booking time type
 
-  const calculateFare = () => {
+const calculateFare = () => {
   console.log("=== Fare Calculation Started ===");
 
   if (!distanceKm) {
@@ -116,7 +116,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
   const bookingFees = 4;
 
   // helper to compute per-vehicle fare
-  const compute = (vehicleName) => {
+  const computeLocal = (vehicleName) => {
     let vehicleSurcharge = 0;
     switch (vehicleName) {
       case "Sedan":
@@ -147,27 +147,28 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
       fareValue += 4.68;
     }
 
-    return fareValue.toFixed(2);
+    // return number (not string) so it's easier to format later if needed
+    return Number(fareValue.toFixed(2));
   };
 
-  // 🔥 calculate fares for all vehicles
+  // NOTE: use ids that match your options' ids (lowercase dashed form).
+  // If your options use different ids, update these strings to match.
   const faresArray = [
-    { "Next Available": compute("Sedan") },
-    { "Silver Service": compute("Silver Service") },
-    { "SUV": compute("SUV") },
-    { "Maxi Taxi": compute("Maxi Taxi") },
+    { id: "next-available", name: "Next Available", price: computeLocal("Sedan") },
+    { id: "silver-service",  name: "Silver Service", price: computeLocal("Silver Service") },
+    { id: "suv",             name: "SUV",            price: computeLocal("SUV") },
+    { id: "maxi-taxi",       name: "Maxi Taxi",      price: computeLocal("Maxi Taxi") },
   ];
 
-  // save in state
   setAllFares(faresArray);
-
   console.log("All fares:", faresArray);
 
   // also keep the current selected fare for UI
   const vehicleName = selected?.name || "Sedan";
-  const selectedFare = compute(vehicleName);
+  const selectedFare = computeLocal(vehicleName);
   setFare(selectedFare);
 };
+
 
   // const calculateFare = () => {
   //   console.log("=== Fare Calculation Started ===");
@@ -250,7 +251,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
     if (destinations.length === 1) {
       const newDestinations = [""];
       setDestinations(newDestinations);
-
+setAllFares([])
       const newLocs = []; // remove any location
       setDestinationLocs(newLocs);
 
@@ -950,7 +951,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
                 ? isOn
                   ? `$${fare}`
                   : `$${Math.round(fare - 5)} - $${Math.round(fare - (-15))}`
-                : "Dest Required"
+                : "Dest required"
             }
             allFares = {allFares}
             changeVehicleText={setVehicleText}
