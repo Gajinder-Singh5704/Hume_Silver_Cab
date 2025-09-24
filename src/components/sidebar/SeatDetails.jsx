@@ -37,11 +37,13 @@ const SeatDetails = ({ data }) => {
     fareEstimate: "Fare Estimate",
     destRequired: "Dest required",
     color: "bg-gray-100",
+    seatCount: isShow ? seats : 4
   };
 
   const formData = {
     ...location.state?.bookingData, // previous booking info if any
     selectedCar: carData,
+    seatCount: isShow ? seats : 4
   };
 
   navigate("/", {

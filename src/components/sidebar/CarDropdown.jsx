@@ -115,10 +115,38 @@ const CarDropdown = ({
       {/* Dropdown Options */}
       {isOpen && (
         <div className="">
-          {options.map((option, index) => (
-            <button
+          {options.map((option, index) => {
+            const isSUV = option.name === "Suv";
+            const isMaxiTaxi = option.name === "MAXI TAXI";
+            return <button
               key={option.id}
-              onClick={() => handleOptionSelect(option)}
+              onClick={() => {
+                if (isSUV) {
+                  navigate(`/suv`, {
+                    state: {
+                      bookingData: {
+                        ...bookingData, // previous booking info if any
+                        selectedCar: option
+                      },
+                      vehicleData: option,
+                    }
+                  });
+                }
+                else if (isMaxiTaxi) {
+                  navigate(`/maxi-taxi`, {
+                    state: {
+                      bookingData: {
+                        ...bookingData, // previous booking info if any
+                        selectedCar: option
+                      },
+                      vehicleData: option,
+                    }
+                  });
+                }
+                else {
+                  handleOptionSelect(option)
+                }
+              }}
               className={`w-full px-4 py-4 ${
                 option.color
               } hover:opacity-80 transition-opacity border-b border-gray-200 last:border-b-0 ${
@@ -158,7 +186,7 @@ const CarDropdown = ({
                 </div>
               </div>
             </button>
-          ))}
+  })}
         </div>
       )}
     </div>

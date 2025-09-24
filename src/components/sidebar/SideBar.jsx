@@ -566,6 +566,7 @@ useEffect(() => {
 
   if (bookingData?.selectedCar) {
     setSelected(bookingData.selectedCar);
+    setPassenger(bookingData.seatCount ? bookingData.seatCount.toString() : "");
   }
 
   if (bookingData) {
@@ -579,6 +580,10 @@ useEffect(() => {
     setInstruction(bookingData.instruction || "");
     setSelectedPayment(bookingData.selectedPayment || null);
     setIsOn(bookingData.isOn ?? true);
+  }
+
+  if (bookingData.seatCount){
+    calculateFare(bookingData.seatCount);
   }
 }, [location]);
 
