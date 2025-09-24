@@ -38,7 +38,7 @@ export const defaultVehicleOptions = [
   },
   {
     id: "suv",
-    name: "Suv",
+    name: "SUV",
     passengers: "1 - 6 passengers",
     image: images.suv,
     fareEstimate: "Fare Estimate",

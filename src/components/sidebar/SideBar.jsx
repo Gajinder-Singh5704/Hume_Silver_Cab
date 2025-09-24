@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
+import CabUnavailableModal from "./NoServiceModal.jsx";
 import {
   Box,
   Button,
@@ -706,6 +707,11 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
               </ul>
             )}
           </div>
+          {/* show modal — pass open and onClose */}
+          <CabUnavailableModal
+            open={isNoServiceOpen}
+            onClose={() => setIsNoServiceOpen(false)}
+          />
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {destinations.map((destination, index) => (

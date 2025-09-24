@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, Info, Lock, LockIcon, Package } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, LockIcon } from "lucide-react";
 import { defaultVehicleOptions } from "../../data/data.jsx";
 import { useNavigate } from "react-router-dom";
 
