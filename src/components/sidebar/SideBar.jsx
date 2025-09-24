@@ -183,10 +183,10 @@ const SideBar = () => {
     // If this is the last remaining field, just clear it
     if (bookingData.destinations.length === 1) {
       const newDestinations = [""];
-      setBookingData({ ...bookingData, destinations: newDestinations });
+      setBookingData(prev => ({ ...prev, destinations: newDestinations }));
 
       const newLocs = []; // remove any location
-      setBookingData({ ...bookingData, destinationLocs: newLocs });
+      setBookingData(prev => ({ ...prev, destinationLocs: newLocs }));
 
       // Notify parent about updated destinations
       onDestinationsSelect(newLocs);
@@ -211,36 +211,37 @@ const SideBar = () => {
     updateRoute(pickupLoc, newLocs);
   };
 
+  const handlePickupChange = (e) => {
+    setBookingData(prev => ({ ...prev, pickup: e.target.value }));
+  };
+
   const handleDeletePickup = () => {
-    setBookingData({ ...bookingData, pickup: "" }); // Clear pickup input
-    setBookingData({ ...bookingData, pickupLoc: null }); // Clear location object
-    setBookingData({ ...bookingData, pickupSuggestions: [] }); // Clear any autocomplete suggestions
-
-    setBookingData({ ...bookingData, destinations: [""] });
-    setBookingData({ ...bookingData, destinationLocs: null });
-
-    // Notify parent that pickup is now empty
-    setBookingData({ ...bookingData, destinations: [] });
-    onPickupSelect(null);
-
-    // Also reset route if needed
-    updateRoute(null, null);
+  setBookingData({
+    ...bookingData,
+    pickup: "",
+    pickupLoc: null,
+    pickupSuggestions: [],
+    destinations: [""],
+    destinationLocs: [],
+  });
+  onPickupSelect(null);
+  updateRoute(null, []);
   };
 
   const handlePickupSelect = async (s) => {
-    setBookingData({ ...bookingData, pickup: s.description });
-    setBookingData({ ...bookingData, pickupSuggestions: [] });
-
-    try {
-      const location = await getGeocode(s);
-      if (location) {
-        setBookingData({ ...bookingData, pickupLoc: location });
-        onPickupSelect(location);
-      }
-    } catch (err) {
-      console.error("Failed to select pickup", err);
-    }
-  };
+  try {
+    const location = await getGeocode(s);
+    setBookingData({
+      ...bookingData,
+      pickup: s.description,
+      pickupLoc: location,
+      pickupSuggestions: [],
+    });
+    onPickupSelect(location);
+  } catch (err) {
+    console.error("Failed to select pickup", err);
+  }
+};
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
@@ -261,14 +262,12 @@ const SideBar = () => {
   const updateRoute = (pickup, dests) => {
     console.log("Calling calculate");
     if (!pickup || dests.length === 0) {
-      setBookingData({ ...bookingData, distanceKm: "" });
-      setBookingData({ ...bookingData, hasToll: false });
-      setBookingData({ ...bookingData, fare: null });
+      setBookingData(prev => ({ ...prev, distanceKm: "", hasToll: false, fare: null }));
       return;
     }
 
-    setBookingData({ ...bookingData, hasToll: false });
-    setBookingData({ ...bookingData, fare: null });
+    setBookingData(prev => ({ ...prev, hasToll: false, fare: null }));
+    
 
     const service = new window.google.maps.DirectionsService();
 
@@ -446,17 +445,17 @@ const SideBar = () => {
               const place = auto.getPlace();
               if (!place || !place.geometry) return;
 
-              const newDestinations = [...destinations];
+              const newDestinations = [...bookingData.destinations];
               newDestinations[idx] = place.formatted_address;
-              setBookingData({ ...bookingData, destinations: newDestinations });
+              setBookingData(prev => ({ ...prev, destinations: newDestinations }));
 
               const location = {
                 lat: place.geometry.location.lat(),
                 lng: place.geometry.location.lng(),
               };
-              const newLocs = [...destinationLocs];
+              const newLocs = [...bookingData.destinationLocs];
               newLocs[idx] = location;
-              setBookingData({ ...bookingData, destinationLocs: newLocs });
+              setBookingData(prev => ({ ...prev, destinationLocs: newLocs }));
               onDestinationsSelect(newLocs);
 
               updateRoute(pickupLoc, newLocs);
@@ -479,16 +478,18 @@ const SideBar = () => {
             const place = autoPickup.getPlace();
             if (!place || !place.geometry) return;
 
-            setBookingData({ ...bookingData, pickup: place.formatted_address });
-
             const location = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-            setBookingData({ ...bookingData, pickupLoc: location });
-            onPickupSelect(location);
 
-            // ✅ Make behavior consistent: trigger route update
+            setBookingData(prev => ({
+              ...prev,
+              pickup: place.formatted_address,
+              pickupLoc: location,
+              // Don't reset other fields here!
+            }));
+            onPickupSelect(location);
             updateRoute(location, bookingData.destinationLocs);
           });
         }
@@ -521,11 +522,11 @@ const SideBar = () => {
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
 
-useEffect(() => {
-  setBookingData({ ...bookingData,
-    seatCount: bookingData.seatCount || 4
+// useEffect(() => {
+//   setBookingData({ ...bookingData,
+//     seatCount: bookingData.seatCount || 4
 
-  }); // ensure bookingData is defined
+//   }); // ensure bookingData is defined
 
   // if (bookingData) {
   //   // restore other fields
@@ -544,7 +545,7 @@ useEffect(() => {
   // }
 
   
-}, [bookingData]);
+// }, []);
 
 
 
@@ -573,7 +574,7 @@ useEffect(() => {
               required
               placeholder="Add your pickup location"
               value={bookingData.pickup}
-              onChange={(e) => setBookingData({...bookingData, pickup: e.target.value})} // update context
+              onChange={(e) => handlePickupChange(e)} // update context
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
