@@ -19,6 +19,7 @@ import LuggageModal from "./LuggageModal.jsx";
 import { useOutletContext} from "react-router-dom";
 import { useBooking } from "../../context/BookingContext";
 
+
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
 );
@@ -39,7 +40,6 @@ const SideBar = () => {
   // const [tollPrice, setTollPrice] = useState(0);
 
   const [isLuggageModalOpen,setIsLuggageModalOpen] = useState(false)
-  
   
 
   // const [pickup, setPickup] = useState("");
@@ -388,6 +388,39 @@ const SideBar = () => {
     console.log("💰 Final calculated toll:", toll);
     return toll;
   };
+  // Validate if a place is in Victoria (AU)
+  const isInVictoria = async (location) => {
+    return new Promise((resolve) => {
+      if (!window.google || !window.google.maps) {
+        console.warn("Google Maps not loaded yet");
+        return resolve(false);
+      }
+
+      const geocoder = new window.google.maps.Geocoder();
+
+      geocoder.geocode({ location }, (results, status) => {
+        if (status === "OK" && results[0]) {
+          const addressComponents = results[0].address_components;
+          const stateComp = addressComponents.find((c) =>
+            c.types.includes("administrative_area_level_1")
+          );
+          const countryComp = addressComponents.find((c) =>
+            c.types.includes("country")
+          );
+
+          // Must be Victoria, Australia
+          if (stateComp?.short_name === "VIC" && countryComp?.short_name === "AU") {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        } else {
+          console.error("Geocode failed:", status);
+          resolve(false);
+        }
+      });
+    });
+  };
 
   const isAirportPickup = (pickup) => {
     let pickupAddress = "";
@@ -441,7 +474,7 @@ const SideBar = () => {
             };
             const auto = new window.google.maps.places.Autocomplete(input, options);
 
-            auto.addListener("place_changed", () => {
+            auto.addListener("place_changed", async () => {
               const place = auto.getPlace();
               if (!place || !place.geometry) return;
 
@@ -460,6 +493,7 @@ const SideBar = () => {
 
               updateRoute(pickupLoc, newLocs);
             });
+
           }
         });
 
@@ -474,7 +508,7 @@ const SideBar = () => {
             options
           );
 
-          autoPickup.addListener("place_changed", () => {
+          autoPickup.addListener("place_changed", async () => {
             const place = autoPickup.getPlace();
             if (!place || !place.geometry) return;
 
@@ -492,6 +526,7 @@ const SideBar = () => {
             onPickupSelect(location);
             updateRoute(location, bookingData.destinationLocs);
           });
+
         }
       }
     }, 300);
@@ -774,7 +809,7 @@ const SideBar = () => {
           <CarDropdown
             selectedOption={selected}
             onOptionSelect={setSelected}
-            isFixedPrice = {isOn}
+            isFixedPrice={isOn}
             label={
               fare
                 ? isOn
@@ -786,6 +821,7 @@ const SideBar = () => {
             }
             isLuggageModal={setIsLuggageModalOpen}
             className="w-full" // <- pass this down
+
             bookingData={bookingData}
             setBookingData={setBookingData}
           />
