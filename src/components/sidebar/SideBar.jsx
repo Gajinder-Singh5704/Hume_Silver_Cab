@@ -180,35 +180,34 @@ const SideBar = () => {
   };
 
   const handleDeleteDestination = (index) => {
-    // If this is the last remaining field, just clear it
-    if (bookingData.destinations.length === 1) {
-      const newDestinations = [""];
-      setBookingData(prev => ({ ...prev, destinations: newDestinations }));
+    setBookingData(prev => {
+      // If this is the last remaining field, just clear it
+      if (prev.destinations.length === 1) {
+        return {
+          ...prev,
+          destinations: [""],
+          destinationLocs: [],
+        };
+      }
+      // Otherwise, remove the field normally
+      const newDestinations = [...prev.destinations];
+      newDestinations.splice(index, 1);
 
-      const newLocs = []; // remove any location
-      setBookingData(prev => ({ ...prev, destinationLocs: newLocs }));
+      const newLocs = [...prev.destinationLocs];
+      newLocs.splice(index, 1);
 
       // Notify parent about updated destinations
       onDestinationsSelect(newLocs);
 
       // Update route with empty destinations
-      updateRoute(pickupLoc, newLocs);
-      return;
-    }
+      updateRoute(prev.pickupLoc, newLocs);
 
-    // Otherwise, remove the field normally
-    const newDestinations = [...bookingData.destinations];
-    newDestinations.splice(index, 1);
-    setBookingData({ ...bookingData, destinations: newDestinations });
-
-    const newLocs = [...bookingData.destinationLocs];
-    newLocs.splice(index, 1);
-    setBookingData({ ...bookingData, destinationLocs: newLocs });
-
-    // Notify parent about updated destinations
-    onDestinationsSelect(newLocs);
-
-    updateRoute(pickupLoc, newLocs);
+      return {
+        ...prev,
+        destinations: newDestinations,
+        destinationLocs: newLocs,
+      };
+    });
   };
 
   const handlePickupChange = (e) => {
@@ -250,14 +249,15 @@ const SideBar = () => {
   };
 
   const handleAdd = () => {
-    if (
-      bookingData.destinations.length < 4 &&
-      typeof bookingData.destinations[bookingData.destinations.length - 1] === "string" &&
-      bookingData.destinations[bookingData.destinations.length - 1].trim() !== ""
-    ) {
-      setBookingData({ ...bookingData, destinations: [...bookingData.destinations, ""] });
+  setBookingData(prev => {
+    const dests = prev.destinations;
+    // Only add if less than 4 and last is not empty
+    if (dests.length < 4 && dests[dests.length - 1].trim() !== "") {
+      return { ...prev, destinations: [...dests, ""] };
     }
-  };
+    return prev;
+  });
+};
 
   const updateRoute = (pickup, dests) => {
     console.log("Calling calculate");
@@ -657,7 +657,7 @@ const SideBar = () => {
                   fullWidth
                   value={destination}
                   onChange={(e) => {
-                    const newDestinations = [...bookingData.destinations, destination];
+                    const newDestinations = [...bookingData.destinations];
                     newDestinations[index] = e.target.value;
                     setBookingData({ ...bookingData, destinations: newDestinations });
                   }}
