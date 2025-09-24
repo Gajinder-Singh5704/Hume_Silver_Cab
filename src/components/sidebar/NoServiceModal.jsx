@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-
-=======
-// CabUnavailableModal.jsx
-// React + Tailwind single-file modal component that matches the provided design.
-// Usage:
-// import CabUnavailableModal from './CabUnavailableModal.jsx'
-// const [open, setOpen] = useState(true)
-// <CabUnavailableModal open={open} onClose={() => setOpen(false)} />
-
-import React from 'react'
->>>>>>> 235a313 (Changed SUV image + Modal For Restricted Area)
 
 export default function CabUnavailableModal({
   open = false,

@@ -104,15 +104,7 @@ const CarDropdown = ({
               <p className="text-sm font-medium text-gray-800">
                 {isFixedPrice ? "Fixed Price" : currentSelection?.fareEstimate}
               </p>
-              <p className="text-sm flex items-center text-gray-600">
-                {isFixedPrice ? (
-                  <>
-                    <LockIcon className="mr-1" color="orange" size={12} /> {label}
-                  </>
-                ) : (
-                  label
-                )}
-              </p>
+              <p className="text-sm flex items-center text-gray-600">{isFixedPrice ? <> <LockIcon className="mr-1" color="orange" size={12}/>  {label} </> : label}</p>
             </div>
           </div>
         </div>

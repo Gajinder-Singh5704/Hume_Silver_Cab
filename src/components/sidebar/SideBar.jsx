@@ -21,7 +21,6 @@ import PaymentDropdown from "./PaymentDropdown.jsx";
 import { seatDetails } from "../../data/data.jsx";
 import SeatDetails from "./SeatDetails.jsx"
 import LuggageModal from "./LuggageModal.jsx";
-import CabUnavailableModal from "./NoServiceModal.jsx"
 
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
@@ -30,6 +29,8 @@ const melbourneNow = new Date(
 const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenChange }) => {
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
+  const [allFares, setAllFares] = useState([]);
+
   // const [pickup, setPickup] = useState("");
   const [destinations, setDestinations] = useState([""]);
   const [passenger, setPassenger] = useState("");
@@ -102,26 +103,20 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
   // set initial and later booking time type
 
   const calculateFare = () => {
-    console.log("=== Fare Calculation Started ===");
+  console.log("=== Fare Calculation Started ===");
 
-    if (!distanceKm) {
-      console.log("❌ No distance available — aborting fare calculation.");
-      return null;
-    }
+  if (!distanceKm) {
+    console.log("❌ No distance available — aborting fare calculation.");
+    setAllFares([]);   // clear when no distance
+    return null;
+  }
 
-    const distance = parseInt(distanceKm);
-    console.log("📏 Distance (km):", distance);
+  const distance = parseInt(distanceKm);
+  const tollCost = hasToll ? parseFloat(tollPrice) : 0;
+  const bookingFees = 4;
 
-    const tollCost = hasToll ? parseFloat(tollPrice) : 0;
-    console.log("💰 Toll cost included:", tollCost);
-
-    const bookingFees = 4;
-    console.log("🧾 Booking fee:", bookingFees);
-
-    const { name: vehicleName = "Sedan" } = selected ?? {};
-    console.log("🚖 Selected vehicle:", vehicleName);
-
-    // Vehicle surcharge
+  // helper to compute per-vehicle fare
+  const compute = (vehicleName) => {
     let vehicleSurcharge = 0;
     switch (vehicleName) {
       case "Sedan":
@@ -131,49 +126,124 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
         vehicleSurcharge = 11;
         break;
       case "SUV":
-      case "MAXI TAXI":
+      case "Maxi Taxi":
         vehicleSurcharge = 17.8;
         break;
     }
-    console.log("🚘 Vehicle surcharge:", vehicleSurcharge);
 
-    // Base fare calculation based on time type
     let base;
     if (timeType === 3) {
       base = 20 + distance * 2.493 + tollCost + 7.8;
-      console.log(
-        "⏰ Time type: Peak (3) → Base fare formula: 20 + distance*2.493 + toll + 7.8"
-      );
     } else if (timeType === 2) {
       base = 13 + distance * 2.265 + tollCost + 6.55;
-      console.log(
-        "⏰ Time type: Shoulder (2) → Base fare formula: 13 + distance*2.265 + toll + 6.55"
-      );
     } else {
       base = 8 + distance * 2.037 + tollCost + 5.25;
-      console.log(
-        "⏰ Time type: Off-Peak (else) → Base fare formula: 8 + distance*2.037 + toll + 5.25"
-      );
     }
-    console.log("📊 Base fare before minimum check:", base);
 
-    // Apply minimum fare
     let fareValue = Math.max(base, 40);
-    console.log("🔎 Applied minimum fare (40 if needed):", fareValue);
-
-    // Add surcharges
     fareValue += vehicleSurcharge + bookingFees;
-    console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
 
-    // Airport surcharge
     if (isAirportPickup(pickup)) {
       fareValue += 4.68;
-      console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
     }
 
-    console.log("✅ Final fare calculated:", fareValue.toFixed(2));
-    setFare(fareValue.toFixed(2));
+    return fareValue.toFixed(2);
   };
+
+  // 🔥 calculate fares for all vehicles
+  const faresArray = [
+    { "Next Available": compute("Sedan") },
+    { "Silver Service": compute("Silver Service") },
+    { "SUV": compute("SUV") },
+    { "Maxi Taxi": compute("Maxi Taxi") },
+  ];
+
+  // save in state
+  setAllFares(faresArray);
+
+  console.log("All fares:", faresArray);
+
+  // also keep the current selected fare for UI
+  const vehicleName = selected?.name || "Sedan";
+  const selectedFare = compute(vehicleName);
+  setFare(selectedFare);
+};
+
+  // const calculateFare = () => {
+  //   console.log("=== Fare Calculation Started ===");
+
+  //   if (!distanceKm) {
+  //     console.log("❌ No distance available — aborting fare calculation.");
+  //     return null;
+  //   }
+
+  //   const distance = parseInt(distanceKm);
+  //   console.log("📏 Distance (km):", distance);
+
+  //   const tollCost = hasToll ? parseFloat(tollPrice) : 0;
+  //   console.log("💰 Toll cost included:", tollCost);
+
+  //   const bookingFees = 4;
+  //   console.log("🧾 Booking fee:", bookingFees);
+
+  //   const { name: vehicleName = "Sedan" } = selected ?? {};
+  //   console.log("🚖 Selected vehicle:", vehicleName);
+
+  //   // Vehicle surcharge
+  //   let vehicleSurcharge = 0;
+  //   switch (vehicleName) {
+  //     case "Sedan":
+  //       vehicleSurcharge = 0;
+  //       break;
+  //     case "Silver Service":
+  //       vehicleSurcharge = 11;
+  //       break;
+  //     case "SUV":
+  //       vehicleSurcharge = 17.80
+  //       break;
+  //     case "MAXI TAXI":
+  //       vehicleSurcharge = 17.80;
+  //       break;
+  //   }
+  //   console.log("🚘 Vehicle surcharge:", vehicleSurcharge);
+
+  //   // Base fare calculation based on time type
+  //   let base;
+  //   if (timeType === 3) {
+  //     base = 20 + distance * 2.493 + tollCost + 7.8;
+  //     console.log(
+  //       "⏰ Time type: Peak (3) → Base fare formula: 20 + distance*2.493 + toll + 7.8"
+  //     );
+  //   } else if (timeType === 2) {
+  //     base = 13 + distance * 2.265 + tollCost + 6.55;
+  //     console.log(
+  //       "⏰ Time type: Shoulder (2) → Base fare formula: 13 + distance*2.265 + toll + 6.55"
+  //     );
+  //   } else {
+  //     base = 8 + distance * 2.037 + tollCost + 5.25;
+  //     console.log(
+  //       "⏰ Time type: Off-Peak (else) → Base fare formula: 8 + distance*2.037 + toll + 5.25"
+  //     );
+  //   }
+  //   console.log("📊 Base fare before minimum check:", base);
+
+  //   // Apply minimum fare
+  //   let fareValue = Math.max(base, 40);
+  //   console.log("🔎 Applied minimum fare (40 if needed):", fareValue);
+
+  //   // Add surcharges
+  //   fareValue += vehicleSurcharge + bookingFees;
+  //   console.log(`➕ After surcharges (vehicle + booking): ${fareValue}`);
+
+  //   // Airport surcharge
+  //   if (isAirportPickup(pickup)) {
+  //     fareValue += 4.68;
+  //     console.log("🛫 Airport pickup detected — added airport surcharge: 4.68");
+  //   }
+
+  //   console.log("✅ Final fare calculated:", fareValue.toFixed(2));
+  //   setFare(fareValue.toFixed(2));
+  // };
 
   const handleDeleteDestination = (index) => {
     // If this is the last remaining field, just clear it
@@ -882,6 +952,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
                   : `$${Math.round(fare - 5)} - $${Math.round(fare - (-15))}`
                 : "Dest Required"
             }
+            allFares = {allFares}
             changeVehicleText={setVehicleText}
             isLuggageModal={setIsLuggageModalOpen}
             isFixedPrice = {isOn}
