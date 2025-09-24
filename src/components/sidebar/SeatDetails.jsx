@@ -55,7 +55,11 @@ const SeatDetails = ({ data }) => {
 
   const handleBackClick = (e) => {
     e.preventDefault();
-    navigate(-1);
+    navigate("/", {
+        state: {
+            bookingData: location.state?.bookingData, // previous booking info if any
+        }
+    })
   };
 
   return (

@@ -40,9 +40,10 @@ const CarDropdown = ({
   console.log("Navigating to:", id);
   if (id) {
     navigate(`/${id}`,{  state: {
-          ...bookingData,    // <-- pass all booking data from SideBar
-          selectedCar: selectedOption,
-          carId: id,
+          bookingData: {
+            ...bookingData, // previous booking info if any
+            selectedCar: selectedOption
+          }
         },});
   } else {
     console.warn("No route defined for this option");

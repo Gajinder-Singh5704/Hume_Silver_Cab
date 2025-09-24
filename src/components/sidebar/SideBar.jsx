@@ -822,16 +822,16 @@ useEffect(() => {
             isLuggageModal={setIsLuggageModalOpen}
             className="w-full" // <- pass this down
               bookingData={{
-    pickup,
-    pickupLoc,
-    destinations,
-    destinationLocs,
-    passenger,
-    contact,
-    instruction,
-    selectedPayment,
-    isOn,
-  }}
+              pickup,
+              pickupLoc,
+              destinations,
+              destinationLocs,
+              passenger,
+              contact,
+              instruction,
+              selectedPayment,
+              isOn,
+            }}
           />
         </div>
 
