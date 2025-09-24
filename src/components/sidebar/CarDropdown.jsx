@@ -104,7 +104,7 @@ const CarDropdown = ({
               <p className="text-sm font-medium text-gray-800">
                 {isFixedPrice? "Fixed Price" : currentSelection.fareEstimate}
               </p>
-              <p className="text-sm text-gray-600">{isFixedPrice ? <> <LockIcon color="orange" size={12}/>  {label} </> : label}</p>
+              <p className="flex items-center text-sm text-gray-600">{isFixedPrice ? <> <LockIcon color="orange" size={12} className="m-1"/>  {label} </> : label}</p>
             </div>
           </div>
         </div>
@@ -180,7 +180,7 @@ const CarDropdown = ({
                   <p className="text-sm font-medium text-gray-800">
                     {isFixedPrice ? "Fixed Price" : option.fareEstimate}
                   </p>
-                  <p className="text-sm text-gray-600">{isFixedPrice ?<> <LockIcon color="orange" size={12}/>  {option.destRequired} </> : option.destRequired}</p>
+                  <p className="flex items-center text-sm text-gray-600">{isFixedPrice ?<> <LockIcon color="orange" size={12} className="mr-1"/>  {option.destRequired} </> : option.destRequired}</p>
                 </div>
               </div>
             </button>
