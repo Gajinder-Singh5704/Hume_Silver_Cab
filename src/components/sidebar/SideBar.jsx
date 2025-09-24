@@ -809,10 +809,11 @@ useEffect(() => {
 
           <p className="mt-2">Lock in a price with no additional charges.</p>
         </div>
-        <div className="w-full px-5">
+        <div className="w-full px-2">
           <CarDropdown
             selectedOption={selected}
             onOptionSelect={setSelected}
+            isFixedPrice = {isOn}
             label={
               fare
                 ? isOn
