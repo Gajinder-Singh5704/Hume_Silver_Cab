@@ -582,9 +582,7 @@ useEffect(() => {
     setIsOn(bookingData.isOn ?? true);
   }
 
-  if (bookingData.seatCount){
-    calculateFare(bookingData.seatCount);
-  }
+  
 }, [location]);
 
 
