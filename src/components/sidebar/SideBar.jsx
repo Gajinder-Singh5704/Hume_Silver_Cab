@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
 import CabUnavailableModal from "./NoServiceModal.jsx";
+import SIDEBAR_CONSTANTS from "../../constants/constants.js";
 import {
   Box,
   Button,
@@ -76,7 +77,7 @@ const SideBar = ({
   const [vehicleText, setVehicleText] = useState("");
   const [isNoServiceOpen, setIsNoServiceOpen] = useState(false);
 
-  const fixedColor = "#f97316"; // orange-500
+  const fixedColor = SIDEBAR_CONSTANTS.COLORS.FIXED_ORANGE; // orange-500
     const [showDone, setShowDone] = useState(false);
     const timeInputRef = useRef(null);
 
