@@ -508,7 +508,7 @@ setAllFares([])
       distanceKm,
     };
 
-    toast.success("🎉 Booking Confirmed!", {
+    toast.success("🎉 Booking Requested Successfully!", {
       position: "top-right",
       autoClose: 3000,
     });
@@ -537,9 +537,6 @@ setAllFares([])
     setContactError("");
     onPickupSelect(setPickupLoc);
     onDestinationsSelect(setDestinationLocs);
-
-    // Update route with empty destinations
-    // updateRoute(pickupLoc, newLocs);
   };
 
   // Validate if a place is in Victoria (AU)
