@@ -4,7 +4,7 @@ import images from "../../assets/images.js";
 
 const SeatDetails = ({ data , changeVehicleText , onSelect ,onVehicleDetailOpenChange , changeIsLuggageModal }) => {
   const [seats, setSeats] = useState(6);
-  const isShow = data.name == "Suv" || data.name == "Maxi Taxi";
+  const isShow = data.name == "SUV" || data.name == "Maxi Taxi";
   console.log(isShow, "isShow");
   const handleSeatsChange = (delta) => {
     setSeats((prev) => {
