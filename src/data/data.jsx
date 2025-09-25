@@ -115,7 +115,7 @@ export const seatDetails = {
     path: "",
   },
   "Suv": {
-    name: "Suv",
+    name: "SUV",
     capacity: "1 - 4 passengers",
     image: "suv",
     imageDecs:

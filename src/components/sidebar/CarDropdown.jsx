@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Info, LockIcon } from "lucide-react";
 import { defaultVehicleOptions } from "../../data/data.jsx";
-import { useNavigate } from "react-router-dom";
-// removed: import { all } from "axios";
 
 const CarDropdown = ({
   vehicleOptions = [],
@@ -17,13 +15,15 @@ const CarDropdown = ({
   allFares = []
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
 
   const options = vehicleOptions.length > 0 ? vehicleOptions : defaultVehicleOptions;
+
 
   const currentSelection = selectedOption
     ? options.find((o) => o.id === selectedOption.id) ?? selectedOption
     : options[0];
+
+    console.log("current Selected Car ",currentSelection)
 
   const toggleDropdown = () => setIsOpen(v => !v);
 
@@ -151,7 +151,7 @@ const CarDropdown = ({
       {isOpen && (
         <div>
           {options.map((option, idx) => {
-            const isSelected = option.id === currentSelection?.id;
+            const isSelected = (option.id)?.toLowerCase() === (currentSelection?.id)?.toLowerCase();
             const isSUV = option.name?.toLowerCase() === "suv";
             const isMaxiTaxi = option.name?.toUpperCase() === "MAXI TAXI";
 
@@ -164,6 +164,7 @@ const CarDropdown = ({
                     changeVehicleText("Suv");
                   } else if (isMaxiTaxi) {
                     changeVehicleText("Maxi Taxi");
+                     isLuggageModal(true);
                   } else {
                     handleSelect(option);
                   }

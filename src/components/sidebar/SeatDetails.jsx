@@ -21,7 +21,8 @@ const SeatDetails = ({ data , changeVehicleText , onSelect ,onVehicleDetailOpenC
 
 
     const handleSelectService = () => {
-        let id = null; switch (data.name) { case "next available": id = "Next-Available"; break; case "Suv": id = "Suv"; break; case "Maxi Taxi": id = "Maxi-Taxi"; break; case "Silver Service": id = "Silver-Service"; break; }
+        let id = null; switch (data.name) { case "Next Available": id = "Next-Available"; break; case "SUV": id = "Suv"; break; case "Maxi Taxi": id = "Maxi-Taxi"; break; case "Silver Service": id = "Silver-Service"; break; }
+        console.log("selectes id ",id)
         const carData = {
         id: id,
         name: data.name,
