@@ -8,3 +8,18 @@
   z-index: 2000 !important;
   box-sizing: border-box !important;
 }
+.scroll-container {
+  overflow: auto;
+
+  /* Firefox */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent; /* optional */
+}
+
+

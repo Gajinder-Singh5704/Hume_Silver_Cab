@@ -14,12 +14,10 @@ import {
 import { LockIcon } from "lucide-react";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
-import {
-  getGeocode,
-} from "../../hooks/map.js";
+import { getGeocode } from "../../hooks/map.js";
 import PaymentDropdown from "./PaymentDropdown.jsx";
 import { seatDetails } from "../../data/data.jsx";
-import SeatDetails from "./SeatDetails.jsx"
+import SeatDetails from "./SeatDetails.jsx";
 import LuggageModal from "./LuggageModal.jsx";
 import { toast } from "react-toastify";
 
@@ -27,7 +25,11 @@ const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
 );
 
-const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenChange }) => {
+const SideBar = ({
+  onPickupSelect,
+  onDestinationsSelect,
+  onVehicleDetailOpenChange,
+}) => {
   // form fields
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [allFares, setAllFares] = useState([]);
@@ -41,7 +43,7 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
   const [selected, setSelected] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [tollPrice, setTollPrice] = useState(0);
-  const [isLuggageModalOpen,setIsLuggageModalOpen] = useState(false)
+  const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
 
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
@@ -71,8 +73,8 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
 
-  const [vehicleText,setVehicleText] = useState("")
-  const [isNoServiceOpen,setIsNoServiceOpen] = useState(false) 
+  const [vehicleText, setVehicleText] = useState("");
+  const [isNoServiceOpen, setIsNoServiceOpen] = useState(false);
 
   const fixedColor = "#f97316"; // orange-500
 
@@ -85,93 +87,111 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
 
     if (
       (day === 5 && hour24 >= 22) || // Friday 22:00–23:59
-      (day === 6 && hour24 < 4) ||   // Saturday 00:00–03:59
+      (day === 6 && hour24 < 4) || // Saturday 00:00–03:59
       (day === 6 && hour24 >= 22) || // Saturday 22:00–23:59
-      (day === 0 && hour24 < 4)      // Sunday 00:00–03:59
+      (day === 0 && hour24 < 4) // Sunday 00:00–03:59
     ) {
       timeType = 3; // Overnight Weekend
     } else if (hour24 >= 9 && hour24 < 17) {
       timeType = 1; // Normal
     }
 
-    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     console.log(
-      `Calculated time type: ${timeType} | Day: ${dayNames[day]} | Time: ${hour24.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`
+      `Calculated time type: ${timeType} | Day: ${
+        dayNames[day]
+      } | Time: ${hour24.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}`
     );
 
     return timeType;
   };
 
-
   // set initial and later booking time type
 
-const calculateFare = () => {
-  console.log("=== Fare Calculation Started ===");
+  const calculateFare = () => {
+    console.log("=== Fare Calculation Started ===");
 
-  if (!distanceKm) {
-    console.log("❌ No distance available — aborting fare calculation.");
-    setAllFares([]);   // clear when no distance
-    return null;
-  }
-
-  const distance = parseInt(distanceKm);
-  const tollCost = hasToll ? parseFloat(tollPrice) : 0;
-  const bookingFees = 4;
-
-  // helper to compute per-vehicle fare
-  const computeLocal = (vehicleName) => {
-    let vehicleSurcharge = 0;
-    switch (vehicleName) {
-      case "Sedan":
-        vehicleSurcharge = 0;
-        break;
-      case "Silver Service":
-        vehicleSurcharge = 11;
-        break;
-      case "SUV":
-      case "Maxi Taxi":
-        vehicleSurcharge = 17.8;
-        break;
+    if (!distanceKm) {
+      console.log("❌ No distance available — aborting fare calculation.");
+      setAllFares([]); // clear when no distance
+      return null;
     }
 
-    let base;
-    if (timeType === 3) {
-      base = 20 + distance * 2.493 + tollCost + 7.8;
-    } else if (timeType === 2) {
-      base = 13 + distance * 2.265 + tollCost + 6.55;
-    } else {
-      base = 8 + distance * 2.037 + tollCost + 5.25;
-    }
+    const distance = parseInt(distanceKm);
+    const tollCost = hasToll ? parseFloat(tollPrice) : 0;
+    const bookingFees = 4;
 
-    let fareValue = Math.max(base, 40);
-    fareValue += vehicleSurcharge + bookingFees;
+    // helper to compute per-vehicle fare
+    const computeLocal = (vehicleName) => {
+      let vehicleSurcharge = 0;
+      switch (vehicleName) {
+        case "Sedan":
+          vehicleSurcharge = 0;
+          break;
+        case "Silver Service":
+          vehicleSurcharge = 11;
+          break;
+        case "SUV":
+        case "Maxi Taxi":
+          vehicleSurcharge = 17.8;
+          break;
+      }
 
-    if (isAirportPickup(pickup)) {
-      fareValue += 4.68;
-    }
+      let base;
+      if (timeType === 3) {
+        base = 20 + distance * 2.493 + tollCost + 7.8;
+      } else if (timeType === 2) {
+        base = 13 + distance * 2.265 + tollCost + 6.55;
+      } else {
+        base = 8 + distance * 2.037 + tollCost + 5.25;
+      }
 
-    // return number (not string) so it's easier to format later if needed
-    return Number(fareValue.toFixed(2));
+      let fareValue = Math.max(base, 40);
+      fareValue += vehicleSurcharge + bookingFees;
+
+      if (isAirportPickup(pickup)) {
+        fareValue += 4.68;
+      }
+
+      // return number (not string) so it's easier to format later if needed
+      return Number(fareValue.toFixed(2));
+    };
+
+    // NOTE: use ids that match your options' ids (lowercase dashed form).
+    // If your options use different ids, update these strings to match.
+    const faresArray = [
+      {
+        id: "next-available",
+        name: "Next Available",
+        price: computeLocal("Sedan"),
+      },
+      {
+        id: "silver-service",
+        name: "Silver Service",
+        price: computeLocal("Silver Service"),
+      },
+      { id: "suv", name: "SUV", price: computeLocal("SUV") },
+      { id: "maxi-taxi", name: "Maxi Taxi", price: computeLocal("Maxi Taxi") },
+    ];
+
+    setAllFares(faresArray);
+    console.log("All fares:", faresArray);
+
+    // also keep the current selected fare for UI
+    const vehicleName = selected?.name || "Sedan";
+    const selectedFare = computeLocal(vehicleName);
+    setFare(selectedFare);
   };
-
-  // NOTE: use ids that match your options' ids (lowercase dashed form).
-  // If your options use different ids, update these strings to match.
-  const faresArray = [
-    { id: "next-available", name: "Next Available", price: computeLocal("Sedan") },
-    { id: "silver-service",  name: "Silver Service", price: computeLocal("Silver Service") },
-    { id: "suv",             name: "SUV",            price: computeLocal("SUV") },
-    { id: "maxi-taxi",       name: "Maxi Taxi",      price: computeLocal("Maxi Taxi") },
-  ];
-
-  setAllFares(faresArray);
-  console.log("All fares:", faresArray);
-
-  // also keep the current selected fare for UI
-  const vehicleName = selected?.name || "Sedan";
-  const selectedFare = computeLocal(vehicleName);
-  setFare(selectedFare);
-};
-
 
   // const calculateFare = () => {
   //   console.log("=== Fare Calculation Started ===");
@@ -254,7 +274,7 @@ const calculateFare = () => {
     if (destinations.length === 1) {
       const newDestinations = [""];
       setDestinations(newDestinations);
-setAllFares([])
+      setAllFares([]);
       const newLocs = []; // remove any location
       setDestinationLocs(newLocs);
 
@@ -288,7 +308,6 @@ setAllFares([])
 
     setDestinations([""]);
     setDestinationLocs([]);
-
 
     // Notify parent that pickup is now empty
     onDestinationsSelect([]);
@@ -344,15 +363,16 @@ setAllFares([])
 
     const service = new window.google.maps.DirectionsService();
 
-    service.route({
-      origin: pickup,
-      destination: dests[dests.length - 1],
-      waypoints: dests.slice(0, -1).map((loc) => ({
-        location: loc,
-        stopover: true,
-      })),
-      travelMode: window.google.maps.TravelMode.DRIVING,
-    },
+    service.route(
+      {
+        origin: pickup,
+        destination: dests[dests.length - 1],
+        waypoints: dests.slice(0, -1).map((loc) => ({
+          location: loc,
+          stopover: true,
+        })),
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
       (result, status) => {
         if (status === "OK" && result.routes.length > 0) {
           const leg = result.routes[0].legs.reduce(
@@ -562,7 +582,10 @@ setAllFares([])
           );
 
           // Must be Victoria, Australia
-          if (stateComp?.short_name === "VIC" && countryComp?.short_name === "AU") {
+          if (
+            stateComp?.short_name === "VIC" &&
+            countryComp?.short_name === "AU"
+          ) {
             resolve(true);
           } else {
             resolve(false);
@@ -574,85 +597,97 @@ setAllFares([])
       });
     });
   };
-useEffect(() => {
-  // Utility: move all pac containers into the provided wrapper element
-  const movePacInto = (wrapperEl) => {
-    if (!wrapperEl) return;
-    const pacs = document.querySelectorAll(".pac-container");
-    pacs.forEach((pac) => {
-      if (!wrapperEl.contains(pac)) {
-        try {
-          wrapperEl.appendChild(pac);
-          // also enforce style (CSS above will help too)
-          pac.style.position = "absolute";
-          pac.style.top = "100%";
-          pac.style.left = "0";
-          pac.style.width = "100%";
-          pac.style.zIndex = "2000";
-        } catch (e) {
-          // ignore if DOM move fails for any reason
+  useEffect(() => {
+    // Utility: move all pac containers into the provided wrapper element
+    const movePacInto = (wrapperEl) => {
+      if (!wrapperEl) return;
+      const pacs = document.querySelectorAll(".pac-container");
+      pacs.forEach((pac) => {
+        if (!wrapperEl.contains(pac)) {
+          try {
+            wrapperEl.appendChild(pac);
+            // also enforce style (CSS above will help too)
+            pac.style.position = "absolute";
+            pac.style.top = "100%";
+            pac.style.left = "0";
+            pac.style.width = "100%";
+            pac.style.zIndex = "2000";
+          } catch (e) {
+            // ignore if DOM move fails for any reason
+          }
         }
+      });
+    };
+
+    // When an input is focused, move visible pac to its wrapper
+    const onFocusHandler = (ev) => {
+      const input = ev.target;
+      if (!input) return;
+      // prefer the immediate parent wrapper; adjust if you use another wrapper structure
+      const wrapper = input.parentNode || input.closest(".relative");
+      if (wrapper) movePacInto(wrapper);
+    };
+
+    // attach focus listeners to current inputs
+    const attachFocusListeners = () => {
+      if (pickupInputRef?.current) {
+        pickupInputRef.current.addEventListener("focus", onFocusHandler);
+      }
+      // destinationRefs is dynamic; attach listeners to any existing refs
+      destinationRefs.current.forEach((el) => {
+        if (el) el.addEventListener("focus", onFocusHandler);
+      });
+    };
+
+    // detach helper
+    const detachFocusListeners = () => {
+      if (pickupInputRef?.current) {
+        pickupInputRef.current.removeEventListener("focus", onFocusHandler);
+      }
+      destinationRefs.current.forEach((el) => {
+        if (el) el.removeEventListener("focus", onFocusHandler);
+      });
+    };
+
+    // Move pacs immediately in case they already exist
+    movePacInto(
+      pickupInputRef?.current?.parentNode ||
+        pickupInputRef?.current?.closest?.(".relative")
+    );
+
+    // Attach focus listeners
+    attachFocusListeners();
+
+    // Observe DOM additions (Google adds pac-container to body). When added, move it into the currently focused input wrapper.
+    const observer = new MutationObserver((mutations) => {
+      // if an input is focused, move pac(s) into its wrapper
+      const active = document.activeElement;
+      if (
+        active &&
+        (active === pickupInputRef.current ||
+          destinationRefs.current.includes(active))
+      ) {
+        const wrapper = active.parentNode || active.closest(".relative");
+        movePacInto(wrapper);
+      } else {
+        // fallback: ensure pickup wrapper contains pacs
+        movePacInto(
+          pickupInputRef?.current?.parentNode ||
+            pickupInputRef?.current?.closest?.(".relative")
+        );
       }
     });
-  };
 
-  // When an input is focused, move visible pac to its wrapper
-  const onFocusHandler = (ev) => {
-    const input = ev.target;
-    if (!input) return;
-    // prefer the immediate parent wrapper; adjust if you use another wrapper structure
-    const wrapper = input.parentNode || input.closest(".relative");
-    if (wrapper) movePacInto(wrapper);
-  };
+    observer.observe(document.body, { childList: true, subtree: true });
 
-  // attach focus listeners to current inputs
-  const attachFocusListeners = () => {
-    if (pickupInputRef?.current) {
-      pickupInputRef.current.addEventListener("focus", onFocusHandler);
-    }
-    // destinationRefs is dynamic; attach listeners to any existing refs
-    destinationRefs.current.forEach((el) => {
-      if (el) el.addEventListener("focus", onFocusHandler);
-    });
-  };
-
-  // detach helper
-  const detachFocusListeners = () => {
-    if (pickupInputRef?.current) {
-      pickupInputRef.current.removeEventListener("focus", onFocusHandler);
-    }
-    destinationRefs.current.forEach((el) => {
-      if (el) el.removeEventListener("focus", onFocusHandler);
-    });
-  };
-
-  // Move pacs immediately in case they already exist
-  movePacInto(pickupInputRef?.current?.parentNode || pickupInputRef?.current?.closest?.(".relative"));
-
-  // Attach focus listeners
-  attachFocusListeners();
-
-  // Observe DOM additions (Google adds pac-container to body). When added, move it into the currently focused input wrapper.
-  const observer = new MutationObserver((mutations) => {
-    // if an input is focused, move pac(s) into its wrapper
-    const active = document.activeElement;
-    if (active && (active === pickupInputRef.current || destinationRefs.current.includes(active))) {
-      const wrapper = active.parentNode || active.closest(".relative");
-      movePacInto(wrapper);
-    } else {
-      // fallback: ensure pickup wrapper contains pacs
-      movePacInto(pickupInputRef?.current?.parentNode || pickupInputRef?.current?.closest?.(".relative"));
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  return () => {
-    observer.disconnect();
-    detachFocusListeners();
-  };
-// Re-run when destinationRefs array or pickup ref changes
-}, [/* re-run when your destination inputs change length */ destinations.length]);
+    return () => {
+      observer.disconnect();
+      detachFocusListeners();
+    };
+    // Re-run when destinationRefs array or pickup ref changes
+  }, [
+    /* re-run when your destination inputs change length */ destinations.length,
+  ]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -666,7 +701,10 @@ useEffect(() => {
               componentRestrictions: { country: "au" },
               fields: ["formatted_address", "geometry"],
             };
-            const auto = new window.google.maps.places.Autocomplete(input, options);
+            const auto = new window.google.maps.places.Autocomplete(
+              input,
+              options
+            );
 
             auto.addListener("place_changed", async () => {
               const place = auto.getPlace();
@@ -688,7 +726,7 @@ useEffect(() => {
                 // Validate destination is inside Victoria
                 const insideVIC = await isInVictoria(location);
                 if (!insideVIC) {
-                  setIsNoServiceOpen(true)
+                  setIsNoServiceOpen(true);
                   // alert(`Destination ${idx + 1} must be within Victoria, Australia.`);
                   // revert the visible label (optional)
                   const reverted = [...destinations];
@@ -742,8 +780,8 @@ useEffect(() => {
               // Validate using your helper
               const insideVIC = await isInVictoria(location);
               if (!insideVIC) {
-                setIsNoServiceOpen(true)
-                console.log("No Service Open is : " + isNoServiceOpen)
+                setIsNoServiceOpen(true);
+                console.log("No Service Open is : " + isNoServiceOpen);
                 // alert("Pickup must be within Victoria, Australia.");
                 // revert the visible input (optional) so user knows selection failed
                 setPickup("");
@@ -769,12 +807,17 @@ useEffect(() => {
     }, 300);
 
     return () => clearInterval(interval);
-  }, [destinations, pickupLoc, destinationLocs, onDestinationsSelect, onPickupSelect]);
+  }, [
+    destinations,
+    pickupLoc,
+    destinationLocs,
+    onDestinationsSelect,
+    onPickupSelect,
+  ]);
 
   useEffect(() => {
     if (distanceKm) calculateFare();
   }, [selected, distanceKm, hasToll, timeType]);
-
 
   useEffect(() => {
     let dateObj;
@@ -785,9 +828,10 @@ useEffect(() => {
       );
     } else if (bookingMode === "later" && dateVal) {
       const hour = parseInt(hourVal, 10);
-      dateObj = new Date(`${dateVal}T${hour.toString().padStart(2, "0")}:${minuteVal}:00`);
+      dateObj = new Date(
+        `${dateVal}T${hour.toString().padStart(2, "0")}:${minuteVal}:00`
+      );
     }
-
 
     if (dateObj) {
       setTimeType(determineTimeType(dateObj));
@@ -795,114 +839,48 @@ useEffect(() => {
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
   return (
-  <>
-  {!vehicleText && (  <section className=" w-full md:overflow-y-scroll">
-      <form onSubmit={handleSubmit}>
-        {/* Step 1 */}
+    <>
+      {!vehicleText && (
+        <section className=" w-full scroll-container">
+          <form onSubmit={handleSubmit}>
+            {/* Step 1 */}
 
-        {/* Step 1 */}
-        <div className="px-5 py-6">
-          <h3 className="text-sm mb-4 hidden md:flex">
-            Step 1 of 4 <b className="ml-2"> Booking details</b>
-          </h3>
+            {/* Step 1 */}
+            <div className="px-5 py-6">
+              <h3 className="text-sm mb-4 hidden md:flex">
+                Step 1 of 4 <b className="ml-2"> Booking details</b>
+              </h3>
 
-          <h2 className="md:hidden text-2xl text-bold mb-2">
-            Fare Estimates Calculator
-          </h2>
-          <h3 className="md:hidden mb-4 text-sm">
-            Please enter a valid pickup and destination{" "}
-          </h3>
+              <h2 className="md:hidden text-2xl text-bold mb-2">
+                Fare Estimates Calculator
+              </h2>
+              <h3 className="md:hidden mb-4 text-sm">
+                Please enter a valid pickup and destination{" "}
+              </h3>
 
-          <div className="mb-4 relative">
-            <TextField
-              inputRef={pickupInputRef} // attach ref here
-              label="Add pickup (required)"
-              variant="outlined"
-              fullWidth
-              required
-              placeholder="Add your pickup location"
-              value={pickup}
-              onChange={(e) => setPickup(e.target.value)} // just update local state
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {pickup ? (
-                      <IconButton size="small">
-                        <span
-                          onClick={handleDeletePickup}
-                          style={{ fontSize: 16 }}
-                        >
-                          ✖
-                        </span>
-                      </IconButton>
-                    ) : null}
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: `${fixedColor}`, // outline color on focus
-                  },
-                },
-                "& label.Mui-focused": {
-                  color: "gray", // label color on focus
-                },
-              }}
-            />
-
-            {pickupSuggestions.length > 0 && (
-              <ul className="absolute z-50 bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto w-full">
-                {pickupSuggestions.map((s) => (
-                  <li
-                    key={s.place_id}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handlePickupSelect(s)}
-                  >
-                    <span className="font-medium">
-                      {s.structured_formatting.main_text}
-                    </span>
-                    <span className="text-gray-500 ml-2 text-sm">
-                      {s.structured_formatting.secondary_text}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {/* show modal — pass open and onClose */}
-          <CabUnavailableModal
-            open={isNoServiceOpen}
-            onClose={() => setIsNoServiceOpen(false)}
-          />
-
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {destinations.map((destination, index) => (
-              <div key={index} className="relative">
+              <div className="mb-4 relative">
                 <TextField
-                  label={`Destination ${index + 1}`}
+                  inputRef={pickupInputRef} // attach ref here
+                  label="Add pickup (required)"
                   variant="outlined"
                   fullWidth
-                  value={destination}
-                  onChange={(e) => {
-                    const newDestinations = [...destinations];
-                    newDestinations[index] = e.target.value;
-                    setDestinations(newDestinations);
-                  }}
                   required
-                  disabled={!pickup}
-                  inputRef={(el) => (destinationRefs.current[index] = el)}
+                  placeholder="Add your pickup location"
+                  value={pickup}
+                  onChange={(e) => setPickup(e.target.value)} // just update local state
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        {destination && (
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDeleteDestination(index)}
-                          >
-                            <span style={{ fontSize: 16 }}>✖</span>
+                        {pickup ? (
+                          <IconButton size="small">
+                            <span
+                              onClick={handleDeletePickup}
+                              style={{ fontSize: 16 }}
+                            >
+                              ✖
+                            </span>
                           </IconButton>
-                        )}
+                        ) : null}
                       </InputAdornment>
                     ),
                   }}
@@ -917,307 +895,404 @@ useEffect(() => {
                     },
                   }}
                 />
+
+                {pickupSuggestions.length > 0 && (
+                  <ul className="absolute z-50 bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto w-full">
+                    {pickupSuggestions.map((s) => (
+                      <li
+                        key={s.place_id}
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handlePickupSelect(s)}
+                      >
+                        <span className="font-medium">
+                          {s.structured_formatting.main_text}
+                        </span>
+                        <span className="text-gray-500 ml-2 text-sm">
+                          {s.structured_formatting.secondary_text}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            ))}
+              {/* show modal — pass open and onClose */}
+              <CabUnavailableModal
+                open={isNoServiceOpen}
+                onClose={() => setIsNoServiceOpen(false)}
+              />
 
-            <Button
-              variant="outlined"
-              onClick={handleAdd}
-              disabled={
-                destinations.length >= 4 ||
-                !destinations[destinations.length - 1] || // check for undefined/null
-                destinations[destinations.length - 1].trim() === ""
-              }
-            >
-              + Add Destination
-            </Button>
-          </Box>
-        </div>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {destinations.map((destination, index) => (
+                  <div key={index} className="relative">
+                    <TextField
+                      label={`Destination ${index + 1}`}
+                      variant="outlined"
+                      fullWidth
+                      value={destination}
+                      onChange={(e) => {
+                        const newDestinations = [...destinations];
+                        newDestinations[index] = e.target.value;
+                        setDestinations(newDestinations);
+                      }}
+                      required
+                      disabled={!pickup}
+                      inputRef={(el) => (destinationRefs.current[index] = el)}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            {destination && (
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeleteDestination(index)}
+                              >
+                                <span style={{ fontSize: 16 }}>✖</span>
+                              </IconButton>
+                            )}
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "&.Mui-focused fieldset": {
+                            borderColor: `${fixedColor}`, // outline color on focus
+                          },
+                        },
+                        "& label.Mui-focused": {
+                          color: "gray", // label color on focus
+                        },
+                      }}
+                    />
+                  </div>
+                ))}
 
-        {/* Booking now/later radio - controlled */}
-        <div className="flex  gap-4 px-4 ml-3 md:ml-2 items-center">
-          <RadioGroup
-            row
-            value={bookingMode}
-            onChange={(e) => setBookingMode(e.target.value)}
-            sx={{
-              flexDirection: {
-                xs: "column",
-                md: "row",
-              },
-            }}
-          >
-            <FormControlLabel
-              value="now"
-              control={
-                <Radio
-                  sx={{
-                    color: "black",
-                    "&.Mui-checked": {
-                      color: "green",
-                    },
-                    p: 1,
-                  }}
+                <Button
+                  variant="outlined"
+                  onClick={handleAdd}
+                  disabled={
+                    destinations.length >= 4 ||
+                    !destinations[destinations.length - 1] || // check for undefined/null
+                    destinations[destinations.length - 1].trim() === ""
+                  }
+                >
+                  + Add Destination
+                </Button>
+              </Box>
+            </div>
+
+            {/* Booking now/later radio - controlled */}
+            <div className="flex  justify-around ml-6 w-full  items-center">
+              <RadioGroup
+                row
+                value={bookingMode}
+                onChange={(e) => setBookingMode(e.target.value)}
+                sx={{ "& .MuiFormControlLabel-root": { mr: 6 } }} // spacing between radios
+              >
+                <FormControlLabel
+                  value="now"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "black",
+                        "&.Mui-checked": { color: "green" },
+                        p: 1,
+                      }}
+                    />
+                  }
+                  label="Book for now"
                 />
-              }
-              label="Book for now"
-            />
 
-            <FormControlLabel
-              value="later"
-              control={
-                <Radio
-                  sx={{
-                    color: "black",
-                    "&.Mui-checked": {
-                      color: "green",
-                    },
-                    p: 1,
-                  }}
+                <FormControlLabel
+                  value="later"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "black",
+                        "&.Mui-checked": { color: "green" },
+                        p: 1,
+                      }}
+                    />
+                  }
+                  label="Book for later"
                 />
-              }
-              label="Book for later"
-            />
-          </RadioGroup>
-        </div>
+              </RadioGroup>
+            </div>
 
-        {/* If "later", show date/time selects (keeps style minimal) */}
-        {/* // ...existing code... */}
-        {bookingMode === "later" && (
-          <div className="px-3 py-2">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Pickup Date */}
-              <div className="flex-1">
-                <label className="block text-sm mb-1 font-medium">
-                  Pickup date
-                </label>
-                <input
-                  type="date"
-                  className="w-full border rounded px-3 py-2"
-                  value={dateVal}
-                  onChange={(e) => setDateVal(e.target.value)}
+            {/* If "later", show date/time selects (keeps style minimal) */}
+            {/* // ...existing code... */}
+            {bookingMode === "later" && (
+              <div className="px-3 py-2">
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* Pickup Date */}
+                  <div className="flex-1">
+                    <label className="block text-sm mb-1 font-medium">
+                      Pickup date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border rounded px-3 py-2"
+                      value={dateVal}
+                      onChange={(e) => setDateVal(e.target.value)}
+                      required
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                  </div>
+
+                  {/* Pickup Time */}
+                  <div className="flex-1">
+                    <label className="block text-sm mb-1 font-medium">
+                      Pickup time
+                    </label>
+                    <input
+                      type="time"
+                      className="w-full border rounded px-3 py-2"
+                      value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(
+                        2,
+                        "0"
+                      )}`}
+                      onChange={(e) => {
+                        const [h, m] = e.target.value.split(":");
+                        setHourVal(h);
+                        setMinuteVal(m);
+                      }}
+                      required
+                      step="60" // optional
+                      min={
+                        dateVal === new Date().toISOString().split("T")[0]
+                          ? new Date().toTimeString().slice(0, 5) // current local time
+                          : "00:00"
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* // ...existing code... */}
+
+            {/* Fixed Price block */}
+            <div className="w-full bg-[#F8F6F2] px-4 py-5">
+              <div className="flex items-center w-full justify-between">
+                <div className="flex gap-3 items-center">
+                  <LockIcon color={fixedColor} />
+                  <span
+                    style={{ color: fixedColor }}
+                    className={`text-xl font-bold`}
+                  >
+                    Fixed Price
+                  </span>
+                </div>
+
+                <ToggleSwitch enabled={isOn} onToggle={setIsOn} />
+              </div>
+
+              <p className="mt-2">
+                Lock in a price with no additional charges.
+              </p>
+            </div>
+            <div className="w-full ">
+              <CarDropdown
+                selectedOption={selected}
+                onOptionSelect={setSelected}
+                label={
+                  fare
+                    ? isOn
+                      ? `$${fare}`
+                      : `$${Math.round(fare - 5)} - $${Math.round(fare - -15)}`
+                    : "Dest required"
+                }
+                allFares={allFares}
+                changeVehicleText={setVehicleText}
+                isLuggageModal={setIsLuggageModalOpen}
+                isFixedPrice={isOn}
+                onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+              />
+            </div>
+
+            {/* Step 2 */}
+            <div className="px-5 py-6">
+              <h3 className="text-sm mt-4 mb-4">
+                {" "}
+                Step 2 of 4 <b>Contact details</b>
+              </h3>
+
+              <div className="mb-4">
+                <TextField
+                  label="Passenger Name"
+                  variant="outlined"
+                  fullWidth
                   required
-                  min={new Date().toISOString().split("T")[0]}
+                  placeholder="Passenger name"
+                  value={passenger}
+                  onChange={(e) => setPassenger(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "&.Mui-focused fieldset": {
+                        borderColor: `${fixedColor}`, // outline color on focus
+                      },
+                    },
+                    "& label.Mui-focused": {
+                      color: "gray", // label color on focus
+                    },
+                  }}
                 />
               </div>
 
-              {/* Pickup Time */}
-              <div className="flex-1">
-                <label className="block text-sm mb-1 font-medium">
-                  Pickup time
-                </label>
-                <input
-                  type="time"
-                  className="w-full border rounded px-3 py-2"
-                  value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`}
+              <div className="flex items-center justify-center gap-2 w-full">
+                <div className="w-[20%] border rounded-sm h-14 flex items-center justify-center gap-1">
+                  <img
+                    className="h-5"
+                    src="https://flagsapi.com/AU/flat/64.png"
+                    alt="AU"
+                  />
+                  +61
+                </div>
+                <div className="flex-grow">
+                  <TextField
+                    label="Contact Number"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    type="tel"
+                    inputProps={{
+                      pattern: "[0-9]{9}",
+                      maxLength: 9,
+                    }}
+                    value={contact}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      setContact(value);
+                      if (value.length === 9 && value.startsWith("4")) {
+                        setContactError("");
+                      } else {
+                        setContactError(
+                          "Number must be 9 digits and start with 4"
+                        );
+                      }
+                    }}
+                    error={!!contactError}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "&.Mui-focused fieldset": {
+                          borderColor: `${fixedColor}`, // outline color on focus
+                        },
+                      },
+                      "& label.Mui-focused": {
+                        color: "gray", // label color on focus
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Shared error message below both fields */}
+              {contactError && (
+                <p className="text-red-600 text-sm mt-1">{contactError}</p>
+              )}
+            </div>
+
+            {/* Step 3 Payment */}
+            <div className="px-5 py-6">
+              <h3 className="text-sm mt-2 mb-4">
+                {" "}
+                Step 3 of 4 <b>Payment</b>
+              </h3>
+
+              <PaymentDropdown
+                selectedOption={selectedPayment}
+                onOptionSelect={handlePaymentSelect}
+                title="Select payment method"
+                className="mb-4"
+              />
+            </div>
+
+            {/* Step 4 Driver Instruction */}
+            <div className="px-5 py-6">
+              <h3 className="text-sm mb-4">
+                {" "}
+                Step 4 of 4 <b>Driver Instruction</b>
+              </h3>
+
+              <div className="mb-4">
+                <TextField
+                  label="Notes for driver"
+                  variant="outlined"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  inputProps={{
+                    maxLength: 350,
+                  }}
+                  value={instruction}
                   onChange={(e) => {
-                    const [h, m] = e.target.value.split(":");
-                    setHourVal(h);
-                    setMinuteVal(m);
+                    const value = e.target.value;
+                    setInstruction(value);
                   }}
-                  required
-                  step="60" // optional
-                  min={
-                    dateVal === new Date().toISOString().split("T")[0]
-                      ? new Date().toTimeString().slice(0, 5) // current local time
-                      : "00:00"
-                  }
+                  placeholder="e.g. Unit, Gate and floor numbers"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "&.Mui-focused fieldset": {
+                        borderColor: `${fixedColor}`, // outline color on focus
+                      },
+                    },
+                    "& label.Mui-focused": {
+                      color: "gray", // label color on focus
+                    },
+                  }}
                 />
-
               </div>
             </div>
-          </div>
-        )}
 
-        {/* // ...existing code... */}
-
-        {/* Fixed Price block */}
-        <div className="w-full bg-[#F8F6F2] px-4 py-5">
-          <div className="flex items-center w-full justify-between">
-            <div className="flex gap-3 items-center">
-              <LockIcon color={fixedColor} />
-              <span style={{ color: fixedColor }} className={`text-xl font-bold`}>Fixed Price</span>
+            <div className="mt-3">
+              <button
+                type="submit"
+                className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer mb-4"
+              >
+                Request Booking
+              </button>
             </div>
+          </form>
+        </section>
+      )}
+      {vehicleText === "Next Available" && (
+        <SeatDetails
+          data={seatDetails["Next Available"]}
+          changeVehicleText={setVehicleText}
+          onSelect={setSelected}
+          onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+        />
+      )}
+      {vehicleText === "Silver Service" && (
+        <SeatDetails
+          data={seatDetails["Silver Service"]}
+          changeVehicleText={setVehicleText}
+          onSelect={setSelected}
+          onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+        />
+      )}
+      {vehicleText === "Suv" && (
+        <SeatDetails
+          data={seatDetails["Suv"]}
+          changeVehicleText={setVehicleText}
+          onSelect={setSelected}
+          onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+        />
+      )}
+      {vehicleText === "Maxi Taxi" && (
+        <SeatDetails
+          data={seatDetails["Maxi Taxi"]}
+          changeVehicleText={setVehicleText}
+          onSelect={setSelected}
+          onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+        />
+      )}
 
-            <ToggleSwitch enabled={isOn} onToggle={setIsOn}/>
-          </div>
-
-          <p className="mt-2">Lock in a price with no additional charges.</p>
-        </div>
-        <div className="w-full ">
-          <CarDropdown
-            selectedOption={selected}
-            onOptionSelect={setSelected}
-            label={
-              fare
-                ? isOn
-                  ? `$${fare}`
-                  : `$${Math.round(fare - 5)} - $${Math.round(fare - (-15))}`
-                : "Dest required"
-            }
-            allFares = {allFares}
-            changeVehicleText={setVehicleText}
-            isLuggageModal={setIsLuggageModalOpen}
-            isFixedPrice = {isOn}
-            onVehicleDetailOpenChange = {onVehicleDetailOpenChange}
-          />
-        </div>
-
-        {/* Step 2 */}
-        <div className="px-5 py-6">
-          <h3 className="text-sm mt-4 mb-4">
-            {" "}
-            Step 2 of 4 <b>Contact details</b>
-          </h3>
-
-          <div className="mb-4">
-            <TextField
-              label="Passenger Name"
-              variant="outlined"
-              fullWidth
-              required
-              placeholder="Passenger name"
-              value={passenger}
-              onChange={(e) => setPassenger(e.target.value)}
-
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: `${fixedColor}`, // outline color on focus
-                  },
-                },
-                "& label.Mui-focused": {
-                  color: "gray", // label color on focus
-                },
-              }}
-            />
-          </div>
-
-          <div className="flex items-center justify-center gap-2 w-full">
-            <div className="w-[20%] border rounded-sm h-14 flex items-center justify-center gap-1">
-              <img
-                className="h-5"
-                src="https://flagsapi.com/AU/flat/64.png"
-                alt="AU"
-              />
-              +61
-            </div>
-            <div className="flex-grow">
-              <TextField
-                label="Contact Number"
-                variant="outlined"
-                fullWidth
-                required
-                type="tel"
-                inputProps={{
-                  pattern: "[0-9]{9}",
-                  maxLength: 9,
-                }}
-                value={contact}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "");
-                  setContact(value);
-                  if (value.length === 9 && value.startsWith("4")) {
-                    setContactError("");
-                  } else {
-                    setContactError("Number must be 9 digits and start with 4");
-                  }
-                }}
-                error={!!contactError}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&.Mui-focused fieldset": {
-                      borderColor: `${fixedColor}`, // outline color on focus
-                    },
-                  },
-                  "& label.Mui-focused": {
-                    color: "gray", // label color on focus
-                  },
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Shared error message below both fields */}
-          {contactError && (
-            <p className="text-red-600 text-sm mt-1">{contactError}</p>
-          )}
-        </div>
-
-        {/* Step 3 Payment */}
-        <div className="px-5 py-6">
-          <h3 className="text-sm mt-2 mb-4">
-            {" "}
-            Step 3 of 4 <b>Payment</b>
-          </h3>
-
-          <PaymentDropdown
-            selectedOption={selectedPayment}
-            onOptionSelect={handlePaymentSelect}
-            title="Select payment method"
-            className="mb-4"
-          />
-        </div>
-
-        {/* Step 4 Driver Instruction */}
-        <div className="px-5 py-6">
-          <h3 className="text-sm mb-4">
-            {" "}
-            Step 4 of 4 <b>Driver Instruction</b>
-          </h3>
-
-          <div className="mb-4">
-            <TextField
-              label="Notes for driver"
-              variant="outlined"
-              fullWidth
-              multiline
-              rows={3}
-              inputProps={{
-                maxLength: 350,
-              }}
-              value={instruction}
-              onChange={(e) => {
-                const value = e.target.value;
-                setInstruction(value);
-              }}
-              placeholder="e.g. Unit, Gate and floor numbers"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: `${fixedColor}`, // outline color on focus
-                  },
-                },
-                "& label.Mui-focused": {
-                  color: "gray", // label color on focus
-                },
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="mt-3">
-          <button
-            type="submit"
-            className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer"
-          >
-            Request Booking
-          </button>
-        </div>
-      </form>
-    </section>)}
-    {vehicleText === "Next Available" && (<SeatDetails data={seatDetails["Next Available"]} changeVehicleText={setVehicleText} onSelect={setSelected} onVehicleDetailOpenChange={onVehicleDetailOpenChange} />)}
-    {vehicleText === "Silver Service" && (<SeatDetails data={seatDetails["Silver Service"]} changeVehicleText={setVehicleText} onSelect={setSelected} onVehicleDetailOpenChange={onVehicleDetailOpenChange} />)}
-    {vehicleText === "Suv" && (<SeatDetails data={seatDetails["Suv"]} changeVehicleText={setVehicleText} onSelect={setSelected}  onVehicleDetailOpenChange={onVehicleDetailOpenChange}/>)}
-    {vehicleText === "Maxi Taxi" && (<SeatDetails data={seatDetails["Maxi Taxi"]} changeVehicleText={setVehicleText} onSelect={setSelected}  onVehicleDetailOpenChange={onVehicleDetailOpenChange}/>)}
-
-    {isLuggageModalOpen && (<LuggageModal/>)}
-    {/* show modal — pass open and onClose */}
-          <CabUnavailableModal
-            open={isNoServiceOpen}
-            onClose={() => setIsNoServiceOpen(false)}
-          />
-  </>
+      {isLuggageModalOpen && <LuggageModal />}
+      {/* show modal — pass open and onClose */}
+      <CabUnavailableModal
+        open={isNoServiceOpen}
+        onClose={() => setIsNoServiceOpen(false)}
+      />
+    </>
   );
 };
 

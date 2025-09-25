@@ -22,7 +22,6 @@ const Home = () => {
   return (
    <>
   {/* Navbar + NavSection */}
- { console.log("object",((isSmall && !isVehicleDetailOpen) || !isSmall))}
   {((isSmall && !isVehicleDetailOpen) || !isSmall) && (
     <>
       <Navbar />
