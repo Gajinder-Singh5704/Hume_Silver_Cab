@@ -24,7 +24,7 @@ const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
           map,
           suppressMarkers: true,
           polylineOptions: {
-            strokeColor: "#FF0000",
+            strokeColor: "#ffb300ff",
             strokeWeight: 4,
           },
         }
@@ -71,6 +71,7 @@ const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
     if (!map) return;
 
     const bounds = new window.google.maps.LatLngBounds();
+    const hasPlace = selectedPlace;
     const hasPickup = !!selectedPickup;
     const hasDests = destinations.some(Boolean);
 
@@ -91,6 +92,9 @@ const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
     } else if (hasDests) {
       // Case 2b: Only destinations → zoom to them
       map.fitBounds(bounds, 80);
+    } else if (hasPlace) { 
+      map.panTo(selectedPlace)
+      map.setZoom(14)
     } else {
       // Case 3: Neither → reset to default
       map.panTo({ lat: -37.6708716, lng: 144.8430578 });
@@ -167,7 +171,7 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
           {/* Pickup marker */}
           {selectedPickup && (
             <AdvancedMarker position={selectedPickup}>
-              <Pin background="blue" borderColor="white" glyphColor="white" />
+              <Pin background="orange" borderColor="white" glyphColor="white" />
             </AdvancedMarker>
           )}
 
@@ -177,7 +181,7 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
               dest && (
                 <AdvancedMarker key={idx} position={dest}>
                   <Pin
-                    background="red"
+                    background="orange"
                     borderColor="white"
                     glyphColor="white"
                     scale={1.2}

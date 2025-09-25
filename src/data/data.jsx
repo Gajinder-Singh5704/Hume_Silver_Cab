@@ -116,7 +116,7 @@ export const seatDetails = {
   },
   "Suv": {
     name: "SUV",
-    capacity: "1 - 4 passengers",
+    capacity: "1 - 6 passengers",
     image: "suv",
     imageDecs:
       "In a hurry? We'll get you there as soon as possible by sending the next available car!",

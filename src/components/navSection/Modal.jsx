@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { getGeocode } from "../../hooks/map";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import SIDEBAR_CONSTANTS from "../../constants/constants";
 
-export default function Modal({ onClose , onPlaceSelect}) {
+export default function Modal({ onClose, onPlaceSelect }) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [select,setSelect] = useState("")
@@ -95,6 +94,7 @@ useEffect(() => {
           <button
             className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
             onClick={handleClose}
+            aria-label="Close"
           >
             <X size={20} />
           </button>

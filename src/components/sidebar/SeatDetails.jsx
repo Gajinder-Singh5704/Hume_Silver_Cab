@@ -10,7 +10,7 @@ const SeatDetails = ({ data , changeVehicleText , onSelect ,onVehicleDetailOpenC
     setSeats((prev) => {
       let next = prev + delta;
       if (next < 1) next = 1;
-      if (data.name == "Suv") {
+      if (data.name == "SUV") {
         if (next > 6) next = 6;
         return next;
       }
