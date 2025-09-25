@@ -2,24 +2,22 @@ import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Info, LockIcon } from "lucide-react";
 import { defaultVehicleOptions } from "../../data/data.jsx";
 import { useNavigate } from "react-router-dom";
-import { all } from "axios";
-
+// removed: import { all } from "axios";
 
 const CarDropdown = ({
   vehicleOptions = [],
   selectedOption = null,
-  isFixedPrice,
+  isFixedPrice = true,
   onOptionSelect = () => { },
   title = "More vehicle/service options",
   label,
   isLuggageModal,
-  changeVehicleText,
-  onVehicleDetailOpenChange,
+  changeVehicleText = () => {},
+  onVehicleDetailOpenChange = () => {},
   allFares = []
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-
 
   const options = vehicleOptions.length > 0 ? vehicleOptions : defaultVehicleOptions;
 
@@ -34,62 +32,60 @@ const CarDropdown = ({
     setIsOpen(false);
   };
 
-  // inside CarDropdown component (above return)
+  // getFareFor - tries id then name match
   const getFareFor = (option) => {
     if (!allFares || allFares.length === 0) return null;
-    // prefer matching by id
     const byId = allFares.find(f => f && (f.id === option.id));
     if (byId) return byId.price;
-    // fallback: try matching by name (case-insensitive)
     const byName = allFares.find(f => f && f.name && option.name && f.name.toLowerCase() === option.name.toLowerCase());
     if (byName) return byName.price;
     return null;
   };
 
-const renderFare = (val, fallback, isFixedPrice = true) => {
-  if (val === null || val === undefined || val == []) return fallback ?? "";
+  const renderFare = (val, fallback, fixedPrice = true) => {
+    if (val === null || val === undefined || val === "") return fallback ?? "";
 
-  if (typeof val === "number") {
-    if (isFixedPrice) {
-      return `$${val.toFixed(2)}`; // keep decimals for fixed price
-    } else {
-      const min = Math.round(val - 5);
-      const max = Math.round(val + 15);
-      return `$${min} - $${max}`; // no decimals for range
+    if (typeof val === "number") {
+      if (fixedPrice) {
+        return `$${val.toFixed(2)}`; // keep decimals for fixed price
+      } else {
+        const min = Math.round(val - 5);
+        const max = Math.round(val + 15);
+        return `$${min} - $${max}`; // no decimals for range
+      }
     }
-  }
 
-  return String(val);
-};
-
-
-
+    // if it's a string or object, stringify lightly
+    return String(val);
+  };
 
   const handleInfoClick = (e, id) => {
     e.stopPropagation();
-    onVehicleDetailOpenChange(true)
-    if (id === "maxi-taxi") {
+    onVehicleDetailOpenChange(true);
+    if (id === "maxi-taxi" && typeof isLuggageModal === "function") {
       isLuggageModal(true);
     }
-    console.log("id:", id)
+    // set changeVehicleText defensively
     switch (id) {
       case "Next-Available":
-        changeVehicleText("Next Available")
+        changeVehicleText("Next Available");
         break;
       case "silver-service":
-        changeVehicleText("Silver Service")
+        changeVehicleText("Silver Service");
         break;
       case "suv":
-        changeVehicleText("Suv")
+        changeVehicleText("Suv");
         break;
       case "maxi-taxi":
-        changeVehicleText("Maxi Taxi")
+        changeVehicleText("Maxi Taxi");
+        break;
+      default:
         break;
     }
   };
 
   return (
-    <div className={`w-full  bg-white rounded-lg shadow-lg mt-4`}>
+    <div className={`w-full bg-white rounded-lg shadow-lg mt-4`}>
       {/* Header (clickable) */}
       <button
         type="button"
@@ -113,13 +109,12 @@ const renderFare = (val, fallback, isFixedPrice = true) => {
           onClick={toggleDropdown}
           className="relative px-2 py-4 cursor-pointer bg-orange-50"
         >
-          {/* left strip (overlay, doesn’t shift content) */}
           <div className="absolute top-0 left-0 h-full w-2 bg-orange-500" />
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {currentSelection?.image && (
-                <img src={currentSelection.image} alt={currentSelection.name} className="h-10" />
+                <img src={currentSelection.image} alt={currentSelection.name} className="h-14 w-20" />
               )}
               <div>
                 <div className="flex items-center space-x-2">
@@ -137,13 +132,22 @@ const renderFare = (val, fallback, isFixedPrice = true) => {
               <p className="text-sm font-medium text-gray-800">
                 {isFixedPrice ? "Fixed Price" : currentSelection?.fareEstimate}
               </p>
-              <p className="text-sm flex items-center text-gray-600">{isFixedPrice ? <> <LockIcon className="mr-1" color="orange" size={12} />  {label} </> : label}</p>
+              <p className="text-sm flex items-center text-gray-600">
+                {isFixedPrice ? (
+                  <>
+                    <LockIcon className="mr-1" color="orange" size={12} />
+                    {label}
+                  </>
+                ) : (
+                  label
+                )}
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* WHEN OPEN: show all options in sequence, highlight selected */}
+      {/* WHEN OPEN: show all options */}
       {isOpen && (
         <div>
           {options.map((option, idx) => {
@@ -154,30 +158,26 @@ const renderFare = (val, fallback, isFixedPrice = true) => {
             return (
               <button
                 type="button"
-                key={option.id}
+                key={option.id ?? idx}
                 onClick={() => {
                   if (isSUV) {
-                    changeVehicleText("Suv")
+                    changeVehicleText("Suv");
                   } else if (isMaxiTaxi) {
-                    changeVehicleText("Maxi Taxi")
+                    changeVehicleText("Maxi Taxi");
                   } else {
                     handleSelect(option);
                   }
                 }}
                 className={`relative w-full px-2 py-4 text-left transition border-b border-gray-200
-            ${idx === options.length - 1 ? "last:border-b-0 rounded-b-lg" : ""}
-            ${isSelected
-                    ? "bg-orange-50" // keep selected highlighted
-                    : "hover:bg-orange-100" // new hover tint for others
-                  }`}
+                  ${idx === options.length - 1 ? "last:border-b-0 rounded-b-lg" : ""}
+                  ${isSelected ? "bg-orange-50" : "hover:bg-orange-100"}`}
               >
-                {/* overlay strip only if selected */}
                 {isSelected && <div className="absolute top-0 left-0 h-full w-2 bg-orange-500" />}
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {option.image && (
-                      <img src={option.image} alt={option.name} className="h-10 w-18" />
+                      <img src={option.image} alt={option.name} className="h-14 w-20" />
                     )}
                     <div className="text-left">
                       <div className="flex items-center space-x-2">
@@ -193,7 +193,7 @@ const renderFare = (val, fallback, isFixedPrice = true) => {
                       <p className="text-sm text-gray-600">{option.passengers}</p>
                     </div>
                   </div>
-                  {/* {console.log("All Fares" , allFares && allFares.length > 0)} */}
+
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-800">
                       {isFixedPrice ? "Fixed Price" : option.fareEstimate}
@@ -205,19 +205,16 @@ const renderFare = (val, fallback, isFixedPrice = true) => {
                           {renderFare(getFareFor(option), option.destRequired)}
                         </>
                       ) : (
-                        renderFare(getFareFor(option), option.destRequired, isFixedPrice = false)
+                        renderFare(getFareFor(option), option.destRequired, false)
                       )}
                     </p>
-
                   </div>
-
                 </div>
               </button>
             );
           })}
         </div>
       )}
-
     </div>
   );
 };

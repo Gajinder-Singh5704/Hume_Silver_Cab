@@ -577,6 +577,85 @@ setAllFares([])
       });
     });
   };
+useEffect(() => {
+  // Utility: move all pac containers into the provided wrapper element
+  const movePacInto = (wrapperEl) => {
+    if (!wrapperEl) return;
+    const pacs = document.querySelectorAll(".pac-container");
+    pacs.forEach((pac) => {
+      if (!wrapperEl.contains(pac)) {
+        try {
+          wrapperEl.appendChild(pac);
+          // also enforce style (CSS above will help too)
+          pac.style.position = "absolute";
+          pac.style.top = "100%";
+          pac.style.left = "0";
+          pac.style.width = "100%";
+          pac.style.zIndex = "2000";
+        } catch (e) {
+          // ignore if DOM move fails for any reason
+        }
+      }
+    });
+  };
+
+  // When an input is focused, move visible pac to its wrapper
+  const onFocusHandler = (ev) => {
+    const input = ev.target;
+    if (!input) return;
+    // prefer the immediate parent wrapper; adjust if you use another wrapper structure
+    const wrapper = input.parentNode || input.closest(".relative");
+    if (wrapper) movePacInto(wrapper);
+  };
+
+  // attach focus listeners to current inputs
+  const attachFocusListeners = () => {
+    if (pickupInputRef?.current) {
+      pickupInputRef.current.addEventListener("focus", onFocusHandler);
+    }
+    // destinationRefs is dynamic; attach listeners to any existing refs
+    destinationRefs.current.forEach((el) => {
+      if (el) el.addEventListener("focus", onFocusHandler);
+    });
+  };
+
+  // detach helper
+  const detachFocusListeners = () => {
+    if (pickupInputRef?.current) {
+      pickupInputRef.current.removeEventListener("focus", onFocusHandler);
+    }
+    destinationRefs.current.forEach((el) => {
+      if (el) el.removeEventListener("focus", onFocusHandler);
+    });
+  };
+
+  // Move pacs immediately in case they already exist
+  movePacInto(pickupInputRef?.current?.parentNode || pickupInputRef?.current?.closest?.(".relative"));
+
+  // Attach focus listeners
+  attachFocusListeners();
+
+  // Observe DOM additions (Google adds pac-container to body). When added, move it into the currently focused input wrapper.
+  const observer = new MutationObserver((mutations) => {
+    // if an input is focused, move pac(s) into its wrapper
+    const active = document.activeElement;
+    if (active && (active === pickupInputRef.current || destinationRefs.current.includes(active))) {
+      const wrapper = active.parentNode || active.closest(".relative");
+      movePacInto(wrapper);
+    } else {
+      // fallback: ensure pickup wrapper contains pacs
+      movePacInto(pickupInputRef?.current?.parentNode || pickupInputRef?.current?.closest?.(".relative"));
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  return () => {
+    observer.disconnect();
+    detachFocusListeners();
+  };
+// Re-run when destinationRefs array or pickup ref changes
+}, [/* re-run when your destination inputs change length */ destinations.length]);
 
   useEffect(() => {
     const interval = setInterval(() => {
