@@ -1,1 +1,10 @@
 @import "tailwindcss";
+/* ensures Google pac container is treated as positioned and visible inside wrappers */
+.pac-container {
+  position: absolute !important;
+  top: 100% !important;   /* immediately below its new parent when moved */
+  left: 0 !important;
+  width: 100% !important;
+  z-index: 2000 !important;
+  box-sizing: border-box !important;
+}
