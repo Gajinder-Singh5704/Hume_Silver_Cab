@@ -716,6 +716,12 @@ const SideBar = ({
         // Attach destination autocomplete
         destinationRefs.current.forEach((input, idx) => {
           if (input) {
+            const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS
+            const auto = new window.google.maps.places.Autocomplete(
+              input,
+              options
+            );
+
             auto.addListener("place_changed", async () => {
               const place = auto.getPlace();
               if (!place || !place.geometry) return;
