@@ -21,9 +21,9 @@ const NavSection = ({onPlaceSelect}) => {
   };
 
   return (
-    <div className="hidden md:flex items-center bg-[#4a4a4a] h-12 px-4 relative">
+    <div className="flex items-center bg-[#4a4a4a] h-12 px-4 relative">
       {/* Left side */}
-      <div className="flex items-center space-x-4 absolute left-4">
+      <div className="flex items-center md:space-x-4 space-x-2 absolute left-4">
         <BsTelephone className="text-white" />
         <a href="tel:+61490092704" className="text-white text-xl font-medium">0490092704</a>
 

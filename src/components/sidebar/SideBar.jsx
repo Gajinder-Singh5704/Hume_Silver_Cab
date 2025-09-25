@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
 import CabUnavailableModal from "./NoServiceModal.jsx";
 import SIDEBAR_CONSTANTS, { TIME_TYPE } from "../../constants/constants.js";
+import { defaultVehicleOptions } from "../../data/data.jsx";
 import {
   Box,
   Button,
@@ -39,7 +40,7 @@ const SideBar = ({
   const [contact, setContact] = useState("");
   const [instruction, setInstruction] = useState("");
   const [isOn, setIsOn] = useState(true);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(defaultVehicleOptions[0]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [tollPrice, setTollPrice] = useState(0);
   const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
@@ -67,7 +68,10 @@ const SideBar = ({
   const [minuteVal, setMinuteVal] = useState(
     melbourneNow.getMinutes().toString().padStart(2, "0")
   );
-
+  // add these refs near the top of your component
+  const pickupAutoRef = useRef(null);
+  // Map <HTMLInputElement, google.maps.places.Autocomplete>
+  const destAutoMapRef = useRef(new Map());
   const [timeType, setTimeType] = useState(2); // number-3
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
@@ -76,8 +80,8 @@ const SideBar = ({
   const [isNoServiceOpen, setIsNoServiceOpen] = useState(false);
 
   const fixedColor = SIDEBAR_CONSTANTS.COLORS.FIXED_ORANGE; // orange-500
-    const [showDone, setShowDone] = useState(false);
-    const timeInputRef = useRef(null);
+  const [showDone, setShowDone] = useState(false);
+  const timeInputRef = useRef(null);
 
   // determine time type (helper stays the same)
   const determineTimeType = (dateObj) => {
@@ -107,8 +111,7 @@ const SideBar = ({
       "Saturday",
     ];
     console.log(
-      `Calculated time type: ${timeType} | Day: ${
-        dayNames[day]
+      `Calculated time type: ${timeType} | Day: ${dayNames[day]
       } | Time: ${hour24.toString().padStart(2, "0")}:${minute
         .toString()
         .padStart(2, "0")}`
@@ -152,23 +155,23 @@ const SideBar = ({
 
       let base;
       if (timeType === 3) {
-        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].baseFlat 
-        + distance 
-        * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm
-        + tollCost 
-        + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
+        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].baseFlat
+          + distance
+          * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm
+          + tollCost
+          + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
       } else if (timeType === 2) {
-        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].baseFlat 
-        + distance 
-        * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].perKm
-        + tollCost 
-        + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].flagFall;
+        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].baseFlat
+          + distance
+          * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].perKm
+          + tollCost
+          + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].flagFall;
       } else {
-        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].baseFlat 
-        + distance 
-        * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].perKm
-        + tollCost 
-        + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].flagFall;
+        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].baseFlat
+          + distance
+          * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].perKm
+          + tollCost
+          + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].flagFall;
       }
 
       let fareValue = Math.max(base, SIDEBAR_CONSTANTS.FEES.MIN_FARE);
@@ -327,7 +330,7 @@ const SideBar = ({
     // Notify parent that pickup is now empty
     onDestinationsSelect([]);
     onPickupSelect(null);
-
+    setAllFares([])
     // Also reset route if neede
     // d
     updateRoute(null, []);
@@ -356,7 +359,7 @@ const SideBar = ({
 
   const handleAdd = () => {
     if (
-      destinations.length < SIDEBAR_CONSTANTS.LIMITS &&
+      destinations.length < SIDEBAR_CONSTANTS.LIMITS.MAX_DESTINATIONS &&
       typeof destinations[destinations.length - 1] === "string" &&
       destinations[destinations.length - 1].trim() !== ""
     ) {
@@ -564,9 +567,9 @@ const SideBar = ({
     setSelected(null);
     setSelectedPayment(null);
     setBookingMode("now");
-    setDateVal("");
-    setHourVal("9");
-    setMinuteVal("00");
+    setDateVal(melbourneNow.toISOString().split("T")[0]);
+    setHourVal(melbourneNow.getHours().toString().padStart(2, "0"));
+    setMinuteVal(melbourneNow.getMinutes().toString().padStart(2, "0"));
     setTimeType(2);
     setFare(null);
     setHasToll(false);
@@ -575,10 +578,10 @@ const SideBar = ({
     onPickupSelect(setPickupLoc);
     onDestinationsSelect(setDestinationLocs);
     setAllFares([]);
-    
+
   };
 
-  console.log("luggage modal ",isLuggageModalOpen)
+  console.log("luggage modal ", isLuggageModalOpen)
 
   // Validate if a place is in Victoria (AU)
   const isInVictoria = async (location) => {
@@ -671,7 +674,7 @@ const SideBar = ({
     // Move pacs immediately in case they already exist
     movePacInto(
       pickupInputRef?.current?.parentNode ||
-        pickupInputRef?.current?.closest?.(".relative")
+      pickupInputRef?.current?.closest?.(".relative")
     );
 
     // Attach focus listeners
@@ -692,7 +695,7 @@ const SideBar = ({
         // fallback: ensure pickup wrapper contains pacs
         movePacInto(
           pickupInputRef?.current?.parentNode ||
-            pickupInputRef?.current?.closest?.(".relative")
+          pickupInputRef?.current?.closest?.(".relative")
         );
       }
     });
@@ -710,123 +713,121 @@ const SideBar = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (window.google && window.google.maps && window.google.maps.places) {
+      if (window.google?.maps?.places) {
         clearInterval(interval);
-
-        // Attach destination autocomplete
+        for (const [input, auto] of destAutoMapRef.current) {
+          if (!destinationRefs.current.includes(input)) {
+            window.google?.maps?.event?.clearInstanceListeners(auto);
+            destAutoMapRef.current.delete(input);
+          }
+        }
+        // --- DESTINATIONS ---
         destinationRefs.current.forEach((input, idx) => {
-          if (input) {
-            const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS
-            const auto = new window.google.maps.places.Autocomplete(
-              input,
-              options
-            );
+          if (!input) return;
+
+          // 🔑 Guard: only create once per input element
+          if (!destAutoMapRef.current.has(input)) {
+            const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
+            const auto = new window.google.maps.places.Autocomplete(input, options);
+            destAutoMapRef.current.set(input, auto);
 
             auto.addListener("place_changed", async () => {
               const place = auto.getPlace();
-              if (!place || !place.geometry) return;
+              if (!place?.geometry) return;
 
               const newDestinations = [...destinations];
-              newDestinations[idx] = place.formatted_address;
+              newDestinations[idx] = place.formatted_address ?? "";
               setDestinations(newDestinations);
 
               const location = {
                 lat: place.geometry.location.lat(),
                 lng: place.geometry.location.lng(),
               };
-              const newLocs = [...destinationLocs];
-              newLocs[idx] = location;
-              // setDestinationLocs(newLocs);
-              // onDestinationsSelect(newLocs);
+
               try {
-                // Validate destination is inside Victoria
                 const insideVIC = await isInVictoria(location);
                 if (!insideVIC) {
                   setIsNoServiceOpen(true);
-                  // alert(`Destination ${idx + 1} must be within Victoria, Australia.`);
-                  // revert the visible label (optional)
                   const reverted = [...destinations];
                   reverted[idx] = "";
                   setDestinations(reverted);
-                  return; // STOP further processing for this destination
+                  return;
                 }
 
-                // valid: save location and notify parent
-                const newLocs = [...destinationLocs];
-                newLocs[idx] = location;
-                setDestinationLocs(newLocs);
-                onDestinationsSelect(newLocs);
+                const nextLocs = [...destinationLocs];
+                nextLocs[idx] = location;
+                setDestinationLocs(nextLocs);
+                onDestinationsSelect(nextLocs);
 
-                // Update route now that we have a valid destination
-                updateRoute(pickupLoc, newLocs);
+                // 🔑 call once
+                updateRoute(pickupLoc, nextLocs);
               } catch (err) {
                 console.error("Failed to validate destination:", err);
-                // revert label on error
                 const reverted = [...destinations];
                 reverted[idx] = "";
                 setDestinations(reverted);
               }
-              updateRoute(pickupLoc, newLocs);
             });
           }
         });
 
-        // Attach pickup autocomplete
-        if (pickupInputRef.current) {
-          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS
+        // --- PICKUP ---
+        if (pickupInputRef.current && !pickupAutoRef.current) { // 🔑 create once
+          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
           const autoPickup = new window.google.maps.places.Autocomplete(
             pickupInputRef.current,
             options
           );
+          pickupAutoRef.current = autoPickup;
 
           autoPickup.addListener("place_changed", async () => {
             const place = autoPickup.getPlace();
-            if (!place || !place.geometry) return;
+            if (!place?.geometry) return;
 
-            setPickup(place.formatted_address);
+            setPickup(place.formatted_address ?? "");
 
             const location = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
+
             try {
-              // Validate using your helper
               const insideVIC = await isInVictoria(location);
               if (!insideVIC) {
                 setIsNoServiceOpen(true);
-                console.log("No Service Open is : " + isNoServiceOpen);
-                // alert("Pickup must be within Victoria, Australia.");
-                // revert the visible input (optional) so user knows selection failed
                 setPickup("");
-                return; // STOP: do not set pickupLoc, do not update route
+                return;
               }
 
-              // valid: set location and notify parent & map
               setPickupLoc(location);
               onPickupSelect(location);
-
-              // Update route now that pickup is valid
+              // 🔑 call once
               updateRoute(location, destinationLocs);
             } catch (err) {
               console.error("Failed to validate pickup location:", err);
-              // optionally revert UI
               setPickup("");
             }
-            // ✅ Make behavior consistent: trigger route update
-            updateRoute(location, destinationLocs);
           });
         }
       }
     }, 300);
 
-    return () => clearInterval(interval);
-  }, [
-    destinations,
-    pickupLoc,
-    destinationLocs,
-    onDestinationsSelect,
-    onPickupSelect,
-  ]);
+    return () => {
+      clearInterval(interval);
+      // optional cleanup to prevent leaks if inputs unmount
+      if (pickupAutoRef.current) {
+        window.google?.maps?.event?.clearInstanceListeners(pickupAutoRef.current);
+        pickupAutoRef.current = null;
+      }
+      for (const [, auto] of destAutoMapRef.current) {
+        window.google?.maps?.event?.clearInstanceListeners(auto);
+      }
+      destAutoMapRef.current.clear();
+    };
+    // 🔑 Keep deps stable so we don't re-init on every state change
+    // Only re-run if the number of destination inputs changes
+  }, [destinationRefs.current.length]);
+
 
   useEffect(() => {
     if (distanceKm) calculateFare();
@@ -1032,73 +1033,73 @@ const SideBar = ({
 
             {/* If "later", show date/time selects (keeps style minimal) */}
             {/* // ...existing code... */}
-  {bookingMode === "later" && (
-  <div className="px-3 py-2">
-    <div className="flex flex-col md:flex-row gap-4">
-      {/* Pickup Date */}
-      <div className="flex-1">
-        <label className="block text-sm mb-1 font-medium">Pickup date</label>
-        <input
-          type="date"
-          className="w-full border rounded px-3 py-2"
-          value={dateVal}
-          onChange={(e) => setDateVal(e.target.value)}
-          required
-          min={new Date().toISOString().split("T")[0]}
-        />
-      </div>
+            {bookingMode === "later" && (
+              <div className="px-3 py-2">
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* Pickup Date */}
+                  <div className="flex-1">
+                    <label className="block text-sm mb-1 font-medium">Pickup date</label>
+                    <input
+                      type="date"
+                      className="w-full border rounded px-3 py-2"
+                      value={dateVal}
+                      onChange={(e) => setDateVal(e.target.value)}
+                      required
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                  </div>
 
-      {/* Pickup Time */}
-      <div className="flex-1">
-        <label className="block text-sm mb-1 font-medium">Pickup time</label>
-        <div className="flex items-center gap-2">
-          <input
-            ref={timeInputRef}
-            type="time"
-            className="w-full border rounded px-3 py-2"
-            value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`}
-            onFocus={(e) => {
-              setShowDone(true);
+                  {/* Pickup Time */}
+                  <div className="flex-1">
+                    <label className="block text-sm mb-1 font-medium">Pickup time</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={timeInputRef}
+                        type="time"
+                        className="w-full border rounded px-3 py-2"
+                        value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`}
+                        onFocus={(e) => {
+                          setShowDone(true);
 
-              // 🔑 Force open time picker programmatically
-              // Works in most mobile browsers, desktop shows native dropdown
-              e.target.showPicker?.();
-            }}
-            onBlur={() => {
-              setTimeout(() => setShowDone(false), 150);
-            }}
-            onChange={(e) => {
-              const [h, m] = e.target.value.split(":");
-              setHourVal(h);
-              setMinuteVal(m);
-            }}
-            required
-            step="60"
-            min={
-              dateVal === new Date().toISOString().split("T")[0]
-                ? new Date().toTimeString().slice(0, 5)
-                : "00:00"
-            }
-          />
+                          // 🔑 Force open time picker programmatically
+                          // Works in most mobile browsers, desktop shows native dropdown
+                          e.target.showPicker?.();
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setShowDone(false), 150);
+                        }}
+                        onChange={(e) => {
+                          const [h, m] = e.target.value.split(":");
+                          setHourVal(h);
+                          setMinuteVal(m);
+                        }}
+                        required
+                        step="60"
+                        min={
+                          dateVal === new Date().toISOString().split("T")[0]
+                            ? new Date().toTimeString().slice(0, 5)
+                            : "00:00"
+                        }
+                      />
 
-          {showDone && (
-            <button
-              type="button"
-              onClick={() => {
-                // Close picker
-                timeInputRef.current?.blur();
-                setShowDone(false);
-              }}
-              className="px-3 py-2 rounded bg-blue-500 text-white text-sm"
-            >
-              Done
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+                      {showDone && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Close picker
+                            timeInputRef.current?.blur();
+                            setShowDone(false);
+                          }}
+                          className="px-3 py-2 rounded bg-blue-500 text-white text-sm"
+                        >
+                          Done
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* // ...existing code... */}
 
@@ -1292,7 +1293,7 @@ const SideBar = ({
           changeVehicleText={setVehicleText}
           onSelect={setSelected}
           onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-          changeIsLuggageModal = {setIsLuggageModalOpen}
+          changeIsLuggageModal={setIsLuggageModalOpen}
         />
       )}
       {vehicleText === "Silver Service" && (
@@ -1301,7 +1302,7 @@ const SideBar = ({
           changeVehicleText={setVehicleText}
           onSelect={setSelected}
           onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-          changeIsLuggageModal = {setIsLuggageModalOpen}
+          changeIsLuggageModal={setIsLuggageModalOpen}
         />
       )}
       {vehicleText === "Suv" && (
@@ -1310,7 +1311,7 @@ const SideBar = ({
           changeVehicleText={setVehicleText}
           onSelect={setSelected}
           onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-          changeIsLuggageModal = {setIsLuggageModalOpen}
+          changeIsLuggageModal={setIsLuggageModalOpen}
         />
       )}
       {vehicleText === "Maxi Taxi" && (
@@ -1319,11 +1320,11 @@ const SideBar = ({
           changeVehicleText={setVehicleText}
           onSelect={setSelected}
           onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-          changeIsLuggageModal = {setIsLuggageModalOpen}
+          changeIsLuggageModal={setIsLuggageModalOpen}
         />
       )}
 
-      {isLuggageModalOpen && <LuggageModal /> }
+      {isLuggageModalOpen && <LuggageModal />}
       {/* show modal — pass open and onClose */}
       <CabUnavailableModal
         open={isNoServiceOpen}

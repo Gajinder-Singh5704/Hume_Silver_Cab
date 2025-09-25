@@ -18,7 +18,7 @@ const Home = () => {
   }, []);
 
    const isSmall = screenSize < 640;     
-
+  console.log("SELECTED PLACE IS : " , selectedPlace)
   return (
    <>
   {/* Navbar + NavSection */}
