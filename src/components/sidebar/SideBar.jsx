@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
 import CabUnavailableModal from "./NoServiceModal.jsx";
-import SIDEBAR_CONSTANTS from "../../constants/constants.js";
+import SIDEBAR_CONSTANTS, { TIME_TYPE } from "../../constants/constants.js";
 import {
   Box,
   Button,
@@ -22,9 +22,7 @@ import SeatDetails from "./SeatDetails.jsx";
 import LuggageModal from "./LuggageModal.jsx";
 import { toast } from "react-toastify";
 
-const melbourneNow = new Date(
-  new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
-);
+const melbourneNow = SIDEBAR_CONSTANTS.getMelbourneNow()
 
 const SideBar = ({
   onPickupSelect,
@@ -132,38 +130,52 @@ const SideBar = ({
 
     const distance = parseInt(distanceKm);
     const tollCost = hasToll ? parseFloat(tollPrice) : 0;
-    const bookingFees = 4;
+    const bookingFees = SIDEBAR_CONSTANTS.FEES.BOOKING_FEE;
 
     // helper to compute per-vehicle fare
     const computeLocal = (vehicleName) => {
       let vehicleSurcharge = 0;
       switch (vehicleName) {
         case "Sedan":
-          vehicleSurcharge = 0;
+          vehicleSurcharge = SIDEBAR_CONSTANTS.VEHICLE_SURCHARGES.Sedan;
           break;
         case "Silver Service":
-          vehicleSurcharge = 11;
+          vehicleSurcharge = SIDEBAR_CONSTANTS.VEHICLE_SURCHARGES.SilverService;
           break;
         case "SUV":
+          vehicleSurcharge = SIDEBAR_CONSTANTS.VEHICLE_SURCHARGES.SUV;
+          break;
         case "Maxi Taxi":
-          vehicleSurcharge = 17.8;
+          vehicleSurcharge = SIDEBAR_CONSTANTS.VEHICLE_SURCHARGES.MaxiTaxi;
           break;
       }
 
       let base;
       if (timeType === 3) {
-        base = 20 + distance * 2.493 + tollCost + 7.8;
+        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].baseFlat 
+        + distance 
+        * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm
+        + tollCost 
+        + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
       } else if (timeType === 2) {
-        base = 13 + distance * 2.265 + tollCost + 6.55;
+        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].baseFlat 
+        + distance 
+        * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].perKm
+        + tollCost 
+        + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].flagFall;
       } else {
-        base = 8 + distance * 2.037 + tollCost + 5.25;
+        base = SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].baseFlat 
+        + distance 
+        * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].perKm
+        + tollCost 
+        + SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].flagFall;
       }
 
-      let fareValue = Math.max(base, 40);
+      let fareValue = Math.max(base, SIDEBAR_CONSTANTS.FEES.MIN_FARE);
       fareValue += vehicleSurcharge + bookingFees;
 
       if (isAirportPickup(pickup)) {
-        fareValue += 4.68;
+        fareValue += SIDEBAR_CONSTANTS.FEES.AIRPORT_SURCHARGE;
       }
 
       // return number (not string) so it's easier to format later if needed
@@ -344,7 +356,7 @@ const SideBar = ({
 
   const handleAdd = () => {
     if (
-      destinations.length < 4 &&
+      destinations.length < SIDEBAR_CONSTANTS.LIMITS &&
       typeof destinations[destinations.length - 1] === "string" &&
       destinations[destinations.length - 1].trim() !== ""
     ) {
@@ -704,10 +716,7 @@ const SideBar = ({
         // Attach destination autocomplete
         destinationRefs.current.forEach((input, idx) => {
           if (input) {
-            const options = {
-              componentRestrictions: { country: "au" },
-              fields: ["formatted_address", "geometry"],
-            };
+            const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS
             const auto = new window.google.maps.places.Autocomplete(
               input,
               options
@@ -764,10 +773,7 @@ const SideBar = ({
 
         // Attach pickup autocomplete
         if (pickupInputRef.current) {
-          const options = {
-            componentRestrictions: { country: "au" },
-            fields: ["formatted_address", "geometry"],
-          };
+          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS
           const autoPickup = new window.google.maps.places.Autocomplete(
             pickupInputRef.current,
             options
@@ -1171,7 +1177,7 @@ const SideBar = ({
                     src="https://flagsapi.com/AU/flat/64.png"
                     alt="AU"
                   />
-                  +61
+                  {SIDEBAR_CONSTANTS.CONTACT.AU_PHONE_PREFIX}
                 </div>
                 <div className="flex-grow">
                   <TextField

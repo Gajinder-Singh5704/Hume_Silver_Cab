@@ -8,7 +8,7 @@ export const getMelbourneNow = () =>
   );
 
 export const COLORS = {
-  FIXED_ORANGE: "#f9cf2a", // used as fixedColor in SideBar
+  FIXED_ORANGE: "#f4b20bff", // used as fixedColor in SideBar
 };
 
 export const LIMITS = {
@@ -41,17 +41,17 @@ export const FARE_RATES = {
   [TIME_TYPE.OVERNIGHT_WEEKEND]: {
     baseFlat: 20,
     perKm: 2.493,
-    extra: 7.8,
+    flagFall: 7.8,
   },
   [TIME_TYPE.SHOULDER]: {
     baseFlat: 13,
     perKm: 2.265,
-    extra: 6.55,
+    flagFall: 6.55,
   },
   [TIME_TYPE.NORMAL]: {
     baseFlat: 8,
     perKm: 2.037,
-    extra: 5.25,
+    flagFall: 5.25,
   },
 };
 
