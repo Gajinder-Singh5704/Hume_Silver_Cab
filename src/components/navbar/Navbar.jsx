@@ -15,14 +15,14 @@ const Navbar = () => {
 
   return (
     <header className="bg-[#f9f6f3] relative">
-      <nav className="flex items-center justify-between pt-4 pb-4 text-[16px]">
+      <nav className="flex items-center justify-between py-4 text-[16px]">
         {/* logo section */}
-        <div className="ml-8">
+        <div className="md:ml-8">
           <img src={images.logo} alt="logo" className="h-[50px]" />
         </div>
         {/* nav links section */}
-        <div className="flex space-x-8 mr-4 items-center ">
-          <ul className="flex space-x-8  cursor-pointer  ">
+        <div className="flex md:space-x-8 space-x-4 md:mr-4 mr-1 items-center ">
+          <ul className="flex md:space-x-8 space-x-4 cursor-pointer  ">
             {navItems.map((item, index) => (
               <li key={index} className="text-[#454545] hover:text-[#000]">
                 <NavLink to={item.path}>{item.label}</NavLink>
