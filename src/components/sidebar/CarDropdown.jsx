@@ -159,12 +159,11 @@ const CarDropdown = ({
               <button
                 type="button"
                 key={option.id ?? idx}
-                onClick={() => {
+                onClick={(e) => {
                   if (isSUV) {
-                    changeVehicleText("Suv");
+                    handleInfoClick(e, option.id);
                   } else if (isMaxiTaxi) {
-                    changeVehicleText("Maxi Taxi");
-                     isLuggageModal(true);
+                    handleInfoClick(e, option.id);
                   } else {
                     handleSelect(option);
                   }

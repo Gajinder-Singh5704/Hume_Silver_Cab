@@ -561,6 +561,8 @@ const SideBar = ({
     onDestinationsSelect(setDestinationLocs);
   };
 
+  console.log("luggage modal ",isLuggageModalOpen)
+
   // Validate if a place is in Victoria (AU)
   const isInVictoria = async (location) => {
     return new Promise((resolve) => {
@@ -1259,6 +1261,7 @@ const SideBar = ({
           changeVehicleText={setVehicleText}
           onSelect={setSelected}
           onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+          changeIsLuggageModal = {setIsLuggageModalOpen}
         />
       )}
       {vehicleText === "Silver Service" && (
@@ -1267,6 +1270,7 @@ const SideBar = ({
           changeVehicleText={setVehicleText}
           onSelect={setSelected}
           onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+          changeIsLuggageModal = {setIsLuggageModalOpen}
         />
       )}
       {vehicleText === "Suv" && (
@@ -1275,6 +1279,7 @@ const SideBar = ({
           changeVehicleText={setVehicleText}
           onSelect={setSelected}
           onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+          changeIsLuggageModal = {setIsLuggageModalOpen}
         />
       )}
       {vehicleText === "Maxi Taxi" && (
@@ -1283,10 +1288,11 @@ const SideBar = ({
           changeVehicleText={setVehicleText}
           onSelect={setSelected}
           onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+          changeIsLuggageModal = {setIsLuggageModalOpen}
         />
       )}
 
-      {isLuggageModalOpen && <LuggageModal />}
+      {isLuggageModalOpen && <LuggageModal /> }
       {/* show modal — pass open and onClose */}
       <CabUnavailableModal
         open={isNoServiceOpen}
