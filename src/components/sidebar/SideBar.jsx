@@ -562,6 +562,8 @@ const SideBar = ({
     setContactError("");
     onPickupSelect(setPickupLoc);
     onDestinationsSelect(setDestinationLocs);
+    setAllFares([]);
+    
   };
 
   console.log("luggage modal ",isLuggageModalOpen)
