@@ -1003,6 +1003,17 @@ setAllFares([])
               placeholder="Passenger name"
               value={passenger}
               onChange={(e) => setPassenger(e.target.value)}
+
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&.Mui-focused fieldset": {
+                    borderColor: `${fixedColor}`, // outline color on focus
+                  },
+                },
+                "& label.Mui-focused": {
+                  color: "gray", // label color on focus
+                },
+              }}
             />
           </div>
 
@@ -1037,6 +1048,16 @@ setAllFares([])
                   }
                 }}
                 error={!!contactError}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&.Mui-focused fieldset": {
+                      borderColor: `${fixedColor}`, // outline color on focus
+                    },
+                  },
+                  "& label.Mui-focused": {
+                    color: "gray", // label color on focus
+                  },
+                }}
               />
             </div>
           </div>
@@ -1085,6 +1106,16 @@ setAllFares([])
                 setInstruction(value);
               }}
               placeholder="e.g. Unit, Gate and floor numbers"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&.Mui-focused fieldset": {
+                    borderColor: `${fixedColor}`, // outline color on focus
+                  },
+                },
+                "& label.Mui-focused": {
+                  color: "gray", // label color on focus
+                },
+              }}
             />
           </div>
         </div>
