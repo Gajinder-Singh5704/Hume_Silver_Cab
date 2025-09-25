@@ -23,7 +23,7 @@ const NavSection = ({onPlaceSelect}) => {
       {/* Left side */}
       <div className="flex items-center space-x-4 absolute left-4">
         <BsTelephone className="text-white" />
-        <p className="text-white text-xl font-medium">0490092704</p>
+        <a href="tel:+61490092704" className="text-white text-xl font-medium">0490092704</a>
 
         {/* ✅ input field */}
         <div className="relative">

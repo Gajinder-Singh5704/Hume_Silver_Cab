@@ -21,6 +21,7 @@ import PaymentDropdown from "./PaymentDropdown.jsx";
 import { seatDetails } from "../../data/data.jsx";
 import SeatDetails from "./SeatDetails.jsx"
 import LuggageModal from "./LuggageModal.jsx";
+import { toast } from "react-toastify";
 
 const melbourneNow = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
@@ -507,7 +508,10 @@ setAllFares([])
       distanceKm,
     };
 
-    alert("Booking requested");
+    toast.success("🎉 Booking Confirmed!", {
+      position: "top-right",
+      autoClose: 3000,
+    });
     console.log("Booking Data:", formData);
 
     // Reset all fields
