@@ -15,10 +15,10 @@ const Navbar = () => {
 
   return (
     <header className="bg-[#f9f6f3] relative">
-      <nav className="flex items-center justify-between py-4 text-[16px]">
+      <nav className="flex items-center justify-between pt-2 pb-2 text-[16px]">
         {/* logo section */}
-        <div className="md:ml-8">
-          <img src={images.logo} alt="logo" className="h-[50px]" />
+        <div className="ml-8">
+          <img src={images.logo} alt="logo" className="h-[60px] rounded-lg" />
         </div>
         {/* nav links section */}
         <div className="flex md:space-x-8 space-x-4 md:mr-4 mr-1 items-center ">
