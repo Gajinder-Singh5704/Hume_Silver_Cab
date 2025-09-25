@@ -68,10 +68,7 @@ const SideBar = ({
   const [minuteVal, setMinuteVal] = useState(
     melbourneNow.getMinutes().toString().padStart(2, "0")
   );
-  // add these refs near the top of your component
-  const pickupAutoRef = useRef(null);
-  // Map <HTMLInputElement, google.maps.places.Autocomplete>
-  const destAutoMapRef = useRef(new Map());
+
   const [timeType, setTimeType] = useState(2); // number-3
   const [fare, setFare] = useState(null);
   const [contactError, setContactError] = useState("");
@@ -713,121 +710,117 @@ const SideBar = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (window.google?.maps?.places) {
+      if (window.google && window.google.maps && window.google.maps.places) {
         clearInterval(interval);
-        for (const [input, auto] of destAutoMapRef.current) {
-          if (!destinationRefs.current.includes(input)) {
-            window.google?.maps?.event?.clearInstanceListeners(auto);
-            destAutoMapRef.current.delete(input);
-          }
-        }
-        // --- DESTINATIONS ---
+
+        // Attach destination autocomplete
         destinationRefs.current.forEach((input, idx) => {
-          if (!input) return;
-
-          // 🔑 Guard: only create once per input element
-          if (!destAutoMapRef.current.has(input)) {
-            const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
-            const auto = new window.google.maps.places.Autocomplete(input, options);
-            destAutoMapRef.current.set(input, auto);
-
+          if (input) {
             auto.addListener("place_changed", async () => {
               const place = auto.getPlace();
-              if (!place?.geometry) return;
+              if (!place || !place.geometry) return;
 
               const newDestinations = [...destinations];
-              newDestinations[idx] = place.formatted_address ?? "";
+              newDestinations[idx] = place.formatted_address;
               setDestinations(newDestinations);
 
               const location = {
                 lat: place.geometry.location.lat(),
                 lng: place.geometry.location.lng(),
               };
-
+              const newLocs = [...destinationLocs];
+              newLocs[idx] = location;
+              // setDestinationLocs(newLocs);
+              // onDestinationsSelect(newLocs);
               try {
+                // Validate destination is inside Victoria
                 const insideVIC = await isInVictoria(location);
                 if (!insideVIC) {
                   setIsNoServiceOpen(true);
+                  // alert(`Destination ${idx + 1} must be within Victoria, Australia.`);
+                  // revert the visible label (optional)
                   const reverted = [...destinations];
                   reverted[idx] = "";
                   setDestinations(reverted);
-                  return;
+                  return; // STOP further processing for this destination
                 }
 
-                const nextLocs = [...destinationLocs];
-                nextLocs[idx] = location;
-                setDestinationLocs(nextLocs);
-                onDestinationsSelect(nextLocs);
+                // valid: save location and notify parent
+                const newLocs = [...destinationLocs];
+                newLocs[idx] = location;
+                setDestinationLocs(newLocs);
+                onDestinationsSelect(newLocs);
 
-                // 🔑 call once
-                updateRoute(pickupLoc, nextLocs);
+                // Update route now that we have a valid destination
+                updateRoute(pickupLoc, newLocs);
               } catch (err) {
                 console.error("Failed to validate destination:", err);
+                // revert label on error
                 const reverted = [...destinations];
                 reverted[idx] = "";
                 setDestinations(reverted);
               }
+              updateRoute(pickupLoc, newLocs);
             });
           }
         });
 
-        // --- PICKUP ---
-        if (pickupInputRef.current && !pickupAutoRef.current) { // 🔑 create once
-          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
+        // Attach pickup autocomplete
+        if (pickupInputRef.current) {
+          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS
           const autoPickup = new window.google.maps.places.Autocomplete(
             pickupInputRef.current,
             options
           );
-          pickupAutoRef.current = autoPickup;
 
           autoPickup.addListener("place_changed", async () => {
             const place = autoPickup.getPlace();
-            if (!place?.geometry) return;
+            if (!place || !place.geometry) return;
 
-            setPickup(place.formatted_address ?? "");
+            setPickup(place.formatted_address);
 
             const location = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-
             try {
+              // Validate using your helper
               const insideVIC = await isInVictoria(location);
               if (!insideVIC) {
                 setIsNoServiceOpen(true);
+                console.log("No Service Open is : " + isNoServiceOpen);
+                // alert("Pickup must be within Victoria, Australia.");
+                // revert the visible input (optional) so user knows selection failed
                 setPickup("");
-                return;
+                return; // STOP: do not set pickupLoc, do not update route
               }
 
+              // valid: set location and notify parent & map
               setPickupLoc(location);
               onPickupSelect(location);
-              // 🔑 call once
+
+              // Update route now that pickup is valid
               updateRoute(location, destinationLocs);
             } catch (err) {
               console.error("Failed to validate pickup location:", err);
+              // optionally revert UI
               setPickup("");
             }
+            // ✅ Make behavior consistent: trigger route update
+            updateRoute(location, destinationLocs);
           });
         }
       }
     }, 300);
 
-    return () => {
-      clearInterval(interval);
-      // optional cleanup to prevent leaks if inputs unmount
-      if (pickupAutoRef.current) {
-        window.google?.maps?.event?.clearInstanceListeners(pickupAutoRef.current);
-        pickupAutoRef.current = null;
-      }
-      for (const [, auto] of destAutoMapRef.current) {
-        window.google?.maps?.event?.clearInstanceListeners(auto);
-      }
-      destAutoMapRef.current.clear();
-    };
-    // 🔑 Keep deps stable so we don't re-init on every state change
-    // Only re-run if the number of destination inputs changes
-  }, [destinationRefs.current.length]);
-
+    return () => clearInterval(interval);
+  }, [
+    destinations,
+    pickupLoc,
+    destinationLocs,
+    onDestinationsSelect,
+    onPickupSelect,
+  ]);
 
   useEffect(() => {
     if (distanceKm) calculateFare();
