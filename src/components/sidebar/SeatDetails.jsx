@@ -48,7 +48,7 @@ const SeatDetails = ({ data , changeVehicleText , onSelect ,onVehicleDetailOpenC
   return (
     <div className="md:static md:bg-transparent fixed inset-0 z-50 max-w-md mx-auto bg-white md:min-h-fit min-h-screen flex flex-col justify-between">
       {/* Header - Only show on mobile */}
-      <div className="md:hidden flex items-center px-4 py-3 border-b">
+      <div className="flex items-center px-4 py-3 border-b">
         <button
           className="mr-2 text-lg"
           aria-label="Back"

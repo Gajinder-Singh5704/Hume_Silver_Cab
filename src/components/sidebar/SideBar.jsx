@@ -763,6 +763,16 @@ setAllFares([])
                   </InputAdornment>
                 ),
               }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&.Mui-focused fieldset": {
+                    borderColor: `${fixedColor}`, // outline color on focus
+                  },
+                },
+                "& label.Mui-focused": {
+                  color: "gray", // label color on focus
+                },
+              }}
             />
 
             {pickupSuggestions.length > 0 && (
