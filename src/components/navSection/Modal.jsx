@@ -9,21 +9,7 @@ export default function Modal({ onClose , onPlaceSelect}) {
   const handleClose = () => onClose();
 
   const handleChange = async (e) => {
-    const value = e.target.value;
-    setQuery(value);
-
-    if (!value) {
-      setSuggestions([]);
-      return;
-    }
-
-    try {
-      const data = await getPlaces(value);
-      if (data?.predictions) setSuggestions(data.predictions);
-    } catch (error) {
-      console.error("Error fetching places:", error);
-      setSuggestions([]);
-    }
+  
   };
 
   const handlePlaceClick = async (s) => {

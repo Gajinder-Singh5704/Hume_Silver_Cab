@@ -9,7 +9,7 @@ const Home = () => {
   const [selectedPickup, setSelectedPickup] = useState(null);
   const [destinations, setSelectedDestinations] = useState([]);
   const [isVehicleDetailOpen,setIsVehicleDetailOpen] = useState(false)
-    const [screenSize, setScreenSize] = useState(window.innerWidth);
+  const [screenSize, setScreenSize] = useState(window.innerWidth);
 
   useEffect(() => {
     const handleResize = () => setScreenSize(window.innerWidth);

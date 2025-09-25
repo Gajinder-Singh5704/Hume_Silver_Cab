@@ -77,6 +77,8 @@ const SideBar = ({
   const [isNoServiceOpen, setIsNoServiceOpen] = useState(false);
 
   const fixedColor = "#f97316"; // orange-500
+    const [showDone, setShowDone] = useState(false);
+    const timeInputRef = useRef(null);
 
   // determine time type (helper stays the same)
   const determineTimeType = (dateObj) => {
@@ -1021,53 +1023,73 @@ const SideBar = ({
 
             {/* If "later", show date/time selects (keeps style minimal) */}
             {/* // ...existing code... */}
-            {bookingMode === "later" && (
-              <div className="px-3 py-2">
-                <div className="flex flex-col md:flex-row gap-4">
-                  {/* Pickup Date */}
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1 font-medium">
-                      Pickup date
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border rounded px-3 py-2"
-                      value={dateVal}
-                      onChange={(e) => setDateVal(e.target.value)}
-                      required
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                  </div>
+  {bookingMode === "later" && (
+  <div className="px-3 py-2">
+    <div className="flex flex-col md:flex-row gap-4">
+      {/* Pickup Date */}
+      <div className="flex-1">
+        <label className="block text-sm mb-1 font-medium">Pickup date</label>
+        <input
+          type="date"
+          className="w-full border rounded px-3 py-2"
+          value={dateVal}
+          onChange={(e) => setDateVal(e.target.value)}
+          required
+          min={new Date().toISOString().split("T")[0]}
+        />
+      </div>
 
-                  {/* Pickup Time */}
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1 font-medium">
-                      Pickup time
-                    </label>
-                    <input
-                      type="time"
-                      className="w-full border rounded px-3 py-2"
-                      value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(
-                        2,
-                        "0"
-                      )}`}
-                      onChange={(e) => {
-                        const [h, m] = e.target.value.split(":");
-                        setHourVal(h);
-                        setMinuteVal(m);
-                      }}
-                      required
-                      step="60" // optional
-                      min={
-                        dateVal === new Date().toISOString().split("T")[0]
-                          ? new Date().toTimeString().slice(0, 5) // current local time
-                          : "00:00"
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+      {/* Pickup Time */}
+      <div className="flex-1">
+        <label className="block text-sm mb-1 font-medium">Pickup time</label>
+        <div className="flex items-center gap-2">
+          <input
+            ref={timeInputRef}
+            type="time"
+            className="w-full border rounded px-3 py-2"
+            value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`}
+            onFocus={(e) => {
+              setShowDone(true);
+
+              // 🔑 Force open time picker programmatically
+              // Works in most mobile browsers, desktop shows native dropdown
+              e.target.showPicker?.();
+            }}
+            onBlur={() => {
+              setTimeout(() => setShowDone(false), 150);
+            }}
+            onChange={(e) => {
+              const [h, m] = e.target.value.split(":");
+              setHourVal(h);
+              setMinuteVal(m);
+            }}
+            required
+            step="60"
+            min={
+              dateVal === new Date().toISOString().split("T")[0]
+                ? new Date().toTimeString().slice(0, 5)
+                : "00:00"
+            }
+          />
+
+          {showDone && (
+            <button
+              type="button"
+              onClick={() => {
+                // Close picker
+                timeInputRef.current?.blur();
+                setShowDone(false);
+              }}
+              className="px-3 py-2 rounded bg-blue-500 text-white text-sm"
+            >
+              Done
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
             {/* // ...existing code... */}
 
