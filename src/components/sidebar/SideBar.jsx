@@ -74,6 +74,8 @@ const SideBar = ({ onPickupSelect, onDestinationsSelect , onVehicleDetailOpenCha
   const [vehicleText,setVehicleText] = useState("")
   const [isNoServiceOpen,setIsNoServiceOpen] = useState(false) 
 
+  const fixedColor = "#f97316"; // orange-500
+
   // determine time type (helper stays the same)
   const determineTimeType = (dateObj) => {
     const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
@@ -934,8 +936,8 @@ setAllFares([])
         <div className="w-full bg-[#F8F6F2] px-4 py-5">
           <div className="flex items-center w-full justify-between">
             <div className="flex gap-3 items-center">
-              <LockIcon color="#145389" />
-              <p className="text-xl text-[#145389] font-bold">Fixed Price</p>
+              <LockIcon color={fixedColor} />
+              <span style={{ color: fixedColor }} className={`text-xl font-bold`}>Fixed Price</span>
             </div>
 
             <ToggleSwitch enabled={isOn} onToggle={setIsOn}/>

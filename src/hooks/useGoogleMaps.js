@@ -11,7 +11,7 @@ export const useGoogleMaps = (apiKey) => {
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    // script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
     script.onload = () => setLoaded(true);
     script.onerror = () => console.error("Google Maps SDK failed to load");
