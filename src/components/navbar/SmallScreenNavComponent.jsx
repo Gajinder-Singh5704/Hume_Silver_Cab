@@ -22,7 +22,7 @@ export default function SmallScreenNavComponent({ onClose }) {
           className="w-24 h-24 rounded-full object-cover ml-4"
         />
        <div class="w-full border-b border-gray-300"></div>
-        <div className="text-center flex flex-col text-left ml-4 ">
+        <div className="text-center flex flex-col ml-4 ">
           <h2 className="text-xl font-bold text-blue-900">Hello.</h2>
           <p className="text-gray-600 text-sm max-w-xs">
             Create a profile to add payment methods, create favourites and more.

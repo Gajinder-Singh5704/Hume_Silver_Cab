@@ -21,26 +21,39 @@ const NavSection = ({onPlaceSelect}) => {
   };
 
   return (
-    <div className="flex items-center bg-[#4a4a4a] h-12 px-4 relative">
+    <div className="flex items-center bg-[#4a4a4a] h-auto min-h-12 px-2 sm:px-4 py-2 sm:py-0">
       {/* Left side */}
-      <div className="flex items-center md:space-x-4 space-x-2 absolute left-4">
-        <BsTelephone className="text-white" />
-        <a href="tel:+61490092704" className="text-white text-xl font-medium">0490092704</a>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full">
+        {/* Phone */}
+        <div className="flex items-center gap-2">
+          <BsTelephone className="text-white text-sm sm:text-base" />
+          <a
+            href="tel:+61490092704"
+            className="text-white text-sm sm:text-xl font-medium"
+          >
+            0490092704
+          </a>
+        </div>
 
-        {/* ✅ input field */}
+        {/* Input field */}
         <div className="relative">
           <input
             type="text"
             value={selectedPlace}
             readOnly
             placeholder="Select a place"
-            className="rounded-sm bg-white w-[200px] md:w-[280px] h-[30px] pl-2 pr-8 cursor-pointer"
+            className="rounded-sm bg-white h-8 sm:h-9 pl-2 pr-8 cursor-pointer text-sm sm:text-base
+                      w-[180px] sm:w-[220px] md:w-[280px]" // ✅ responsive fixed widths
             onClick={handleClick}
           />
-          <span className="absolute right-2 top-1/2 transform -translate-y-1/2" onClick={handleClick}>
-            <PiPencilSimpleLineLight size={20} />
+          <span
+            className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-black"
+            onClick={handleClick}
+          >
+            <PiPencilSimpleLineLight size={18} />
           </span>
         </div>
+
       </div>
 
       {/* Modal */}
@@ -49,6 +62,7 @@ const NavSection = ({onPlaceSelect}) => {
       )}
     </div>
   );
+
 };
 
 export default NavSection;
