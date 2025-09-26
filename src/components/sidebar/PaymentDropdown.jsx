@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { defaultPaymentOptions } from '../../data/data.jsx';
 
-const PaymentDropdown = ({
+const PaymentDropdown = forwardRef(({
   paymentOptions = [],
   selectedOption = null,
   onOptionSelect = () => {},
   title = "Payment method",
-  className = ""
-}) => {
+  className = "",
+  inputRef // <-- optional legacy prop
+}, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -28,7 +29,8 @@ const PaymentDropdown = ({
   };
 
   return (
-    <div className={`relative w-full ${className}`}>
+    // Attach whichever ref is provided: forwarded ref has priority
+    <div ref={ref || inputRef} className={`relative w-full ${className}`}>
       {/* Floating Label - hide completely when value is selected */}
       {!hasValue && (
         <label
@@ -119,8 +121,6 @@ const PaymentDropdown = ({
       )}
     </div>
   );
-};
+});
 
-export default PaymentDropdown
-
-  
+export default PaymentDropdown;

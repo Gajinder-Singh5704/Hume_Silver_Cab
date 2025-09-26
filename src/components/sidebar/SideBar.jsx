@@ -60,10 +60,11 @@ const SideBar = ({
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [tollPrice, setTollPrice] = useState(0);
   const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
+const topRef = useRef(null);
 
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
-
+  const paymentDropdownRef = useRef(null)
   const [pickupLoc, setPickupLoc] = useState(null);
   const [destinationLocs, setDestinationLocs] = useState([]);
 
@@ -73,7 +74,7 @@ const SideBar = ({
   // route & toll
   const [distanceKm, setDistanceKm] = useState("");
   const [hasToll, setHasToll] = useState(false);
-  const [error ,setError] = useState("")
+  const [error, setError] = useState("")
   // const [selectedPaymentMode, setSelectedPaymentMode] = useState(null)
 
   // booking time
@@ -620,28 +621,32 @@ const SideBar = ({
       lower.includes("terminal")
     );
   };
+
+  const scrollToRef = (ref) => {
+    if (ref?.current) {
+      ref.current.scrollIntoView({
+        behavior: "smooth", // smooth scroll
+        block: "start",     // align at top (use "center" or "end" if needed)
+      });
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    scrollToRef(topRef);
     const bookingTime = `${hourVal}:${minuteVal}`;
     const bookingDate = `${dateVal}`
     const selectedCarData = {
-      selectedCar : `${selected.name}`,
-      passengers  : `${selected.passengers}`
+      selectedCar: `${selected.name}`,
+      passengers: `${selected.passengers}`
     }
-    if(!selectedPayment){
-
+    if (!selectedPayment) {
+      scrollToRef(paymentDropdownRef)
       setError("Please select a payment method *");
       return
-      
-    } else{
+    } else {
       setError("")
     }
-
-    
-
-    
-    
 
     const formData = {
       bookingMode,
@@ -654,8 +659,8 @@ const SideBar = ({
       selectedCarData,
       selectedPaymentMode: `${selectedPayment.name}`,
       distanceKm,
-      instruction,     
-      fare,      
+      instruction,
+      fare,
     };
 
     toast.success("🎉 Booking Requested Successfully!", {
@@ -695,10 +700,9 @@ const SideBar = ({
     setHasToll(false);
     setDistanceKm("");
     setContactError("");
-    onPickupSelect(null);          // ✅
+    onPickupSelect(null);    
     onDestinationsSelect([])
     setAllFares([]);
-    // setSelectedPaymentMode(null)
   };
 
   // ===== VIC validator (unchanged) =====
@@ -760,7 +764,7 @@ const SideBar = ({
   return (
     <>
       {!vehicleText && (
-        <section className=" w-full scroll-container">
+        <section className=" w-full scroll-container" ref={topRef}>
           <form onSubmit={handleSubmit} autoComplete="off">
             {/* Step 1 */}
             <div className="px-5 py-6">
@@ -1133,6 +1137,7 @@ const SideBar = ({
               <PaymentDropdown
                 selectedOption={selectedPayment}
                 onOptionSelect={handlePaymentSelect}
+                ref={paymentDropdownRef}
                 title="Select payment method"
                 className="mb-0"
                 required
