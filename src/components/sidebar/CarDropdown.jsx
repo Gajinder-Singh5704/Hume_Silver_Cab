@@ -23,7 +23,7 @@ const CarDropdown = ({
     ? options.find((o) => o.id === selectedOption.id) ?? selectedOption
     : options[0];
 
-    console.log("current Selected Car ",currentSelection)
+    // console.log("current Selected Car ",currentSelection)
 
   const toggleDropdown = () => setIsOpen(v => !v);
 
