@@ -57,16 +57,7 @@ const SideBar = ({
   const [instruction, setInstruction] = useState("");
   const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(defaultVehicleOptions[0]);
-  const [selectedPayment, setSelectedPayment] = useState({
-      id: "pay-driver-directly",
-      name: "Pay Driver Directly",
-      description: "Cash or card to driver",
-      icon: <Wallet className="w-6 h-6 text-orange-600" />,
-      type: "Direct",
-      status: "Default",
-      color: "bg-orange-50",
-      brand: "Direct",
-    });
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [tollPrice, setTollPrice] = useState(0);
   const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
 
@@ -82,6 +73,8 @@ const SideBar = ({
   // route & toll
   const [distanceKm, setDistanceKm] = useState("");
   const [hasToll, setHasToll] = useState(false);
+  const [error ,setError] = useState("")
+  // const [selectedPaymentMode, setSelectedPaymentMode] = useState(null)
 
   // booking time
   const [bookingMode, setBookingMode] = useState("now"); // "now" | "later"
@@ -636,11 +629,19 @@ const SideBar = ({
       selectedCar : `${selected.name}`,
       passengers  : `${selected.passengers}`
     }
+    if(!selectedPayment){
 
-    const selectedPaymentData = {
-      paymentType: `${selectedPayment.name}`,
-      paymentBrand: `${selectedPayment.brand}`
+      setError("Please select a payment method *");
+      return
+      
+    } else{
+      setError("")
     }
+
+    
+
+    
+    
 
     const formData = {
       bookingMode,
@@ -651,7 +652,7 @@ const SideBar = ({
       bookingDate,
       bookingTime,
       selectedCarData,
-      selectedPaymentData,
+      selectedPaymentMode: `${selectedPayment.name}`,
       distanceKm,
       instruction,     
       fare,      
@@ -697,6 +698,7 @@ const SideBar = ({
     onPickupSelect(null);          // ✅
     onDestinationsSelect([])
     setAllFares([]);
+    // setSelectedPaymentMode(null)
   };
 
   // ===== VIC validator (unchanged) =====
@@ -1124,7 +1126,7 @@ const SideBar = ({
             </div>
 
             {/* Step 3 Payment */}
-            <div className="px-5 py-6">
+            <div className="px-5 py-3">
               <h3 className="text-sm mt-2 mb-4">
                 Step 3 of 4 <b>Payment</b>
               </h3>
@@ -1132,10 +1134,12 @@ const SideBar = ({
                 selectedOption={selectedPayment}
                 onOptionSelect={handlePaymentSelect}
                 title="Select payment method"
-                className="mb-4"
+                className="mb-0"
                 required
               />
             </div>
+
+            {error && <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>}
 
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
