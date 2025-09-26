@@ -3,7 +3,6 @@ import { useState } from "react";
 import images from "../../assets/images";
 import { IoMenu } from "react-icons/io5";
 import { navItems } from "../../data/data.jsx";
-
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 

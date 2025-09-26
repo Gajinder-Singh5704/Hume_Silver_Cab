@@ -23,7 +23,7 @@ const NavSection = ({onPlaceSelect}) => {
   return (
     <div className="flex items-center bg-[#4a4a4a] h-auto min-h-12 px-2 sm:px-4 py-2 sm:py-0">
       {/* Left side */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full">
+      <div className="flex flex-wrap items-center md:justify-normal justify-between gap-2 sm:gap-4 w-full">
         {/* Phone */}
         <div className="flex items-center gap-2">
           <BsTelephone className="text-white text-sm sm:text-base" />

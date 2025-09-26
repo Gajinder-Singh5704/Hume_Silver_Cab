@@ -8,7 +8,7 @@ const Home = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedPickup, setSelectedPickup] = useState(null);
   const [destinations, setSelectedDestinations] = useState([]);
-  const [isVehicleDetailOpen,setIsVehicleDetailOpen] = useState(false)
+  const [isVehicleDetailOpen, setIsVehicleDetailOpen] = useState(false);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -17,49 +17,50 @@ const Home = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-   const isSmall = screenSize < 640;     
-  // console.log("SELECTED PLACE IS : " , selectedPlace)
+  const isSmall = screenSize < 640;
+
   return (
-   <>
-  {/* Navbar + NavSection */}
-  {((isSmall && !isVehicleDetailOpen) || !isSmall) && (
     <>
-      <Navbar />
-      <NavSection onPlaceSelect={setSelectedPlace} />
-    </>
-  )}
-
-  {/* Wrapper handles both sm & lg */}
-  <div className="flex flex-col md:flex-row w-full h-[calc(100vh-125px)]">
-    {/* Sidebar */}
-    <div
-      className={`
-        ${((isSmall && !isVehicleDetailOpen) || !isSmall) ? "md:w-[410px]": "w-full min-h-screen " }
-        md:border-r order-2 md:order-1
-        h-[50vh] md:h-auto border-t md:border-t-0
-        overflow-y-auto
-      `}
-    >
-      <SideBar
-        onPickupSelect={setSelectedPickup}
-        onDestinationsSelect={setSelectedDestinations}
-        onVehicleDetailOpenChange={setIsVehicleDetailOpen}
-      />
-    </div>
-
-    {/* Map Section */}
-    <div className=" order-1 md:flex-1 md:order-2 min-h-[44vh] md:h-auto">
+      {/* Navbar + NavSection */}
       {((isSmall && !isVehicleDetailOpen) || !isSmall) && (
-        <MapSection
-          selectedPlace={selectedPlace}
-          selectedPickup={selectedPickup}
-          destinations={destinations}
-        />
+        <>
+          <Navbar />
+          <NavSection onPlaceSelect={setSelectedPlace} />
+        </>
       )}
-    </div>
-  </div>
-</>
 
+      {/* Wrapper: page scroll on small; fixed height on md+ */}
+      <div className="flex flex-col md:flex-row w-full md:h-[calc(100vh-125px)]">
+        {/* Sidebar */}
+        <div
+          className={`
+            ${((isSmall && !isVehicleDetailOpen) || !isSmall) ? "md:w-[410px]" : "w-full"}
+            md:border-r order-2 md:order-1
+            border-t md:border-t-0
+            overflow-visible md:overflow-y-auto
+          `}
+        >
+          <SideBar
+            onPickupSelect={setSelectedPickup}
+            onDestinationsSelect={setSelectedDestinations}
+            onVehicleDetailOpenChange={setIsVehicleDetailOpen}
+          />
+        </div>
+
+        {/* Map Section */}
+        <div className="order-1 md:flex-1 md:order-2 md:h-full">
+          {((isSmall && !isVehicleDetailOpen) || !isSmall) && (
+            <div className="h-[40vh] md:h-full">
+              <MapSection
+                selectedPlace={selectedPlace}
+                selectedPickup={selectedPickup}
+                destinations={destinations}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 };
 

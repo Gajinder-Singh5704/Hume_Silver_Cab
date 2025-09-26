@@ -120,8 +120,8 @@ const RecenterButton = ({ selectedPickup, destinations }) => {
     if (!bounds.isEmpty()) {
       map.fitBounds(bounds, 80);
     } else {
-      map.panTo({ lat: 53.54, lng: 10 });
-      map.setZoom(10);
+      map.panTo({ lat: -37.6708716, lng: 144.8430578 });
+      map.setZoom(12);
     }
   };
 
@@ -149,7 +149,7 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY}>
-      <div className="w-full h-full relative">
+      <div className="w-full h-full relative touch-pan-y">
         <Map
           defaultZoom={10}
           defaultCenter={{ lat: 53.54, lng: 10 }}
@@ -158,7 +158,7 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: false,
-            gestureHandling: "greedy",
+            gestureHandling: "cooperative",
           }}
           zoomControl={false}
         >
