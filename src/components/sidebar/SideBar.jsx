@@ -627,7 +627,6 @@ const SideBar = ({
       lower.includes("terminal")
     );
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -676,7 +675,16 @@ const SideBar = ({
     setInstruction("");
     setIsOn(true);
     setSelected(defaultVehicleOptions[0]);
-    setSelectedPayment(null);
+    setSelectedPayment({
+       id: "pay-driver-directly",
+      name: "Pay Driver Directly",
+      description: "Cash or card to driver",
+      icon: <Wallet className="w-6 h-6 text-orange-600" />,
+      type: "Direct",
+      status: "Default",
+      color: "bg-orange-50",
+      brand: "Direct",
+    });
     setBookingMode("now");
     setDateVal(melbourneNow.toISOString().split("T")[0]);
     setHourVal(melbourneNow.getHours().toString().padStart(2, "0"));
