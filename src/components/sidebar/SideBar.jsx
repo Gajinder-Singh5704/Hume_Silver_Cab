@@ -644,20 +644,18 @@ const SideBar = ({
     }
 
     const formData = {
-      pickup,
-      destinations,
+      bookingMode,
       passenger,
       contact,
-      instruction,
-      selectedCarData,
-      selectedPaymentData,
-      bookingMode,
+      pickup,
+      destinations,
       bookingDate,
       bookingTime,
-      timeType,
-      fare,
-      hasToll,
+      selectedCarData,
+      selectedPaymentData,
       distanceKm,
+      instruction,     
+      fare,      
     };
 
     toast.success("🎉 Booking Requested Successfully!", {
