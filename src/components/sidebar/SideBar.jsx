@@ -766,11 +766,8 @@ const SideBar = ({
                 Step 1 of 4 <b className="ml-2"> Booking details</b>
               </h3>
 
-              <h2 className="md:hidden text-2xl text-bold mb-2">
-                Fare Estimates Calculator
-              </h2>
-              <h3 className="md:hidden mb-4 text-sm">
-                Please enter a valid pickup and destination{" "}
+              <h3 className="md:hidden text-sm mb-4 mb-4">
+                Step 1 of 4 <b className="ml-2"> Booking details</b>
               </h3>
 
               {/* PICKUP */}
@@ -1139,38 +1136,38 @@ const SideBar = ({
 
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
-  <h3 className="text-sm mb-4">
-    Step 4 of 4 <b>Driver Instruction</b>
-  </h3>
+              <h3 className="text-sm mb-4">
+                Step 4 of 4 <b>Driver Instruction</b>
+              </h3>
 
-  <div className="mb-4">
-    <TextField
-      label="Notes for driver"
-      variant="outlined"
-      fullWidth
-      multiline
-      rows={3}
-      inputProps={{ maxLength: 350 }}
-      value={instruction}
-      onChange={(e) => setInstruction(e.target.value)}
-      placeholder="e.g. Unit, Gate and floor numbers"
-      sx={{
-        "& .MuiOutlinedInput-root": {
-          "&.Mui-focused fieldset": { borderColor: `${fixedColor}` },
-        },
-        "& label.Mui-focused": { color: "gray" },
-      }}
-    />
-  </div>
+              <div className="mb-4">
+                <TextField
+                  label="Notes for driver"
+                  variant="outlined"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  inputProps={{ maxLength: 350 }}
+                  value={instruction}
+                  onChange={(e) => setInstruction(e.target.value)}
+                  placeholder="e.g. Unit, Gate and floor numbers"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "&.Mui-focused fieldset": { borderColor: `${fixedColor}` },
+                    },
+                    "& label.Mui-focused": { color: "gray" },
+                  }}
+                />
+              </div>
 
-  {/* Request Booking Button */}
-  <button
-    type="submit"
-    className="w-full py-3 rounded-md bg-orange-500 text-white font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500"
-  >
-    Request Booking
-  </button>
-</div>
+              {/* Request Booking Button */}
+              <button
+                type="submit"
+                className="w-full py-3 rounded-md bg-orange-500 text-white font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500"
+              >
+                Request Booking
+              </button>
+            </div>
 
           </form>
         </section>
