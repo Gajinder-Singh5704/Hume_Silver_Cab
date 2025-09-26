@@ -5,7 +5,7 @@ import images from "../../assets/images.js";
 const SeatDetails = ({ data , changeVehicleText , onSelect ,onVehicleDetailOpenChange , changeIsLuggageModal }) => {
   const [seats, setSeats] = useState(6);
   const isShow = data.name == "SUV" || data.name == "Maxi Taxi";
-  console.log(isShow, "isShow");
+  // console.log(isShow, "isShow");
   const handleSeatsChange = (delta) => {
     setSeats((prev) => {
       let next = prev + delta;
@@ -22,7 +22,7 @@ const SeatDetails = ({ data , changeVehicleText , onSelect ,onVehicleDetailOpenC
 
     const handleSelectService = () => {
         let id = null; switch (data.name) { case "Next Available": id = "Next-Available"; break; case "SUV": id = "Suv"; break; case "Maxi Taxi": id = "Maxi-Taxi"; break; case "Silver Service": id = "Silver-Service"; break; }
-        console.log("selectes id ",id)
+        // console.log("selectes id ",id)
         const carData = {
         id: id,
         name: data.name,

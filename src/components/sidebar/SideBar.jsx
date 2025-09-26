@@ -366,7 +366,7 @@ const SideBar = ({
   // ===== Payment select (unchanged) =====
   const handlePaymentSelect = (paymentMethod) => {
     setSelectedPayment(paymentMethod);
-    console.log("Selected payment:", paymentMethod);
+    // console.log("Selected payment:", paymentMethod);
   };
 
   const handleAdd = () => {
@@ -382,7 +382,7 @@ const SideBar = ({
 
   // ===== Route & fare logic (unchanged) =====
   const updateRoute = (pickup, dests) => {
-    console.log("Calling calculate");
+    // console.log("Calling calculate");
     if (!pickup || dests.length === 0) {
       setDistanceKm("");
       setHasToll(false);
@@ -419,9 +419,9 @@ const SideBar = ({
           const km = (leg.distance / 1000).toFixed(1);
           setDistanceKm(km);
 
-          console.log("Route Instructions:");
+          // console.log("Route Instructions:");
           leg.steps.forEach((step, idx) => {
-            console.log(`${idx + 1}. ${step.instructions}`);
+            // console.log(`${idx + 1}. ${step.instructions}`);
           });
 
           const stepsText = leg.steps
@@ -432,7 +432,7 @@ const SideBar = ({
 
           setHasToll(toll > 0);
           setTollPrice(toll);
-          console.log("Toll Cost:", toll);
+          // console.log("Toll Cost:", toll);
           calculateFare();
         } else {
           console.error("Directions request failed:", status);
@@ -450,24 +450,24 @@ const SideBar = ({
 
     Object.keys(roadAliases).forEach((alias) => {
       if (plainText.includes(alias)) {
-        console.log(
-          `Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`
-        );
+        // console.log(
+        //   `Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`
+        // );
         plainText = plainText.replaceAll(alias, roadAliases[alias]);
       }
     });
 
-    console.log("=== Toll Calculation ===");
-    console.log("Normalized steps text:", plainText);
+    // console.log("=== Toll Calculation ===");
+    // console.log("Normalized steps text:", plainText);
 
     tolls.forEach((entry) => {
       const normalizedEntry = normalizeRoad(entry.entryPoint);
       const entryIndex = plainText.indexOf(normalizedEntry);
 
       if (entryIndex !== -1) {
-        console.log(
-          `✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`
-        );
+        // console.log(
+        //   `✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`
+        // );
 
         let farthestExit = null;
         let farthestExitIndex = -1;
@@ -477,9 +477,9 @@ const SideBar = ({
           const exitIndex = plainText.indexOf(normalizedExit);
 
           if (exitIndex !== -1 && exitIndex > entryIndex) {
-            console.log(
-              `   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`
-            );
+            // console.log(
+            //   `   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`
+            // );
             if (exitIndex > farthestExitIndex) {
               farthestExitIndex = exitIndex;
               farthestExit = exit;
@@ -488,21 +488,21 @@ const SideBar = ({
         });
 
         if (farthestExit) {
-          console.log(
-            `   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`
-          );
+          // console.log(
+          //   `   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`
+          // );
           toll = Math.max(toll, farthestExit.price);
         } else {
-          console.log(
-            `   ⚠ No exits matched after entry point: ${normalizedEntry}`
-          );
+          // console.log(
+          //   `   ⚠ No exits matched after entry point: ${normalizedEntry}`
+          // );
         }
       } else {
-        console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
+        // console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
       }
     });
 
-    console.log("💰 Final calculated toll:", toll);
+    // console.log("💰 Final calculated toll:", toll);
     return toll;
   };
 
@@ -523,9 +523,9 @@ const SideBar = ({
       timeType = 1;
     }
 
-    console.log(
-      `Calculated time type: ${timeType}`
-    );
+    // console.log(
+    //   `Calculated time type: ${timeType}`
+    // );
 
     return timeType;
   };
@@ -660,7 +660,7 @@ const SideBar = ({
     setContact("");
     setInstruction("");
     setIsOn(true);
-    setSelected(null);
+    setSelected(defaultVehicleOptions[0]);
     setSelectedPayment(null);
     setBookingMode("now");
     setDateVal(melbourneNow.toISOString().split("T")[0]);
@@ -671,8 +671,8 @@ const SideBar = ({
     setHasToll(false);
     setDistanceKm("");
     setContactError("");
-    onPickupSelect(setPickupLoc);
-    onDestinationsSelect(setDestinationLocs);
+    onPickupSelect(null);          // ✅
+    onDestinationsSelect([])
     setAllFares([]);
   };
 
