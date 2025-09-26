@@ -1,5 +1,5 @@
 import images from "../assets/images";
-import { CreditCard, Wallet } from "lucide-react";
+import { CreditCard, IdCard, Wallet } from "lucide-react";
 
 // navbar
 export const navItems = [
@@ -94,6 +94,12 @@ export const defaultPaymentOptions = [
     status: "Available",
     color: "bg-blue-50",
     brand: "FastCard",
+  },
+
+  {
+    id: "MPTP",
+    name: "MPTP",   
+    icon: <IdCard className="w-6 h-6 text-blue-600" />,    
   },
 ];
 
