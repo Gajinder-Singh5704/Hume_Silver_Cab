@@ -23,7 +23,8 @@ export default function Modal({ onClose, onPlaceSelect }) {
   useEffect(() => {
     const init = () => {
       if (window.google?.maps?.places) {
-        serviceRef.current = new window.google.maps.places.AutocompleteService();
+        serviceRef.current =
+          new window.google.maps.places.AutocompleteService();
         sessionTokenRef.current =
           new window.google.maps.places.AutocompleteSessionToken();
         setIsReady(true);
@@ -108,7 +109,8 @@ export default function Modal({ onClose, onPlaceSelect }) {
 
     try {
       const location = await getGeocode({
-        ...s,
+        place_id: s.place_id,
+        description: s.description,
         sessionToken: sessionTokenRef.current,
       });
       if (location) {
@@ -155,7 +157,9 @@ export default function Modal({ onClose, onPlaceSelect }) {
     matches.forEach(({ offset, length }, idx) => {
       if (offset > lastIndex) {
         parts.push(
-          <span key={`n-${idx}-${lastIndex}`}>{text.slice(lastIndex, offset)}</span>
+          <span key={`n-${idx}-${lastIndex}`}>
+            {text.slice(lastIndex, offset)}
+          </span>
         );
       }
       parts.push(
@@ -215,24 +219,25 @@ export default function Modal({ onClose, onPlaceSelect }) {
                   <li className="p-2 text-sm text-gray-500">Searching…</li>
                 )}
 
-                {!loading && suggestions.map((s, idx) => (
-                  <li
-                    key={s.place_id}
-                    className={`p-2 cursor-pointer flex flex-col ${
-                      idx === highlight ? "bg-gray-100" : "hover:bg-gray-50"
-                    }`}
-                    onMouseEnter={() => setHighlight(idx)}
-                    onMouseLeave={() => setHighlight(-1)}
-                    onClick={() => handlePlaceClick(s)}
-                  >
-                    <div>{renderMainText(s)}</div>
-                    {s.structured_formatting?.secondary_text && (
-                      <div className="text-gray-500 text-sm">
-                        {s.structured_formatting.secondary_text}
-                      </div>
-                    )}
-                  </li>
-                ))}
+                {!loading &&
+                  suggestions.map((s, idx) => (
+                    <li
+                      key={s.place_id}
+                      className={`p-2 cursor-pointer flex flex-col ${
+                        idx === highlight ? "bg-gray-100" : "hover:bg-gray-50"
+                      }`}
+                      onMouseEnter={() => setHighlight(idx)}
+                      onMouseLeave={() => setHighlight(-1)}
+                      onClick={() => handlePlaceClick(s)}
+                    >
+                      <div>{renderMainText(s)}</div>
+                      {s.structured_formatting?.secondary_text && (
+                        <div className="text-gray-500 text-sm">
+                          {s.structured_formatting.secondary_text}
+                        </div>
+                      )}
+                    </li>
+                  ))}
 
                 {!loading && suggestions.length === 0 && (
                   <li className="p-2 text-sm text-gray-500">No results</li>
