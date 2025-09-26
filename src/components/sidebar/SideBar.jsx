@@ -13,7 +13,7 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import { LockIcon, XIcon as XLucide } from "lucide-react";
+import { LockIcon, Wallet, XIcon as XLucide } from "lucide-react";
 import ToggleSwitch from "./ToggleSwich";
 import CarDropdown from "./CarDropdown";
 import { getGeocode } from "../../hooks/map.js";
@@ -57,7 +57,16 @@ const SideBar = ({
   const [instruction, setInstruction] = useState("");
   const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(defaultVehicleOptions[0]);
-  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState({
+      id: "pay-driver-directly",
+      name: "Pay Driver Directly",
+      description: "Cash or card to driver",
+      icon: <Wallet className="w-6 h-6 text-orange-600" />,
+      type: "Direct",
+      status: "Default",
+      color: "bg-orange-50",
+      brand: "Direct",
+    });
   const [tollPrice, setTollPrice] = useState(0);
   const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
 
@@ -622,21 +631,29 @@ const SideBar = ({
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const bookingTime = `${hourVal}:${minuteVal}`;
+    const bookingDate = `${dateVal}`
+    const selectedCarData = {
+      selectedCar : `${selected.name}`,
+      passengers  : `${selected.passengers}`
+    }
+
+    const selectedPaymentData = {
+      paymentType: `${selectedPayment.name}`,
+      paymentBrand: `${selectedPayment.brand}`
+    }
+
     const formData = {
       pickup,
-      pickupLoc,
       destinations,
-      destinationLocs,
       passenger,
       contact,
       instruction,
-      isOn,
-      selected,
-      selectedPayment,
+      selectedCarData,
+      selectedPaymentData,
       bookingMode,
-      dateVal,
-      hourVal,
-      minuteVal,
+      bookingDate,
+      bookingTime,
       timeType,
       fare,
       hasToll,
@@ -1110,6 +1127,7 @@ const SideBar = ({
                 onOptionSelect={handlePaymentSelect}
                 title="Select payment method"
                 className="mb-4"
+                required
               />
             </div>
 

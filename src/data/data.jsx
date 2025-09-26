@@ -59,25 +59,26 @@ export const defaultVehicleOptions = [
 // paymnet options
 export const defaultPaymentOptions = [
   {
-    id: "card",
-    name: "Credit Card / Debit Card",
-    description: "**** **** **** 4567",
-    icon: <CreditCard className="w-6 h-6 text-blue-600" />,
-    type: "Primary",
-    status: "Default",
-    color: "bg-blue-50",
-    brand: "Visa,MasterCard",
-  },
-  {
     id: "pay-driver-directly",
     name: "Pay Driver Directly",
     description: "Cash or card to driver",
     icon: <Wallet className="w-6 h-6 text-orange-600" />,
     type: "Direct",
-    status: "Available",
+    status: "Default",
     color: "bg-orange-50",
     brand: "Direct",
   },
+  {
+    id: "card",
+    name: "Credit Card / Debit Card",
+    description: "**** **** **** 4567",
+    icon: <CreditCard className="w-6 h-6 text-blue-600" />,
+    type: "Primary",
+    status: "Available",
+    color: "bg-blue-50",
+    brand: "Visa,MasterCard",
+  },
+  
   {
     id: "CabCharge FastCard",
     name: "CabCharge FastCard",
