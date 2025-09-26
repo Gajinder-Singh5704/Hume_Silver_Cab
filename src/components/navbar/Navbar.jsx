@@ -2,8 +2,6 @@ import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import images from "../../assets/images";
 import { IoMenu } from "react-icons/io5";
-import SmallScreenNavComponent from "./SmallScreenNavComponent";
-import MdScreenNavComponent from "./MdScreenNavComponent";
 import { navItems } from "../../data/data.jsx";
 
 const Navbar = () => {
@@ -39,9 +37,7 @@ const Navbar = () => {
           <button className="hidden" onClick={toggleMenu}>
             <IoMenu size={32} />
           </button>
-          {isOpen && <MdScreenNavComponent />}
 
-          {isOpen && <SmallScreenNavComponent onClose={toggleMenu} />}
         </div>
       </nav>
     </header>
