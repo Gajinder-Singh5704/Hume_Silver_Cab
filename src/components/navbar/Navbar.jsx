@@ -12,7 +12,7 @@ const Navbar = () => {
 
   return (
     <header className="bg-[#f9f6f3] relative">
-      <nav className="flex items-center justify-between pt-2 pb-2 text-[16px]">
+      <nav id="navbar" className="flex items-center justify-between pt-2 pb-2 text-[16px]">
         {/* logo section */}
         <div className="ml-2 md:ml-6">
           <img src={images.logo} alt="logo" className="h-[60px] rounded-lg shadow-[4px_4px_10px_rgba(0,0,0,0.55)]" />
