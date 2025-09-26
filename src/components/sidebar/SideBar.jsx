@@ -58,15 +58,15 @@ const SideBar = ({
   const [isOn, setIsOn] = useState(true);
   const [selected, setSelected] = useState(defaultVehicleOptions[0]);
   const [selectedPayment, setSelectedPayment] = useState({
-      id: "pay-driver-directly",
-      name: "Pay Driver Directly",
-      description: "Cash or card to driver",
-      icon: <Wallet className="w-6 h-6 text-orange-600" />,
-      type: "Direct",
-      status: "Default",
-      color: "bg-orange-50",
-      brand: "Direct",
-    });
+    id: "pay-driver-directly",
+    name: "Pay Driver Directly",
+    description: "Cash or card to driver",
+    icon: <Wallet className="w-6 h-6 text-orange-600" />,
+    type: "Direct",
+    status: "Default",
+    color: "bg-orange-50",
+    brand: "Direct",
+  });
   const [tollPrice, setTollPrice] = useState(0);
   const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
 
@@ -633,8 +633,8 @@ const SideBar = ({
     const bookingTime = `${hourVal}:${minuteVal}`;
     const bookingDate = `${dateVal}`
     const selectedCarData = {
-      selectedCar : `${selected.name}`,
-      passengers  : `${selected.passengers}`
+      selectedCar: `${selected.name}`,
+      passengers: `${selected.passengers}`
     }
 
     const selectedPaymentData = {
@@ -653,8 +653,8 @@ const SideBar = ({
       selectedCarData,
       selectedPaymentData,
       distanceKm,
-      instruction,     
-      fare,      
+      instruction,
+      fare,
     };
 
     toast.success("🎉 Booking Requested Successfully!", {
@@ -676,7 +676,7 @@ const SideBar = ({
     setIsOn(true);
     setSelected(defaultVehicleOptions[0]);
     setSelectedPayment({
-       id: "pay-driver-directly",
+      id: "pay-driver-directly",
       name: "Pay Driver Directly",
       description: "Cash or card to driver",
       icon: <Wallet className="w-6 h-6 text-orange-600" />,
@@ -1139,39 +1139,39 @@ const SideBar = ({
 
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
-              <h3 className="text-sm mb-4">
-                Step 4 of 4 <b>Driver Instruction</b>
-              </h3>
+  <h3 className="text-sm mb-4">
+    Step 4 of 4 <b>Driver Instruction</b>
+  </h3>
 
-              <div className="mb-4">
-                <TextField
-                  label="Notes for driver"
-                  variant="outlined"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  inputProps={{ maxLength: 350 }}
-                  value={instruction}
-                  onChange={(e) => setInstruction(e.target.value)}
-                  placeholder="e.g. Unit, Gate and floor numbers"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": { borderColor: `${fixedColor}` },
-                    },
-                    "& label.Mui-focused": { color: "gray" },
-                  }}
-                />
-              </div>
-            </div>
+  <div className="mb-4">
+    <TextField
+      label="Notes for driver"
+      variant="outlined"
+      fullWidth
+      multiline
+      rows={3}
+      inputProps={{ maxLength: 350 }}
+      value={instruction}
+      onChange={(e) => setInstruction(e.target.value)}
+      placeholder="e.g. Unit, Gate and floor numbers"
+      sx={{
+        "& .MuiOutlinedInput-root": {
+          "&.Mui-focused fieldset": { borderColor: `${fixedColor}` },
+        },
+        "& label.Mui-focused": { color: "gray" },
+      }}
+    />
+  </div>
 
-            <div className="mt-3">
-              <button
-                type="submit"
-                className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer mb-4"
-              >
-                Request Booking
-              </button>
-            </div>
+  {/* Request Booking Button */}
+  <button
+    type="submit"
+    className="w-full py-3 rounded-md bg-orange-500 text-white font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500"
+  >
+    Request Booking
+  </button>
+</div>
+
           </form>
         </section>
       )}
