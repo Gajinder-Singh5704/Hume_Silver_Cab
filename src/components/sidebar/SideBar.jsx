@@ -164,6 +164,10 @@ const SideBar = ({
   const [showDone, setShowDone] = useState(false);
   const timeInputRef = useRef(null);
 
+  const pickupAutoRef = useRef(null);
+  const destinationAutoRef = useRef(null);
+
+
   // determine time type (helper stays the same)
   const determineTimeType = (dateObj) => {
     const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
@@ -192,8 +196,7 @@ const SideBar = ({
       "Saturday",
     ];
     console.log(
-      `Calculated time type: ${timeType} | Day: ${
-        dayNames[day]
+      `Calculated time type: ${timeType} | Day: ${dayNames[day]
       } | Time: ${hour24.toString().padStart(2, "0")}:${minute
         .toString()
         .padStart(2, "0")}`
@@ -240,7 +243,7 @@ const SideBar = ({
         base =
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].baseFlat +
           distance *
-            SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
+          SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
       } else if (timeType === 2) {
@@ -294,18 +297,18 @@ const SideBar = ({
     setFare(selectedFare);
   };
 
- 
+
   const handleDeleteDestination = () => {
-    setDestination(""); 
-    setDestinationLoc(null); 
-    setDestinationSuggestions([]); 
+    setDestination("");
+    setDestinationLoc(null);
+    setDestinationSuggestions([]);
 
     onDestinationSelect(null);
 
-    updateRoute(pickupLoc, []);
+    updateRoute(pickupLoc, null);
   };
 
-  const handleDestinationSelect = async(s) => {
+  const handleDestinationSelect = async (s) => {
     setDestination(s.description);
     setDestinationSuggestions([]);
 
@@ -314,7 +317,7 @@ const SideBar = ({
       if (location) {
         setDestinationLoc(location);
         onDestinationSelect(location);
-        updateRoute(pickupLoc,location)
+        updateRoute(pickupLoc, location)
         calculateFare()
       }
     } catch (err) {
@@ -323,9 +326,9 @@ const SideBar = ({
   }
 
   const handleDeletePickup = () => {
-    setPickup(""); 
-    setPickupLoc(null); 
-    setPickupSuggestions([]); 
+    setPickup("");
+    setPickupLoc(null);
+    setPickupSuggestions([]);
 
     setDestination("");
     setDestinationLoc([]);
@@ -353,7 +356,7 @@ const SideBar = ({
     } catch (err) {
       console.error("Failed to select pickup", err);
     }
-  }; 
+  };
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
@@ -367,6 +370,7 @@ const SideBar = ({
       setDistanceKm("");
       setHasToll(false);
       setFare(null);
+      setAllFares([])
       return;
     }
     setHasToll(false);
@@ -381,7 +385,7 @@ const SideBar = ({
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
-        console.log("result",result)
+        console.log("result", result)
         if (status === "OK" && result.routes.length > 0) {
           const leg = result.routes[0].legs.reduce(
             (acc, l) => {
@@ -660,176 +664,157 @@ const SideBar = ({
     });
   };
 
- useEffect(() => {
-  let lastWrapper = null;
+  useEffect(() => {
+    // Utility: move all pac containers into the provided wrapper element
+    const movePacInto = (wrapperEl) => {
+      if (!wrapperEl) return;
+      const pacs = document.querySelectorAll(".pac-container");
+      pacs.forEach((pac) => {
+        if (!wrapperEl.contains(pac)) {
+          try {
+            wrapperEl.appendChild(pac);
+            // also enforce style
+            pac.style.position = "absolute";
+            pac.style.top = "100%";
+            pac.style.left = "0";
+            pac.style.width = "100%";
+            pac.style.zIndex = "2000";
+          } catch (e) {
+            console.warn("Failed to move pac-container:", e);
+          }
+        }
+      });
+    };
 
-  const movePacInto = (wrapperEl) => {
-    if (!wrapperEl) return;
-    const pacs = document.querySelectorAll(".pac-container");
-    pacs.forEach((pac) => {
-      if (wrapperEl.contains(pac)) return; // already inside
-      try {
-        wrapperEl.appendChild(pac);
-        pac.style.position = "absolute";
-        pac.style.top = "100%";
-        pac.style.left = "0";
-        pac.style.width = "100%";
-        pac.style.zIndex = "2000";
-      } catch (e) {
-        console.warn("Failed to move pac-container:", e);
-      }
-    });
-  };
+    // When an input is focused, move visible pac to its wrapper
+    const onFocusHandler = (ev) => {
+      const input = ev.target;
+      if (!input) return;
+      const wrapper = input.parentNode || input.closest(".relative");
+      if (wrapper) movePacInto(wrapper);
+    };
 
-  const ensurePacInActiveWrapper = () => {
-    const active = document.activeElement;
-    if (!active) return;
-
-    const wrapper = active.closest(".relative");
-    if (!wrapper || wrapper === lastWrapper) return;
-
-    movePacInto(wrapper);
-    lastWrapper = wrapper; // remember where we placed it
-  };
-
-  // Run when focus changes
-  const onFocusHandler = () => {
-    ensurePacInActiveWrapper();
-  };
-
-  if (pickupInputRef?.current) {
-    pickupInputRef.current.addEventListener("focus", onFocusHandler);
-  }
-  if (destinationRef?.current) {
-    destinationRef.current.addEventListener("focus", onFocusHandler);
-  }
-
-  // Watch for DOM mutations (when Google re-creates pac)
-  const observer = new MutationObserver(() => {
-    ensurePacInActiveWrapper();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  return () => {
-    observer.disconnect();
+    // attach focus listeners
     if (pickupInputRef?.current) {
-      pickupInputRef.current.removeEventListener("focus", onFocusHandler);
+      pickupInputRef.current.addEventListener("focus", onFocusHandler);
     }
     if (destinationRef?.current) {
-      destinationRef.current.removeEventListener("focus", onFocusHandler);
+      destinationRef.current.addEventListener("focus", onFocusHandler);
     }
-  };
-}, []);
 
+    // Move pacs immediately in case they already exist
+    movePacInto(pickupInputRef?.current?.parentNode || pickupInputRef?.current?.closest?.(".relative"));
+    movePacInto(destinationRef?.current?.parentNode || destinationRef?.current?.closest?.(".relative"));
+
+    // Observe DOM additions (Google adds pac-container to body)
+    const observer = new MutationObserver(() => {
+      const active = document.activeElement;
+      if (active && (active === pickupInputRef.current || active === destinationRef.current)) {
+        const wrapper = active.parentNode || active.closest(".relative");
+        movePacInto(wrapper);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      if (pickupInputRef?.current) {
+        pickupInputRef.current.removeEventListener("focus", onFocusHandler);
+      }
+      if (destinationRef?.current) {
+        destinationRef.current.removeEventListener("focus", onFocusHandler);
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (window.google && window.google.maps && window.google.maps.places) {
+    let interval = setInterval(() => {
+      if (window.google?.maps?.places && pickupInputRef.current && destinationRef.current) {
         clearInterval(interval);
 
-        if (destinationRef.current) {
-          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
-          const autoPickup = new window.google.maps.places.Autocomplete(
-            destinationRef.current,
-            options
-          );
+        const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
 
-          autoPickup.addListener("place_changed", async () => {
-            const place = autoPickup.getPlace();
-            if (!place || !place.geometry) return;
+        // Create ONCE
+        pickupAutoRef.current = new window.google.maps.places.Autocomplete(
+          pickupInputRef.current,
+          options
+        );
+        destinationAutoRef.current = new window.google.maps.places.Autocomplete(
+          destinationRef.current,
+          options
+        );
 
-            setDestination(place.formatted_address);
+        // PICKUP listener
+        pickupAutoRef.current.addListener("place_changed", async () => {
+          const place = pickupAutoRef.current.getPlace();
+          if (!place?.geometry) return;
 
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            };
-            try {
-              // Validate using your helper
-              const insideVIC = await isInVictoria(location);
-              if (!insideVIC) {
-                setIsNoServiceOpen(true);
-                console.log("No Service Open is : " + isNoServiceOpen);
-                // alert("Pickup must be within Victoria, Australia.");
-                // revert the visible input (optional) so user knows selection failed
-                setDestination("");
-                return; // STOP: do not set pickupLoc, do not update route
-              }
+          const formatted = place.formatted_address || place.name || "";
+          setPickup(formatted);
 
-              // valid: set location and notify parent & map
-              setDestinationLoc(location);
-              console.log("object",location)
-              onDestinationSelect(location);
+          const loc = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          };
 
-              // Update route now that pickup is valid
-              updateRoute(pickupLoc, location);
-            } catch (err) {
-              console.error("Failed to validate destination location:", err);
-              // optionally revert UI
-              setPickup("");
-            }
-            // ✅ Make behavior consistent: trigger route update
-            updateRoute(pickupLoc, location);
-          });
-        }
+          const insideVIC = await isInVictoria(loc);
+          if (!insideVIC) {
+            setIsNoServiceOpen(true);
+            setPickup("");
+            return;
+          }
 
-        // Attach pickup autocomplete
-        if (pickupInputRef.current) {
-          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
-          const autoPickup = new window.google.maps.places.Autocomplete(
-            pickupInputRef.current,
-            options
-          );
+          setPickupLoc(loc);
+          onPickupSelect(loc);
+          updateRoute(loc, destinationLoc);
+        });
 
-          autoPickup.addListener("place_changed", async () => {
-            const place = autoPickup.getPlace();
-            if (!place || !place.geometry) return;
+        // DESTINATION listener
+        destinationAutoRef.current.addListener("place_changed", async () => {
+          const place = destinationAutoRef.current.getPlace();
+          if (!place?.geometry) return;
 
-            setPickup(place.formatted_address);
+          const formatted = place.formatted_address || place.name || "";
+          setDestination(formatted);
 
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            };
-            try {
-              // Validate using your helper
-              const insideVIC = await isInVictoria(location);
-              if (!insideVIC) {
-                setIsNoServiceOpen(true);
-                console.log("No Service Open is : " + isNoServiceOpen);
-                // alert("Pickup must be within Victoria, Australia.");
-                // revert the visible input (optional) so user knows selection failed
-                setPickup("");
-                return; // STOP: do not set pickupLoc, do not update route
-              }
+          const loc = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          };
 
-              // valid: set location and notify parent & map
-              setPickupLoc(location);
-              console.log("pick",location)
-              onPickupSelect(location);
+          const insideVIC = await isInVictoria(loc);
+          if (!insideVIC) {
+            setIsNoServiceOpen(true);
+            setDestination("");
+            return;
+          }
 
-              // Update route now that pickup is valid
-              updateRoute(location, destinationLoc);
-            } catch (err) {
-              console.error("Failed to validate pickup location:", err);
-              // optionally revert UI
-              setPickup("");
-            }
-            // ✅ Make behavior consistent: trigger route update
-            updateRoute(location, destinationLoc);
-          });
-        }
+          setDestinationLoc(loc);
+          onDestinationSelect(loc);
+          updateRoute(pickupLoc, loc);
+        });
       }
-    }, 300);
+    }, 200);
 
-    return () => clearInterval(interval);
-  }, [
-    destination,
-    pickupLoc,
-    destinationLoc,
-    onDestinationSelect,
-    onPickupSelect,
-  ]);
+    return () => {
+      clearInterval(interval);
+      if (pickupAutoRef.current) {
+        window.google.maps.event.clearInstanceListeners(pickupAutoRef.current);
+        pickupAutoRef.current = null;
+      }
+      if (destinationAutoRef.current) {
+        window.google.maps.event.clearInstanceListeners(destinationAutoRef.current);
+        destinationAutoRef.current = null;
+      }
+      // Safety: remove extra pacs on unmount
+      const pacs = document.querySelectorAll(".pac-container");
+      pacs.forEach((el, idx) => idx > 0 && el.remove());
+    };
+  }, []); // <- IMPORTANT: run once
+
+  useEffect(() => {
+    updateRoute(pickupLoc, destinationLoc);
+  }, [pickupLoc, destinationLoc]);
 
   useEffect(() => {
     if (distanceKm) calculateFare();
@@ -935,16 +920,16 @@ const SideBar = ({
                 onClose={() => setIsNoServiceOpen(false)}
               />
 
-               <div className="mb-4 relative">
+              <div className="mb-4 relative">
                 <TextField
-                  inputRef={destinationRef} 
+                  inputRef={destinationRef}
                   label="Add Destination (required)"
                   variant="outlined"
                   fullWidth
                   required
                   placeholder="Add your Destination location"
                   value={destination}
-                  disabled = {pickupLoc? false :true}
+                  disabled={pickupLoc ? false : true}
                   onChange={(e) => setDestination(e.target.value)} // just update local state
                   InputProps={{
                     endAdornment: (
@@ -1033,88 +1018,88 @@ const SideBar = ({
               </RadioGroup>
             </div>
 
-{bookingMode === "later" && (
-  <div className="px-3 py-2">
-    <div className="flex flex-col md:flex-col gap-4">
-      <div className="flex-1">
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            key={`date-${pickerKey}`}
-            label="Pickup date"
-            value={dateVal ? new Date(dateVal) : null}
-            onChange={(newVal) => {
-              if (!newVal) return;
-              const y = newVal.getFullYear();
-              const m = String(newVal.getMonth() + 1).padStart(2, "0");
-              const d = String(newVal.getDate()).padStart(2, "0");
-              const next = `${y}-${m}-${d}`;
-              setDateVal(next);
+            {bookingMode === "later" && (
+              <div className="px-3 py-2">
+                <div className="flex flex-col md:flex-col gap-4">
+                  <div className="flex-1">
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        key={`date-${pickerKey}`}
+                        label="Pickup date"
+                        value={dateVal ? new Date(dateVal) : null}
+                        onChange={(newVal) => {
+                          if (!newVal) return;
+                          const y = newVal.getFullYear();
+                          const m = String(newVal.getMonth() + 1).padStart(2, "0");
+                          const d = String(newVal.getDate()).padStart(2, "0");
+                          const next = `${y}-${m}-${d}`;
+                          setDateVal(next);
 
-              if (isToday(next)) {
-                const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
-                setHourVal(h);
-                setMinuteVal(mi);
-              }
-            }}
-            maxDate={maxBookingDate()}
-            disablePast
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                sx: {
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
-                  "& label.Mui-focused": { color: "gray" },
-                },
-              },
-            }}
-          />
-        </LocalizationProvider>
-      </div>
+                          if (isToday(next)) {
+                            const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
+                            setHourVal(h);
+                            setMinuteVal(mi);
+                          }
+                        }}
+                        maxDate={maxBookingDate()}
+                        disablePast
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            required: true,
+                            sx: {
+                              "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                              "& label.Mui-focused": { color: "gray" },
+                            },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
 
-      <div className="flex-1">
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <TimePicker
-            key={`time-${pickerKey}`}
-            label="Pickup time"
-            value={
-              hourVal && minuteVal
-                ? new Date(
-                    `${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(
-                      2,
-                      "0"
-                    )}:00`
-                  )
-                : null
-            }
-            onChange={(newVal) => {
-              if (!newVal) return;
-              let h = String(newVal.getHours()).padStart(2, "0");
-              let m = String(newVal.getMinutes()).padStart(2, "0");
-              [h, m] = clampToMinIfPast(dateVal, h, m);
-              setHourVal(h);
-              setMinuteVal(m);
-            }}
-            // minTime={buildMinTime(dateVal)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                sx: {
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                    borderColor: fixedColor,
-                  },
-                  "& label.Mui-focused": { color: "gray" },
-                },
-              },
-              actionBar: { actions: ["accept", "cancel"] },
-            }}
-          />
-        </LocalizationProvider>
-      </div>
-    </div>
-  </div>
-)}
+                  <div className="flex-1">
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <TimePicker
+                        key={`time-${pickerKey}`}
+                        label="Pickup time"
+                        value={
+                          hourVal && minuteVal
+                            ? new Date(
+                              `${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(
+                                2,
+                                "0"
+                              )}:00`
+                            )
+                            : null
+                        }
+                        onChange={(newVal) => {
+                          if (!newVal) return;
+                          let h = String(newVal.getHours()).padStart(2, "0");
+                          let m = String(newVal.getMinutes()).padStart(2, "0");
+                          [h, m] = clampToMinIfPast(dateVal, h, m);
+                          setHourVal(h);
+                          setMinuteVal(m);
+                        }}
+                        // minTime={buildMinTime(dateVal)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            required: true,
+                            sx: {
+                              "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                                borderColor: fixedColor,
+                              },
+                              "& label.Mui-focused": { color: "gray" },
+                            },
+                          },
+                          actionBar: { actions: ["accept", "cancel"] },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </div>
+              </div>
+            )}
 
 
             {/* // ...existing code... */}
