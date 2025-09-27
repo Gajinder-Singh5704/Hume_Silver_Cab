@@ -230,7 +230,7 @@ const SideBar = ({
       if (location) {
         setDestinationLoc(location);
         onDestinationSelect(location);
-        console.log("pichup at set dest",pickupLoc)
+        console.log("pichup at set dest", pickupLoc);
         updateRoute(pickupLoc, location);
         calculateFare();
       }
@@ -280,8 +280,8 @@ const SideBar = ({
 
   const updateRoute = (pickup, dest) => {
     console.log("Calling calculate");
-    console.log("destination",dest)
-    console.log("pickup",pickup)
+    console.log("destination", dest);
+    console.log("pickup", pickup);
     if (!pickup || !dest) {
       setDistanceKm("");
       setHasToll(false);
@@ -488,7 +488,7 @@ const SideBar = ({
     setAllFares([]);
   };
 
-  console.log("pickup ",pickupLoc);
+  console.log("pickup ", pickupLoc);
 
   // Validate if a place is in Victoria (AU)
   const isInVictoria = async (location) => {
@@ -589,51 +589,75 @@ const SideBar = ({
   }, []);
 
   useEffect(() => {
-  if (!window.google?.maps?.places) return;
+    if (!window.google?.maps?.places) return;
 
-  const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
+    const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
 
-  // Pickup autocomplete
-  const pickupAutocomplete = new window.google.maps.places.Autocomplete(
-    pickupInputRef.current,
-    options
-  );
-  pickupAutocomplete.addListener("place_changed", async () => {
-    const place = pickupAutocomplete.getPlace();
-    if (!place?.geometry) return;
-    const location = {
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng(),
+    // Pickup autocomplete
+    const pickupAutocomplete = new window.google.maps.places.Autocomplete(
+      pickupInputRef.current,
+      options
+    );
+    pickupAutocomplete.addListener("place_changed", async () => {
+      const place = pickupAutocomplete.getPlace();
+      if (!place?.geometry) return;
+      const location = {
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      };
+      try {
+        // Validate using your helper
+        const insideVIC = await isInVictoria(location);
+        if (!insideVIC) {
+          setIsNoServiceOpen(true);
+          console.log("No Service Open is : " + isNoServiceOpen);
+          setPickup("");
+          return;
+        }
+        setPickup(place.formatted_address);
+        setPickupLoc(location);
+        onPickupSelect(location);
+      } catch (err) {
+        console.error("Failed to validate pickup location:", err);
+        setPickup("");
+      }
+    });
+
+    // Destination autocomplete
+    const destAutocomplete = new window.google.maps.places.Autocomplete(
+      destinationRef.current,
+      options
+    );
+    destAutocomplete.addListener("place_changed", async () => {
+      const place = destAutocomplete.getPlace();
+      if (!place?.geometry) return;
+      const location = {
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      };
+      try {
+        // Validate destination is inside Victoria
+        const insideVIC = await isInVictoria(location);
+        if (!insideVIC) {
+          setIsNoServiceOpen(true);
+          setDestination("");
+          return;
+        }
+        setDestination(place.formatted_address);
+        setDestinationLoc(location);
+        onDestinationSelect(location);
+        // Update route now that we have a valid destination
+      } catch (err) {
+        console.error("Failed to validate destination:", err);
+        setDestination("");
+      }
+    });
+
+    return () => {
+      window.google.maps.event.clearInstanceListeners(pickupAutocomplete);
+      window.google.maps.event.clearInstanceListeners(destAutocomplete);
     };
-    setPickup(place.formatted_address);
-    setPickupLoc(location);
-    onPickupSelect(location);
-  });
-
-  // Destination autocomplete
-  const destAutocomplete = new window.google.maps.places.Autocomplete(
-    destinationRef.current,
-    options
-  );
-  destAutocomplete.addListener("place_changed", async () => {
-    const place = destAutocomplete.getPlace();
-    if (!place?.geometry) return;
-    const location = {
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng(),
-    };
-    setDestination(place.formatted_address);
-    setDestinationLoc(location);
-    onDestinationSelect(location);
-    console.log("pichup at set dest",pickupLoc)
-  });
-
-  return () => {
-    window.google.maps.event.clearInstanceListeners(pickupAutocomplete);
-    window.google.maps.event.clearInstanceListeners(destAutocomplete);
-  };
-}, []);
-
+  }, []);
 
   useEffect(() => {
     if (distanceKm) calculateFare();
@@ -660,7 +684,7 @@ const SideBar = ({
 
   useEffect(() => {
     updateRoute(pickupLoc, destinationLoc);
-}, [destinationLoc]);
+  }, [pickup,destinationLoc]);
 
   return (
     <>
