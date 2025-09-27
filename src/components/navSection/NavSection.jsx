@@ -41,7 +41,7 @@ const NavSection = ({onPlaceSelect}) => {
             type="text"
             value={selectedPlace}
             readOnly
-            placeholder="Select a place"
+            placeholder="Melbourne VIC, Australia"
             className="rounded-sm bg-white h-8 sm:h-9 pl-2 pr-8 cursor-pointer text-sm sm:text-base
                       w-[180px] sm:w-[220px] md:w-[280px]" // ✅ responsive fixed widths
             onClick={handleClick}

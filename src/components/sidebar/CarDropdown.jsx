@@ -132,14 +132,15 @@ const CarDropdown = ({
               <p className="text-sm font-medium text-gray-800">
                 {isFixedPrice ? "Fixed Price" : currentSelection?.fareEstimate}
               </p>
-              <p className="text-sm flex items-center text-gray-600">
+              <p className="text-sm flex items-center  text-gray-600">
                 {isFixedPrice ? (
                   <>
                     <LockIcon className="mr-1" color="orange" size={12} />
-                    {label}
+                    <span className="font-bold">{label}</span>
+                    
                   </>
                 ) : (
-                  label
+                  <span className="font-bold">{label}</span>
                 )}
               </p>
             </div>
@@ -202,10 +203,11 @@ const CarDropdown = ({
                       {isFixedPrice ? (
                         <>
                           <LockIcon className="mr-1" color="orange" size={12} />
-                          {renderFare(getFareFor(option), option.destRequired)}
+                           <span className="font-bold">  {renderFare(getFareFor(option), option.destRequired)}</span>
+                        
                         </>
                       ) : (
-                        renderFare(getFareFor(option), option.destRequired, false)
+                        <span className="font-bold">  {renderFare(getFareFor(option), option.destRequired)}</span>
                       )}
                     </p>
                   </div>

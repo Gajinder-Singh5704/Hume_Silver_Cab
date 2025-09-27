@@ -88,7 +88,7 @@ const MapUpdater = ({ selectedPlace, selectedPickup, selectedDestination }) => {
       map.setZoom(14);
     } else {
       // Case 3: Neither → reset to default
-      map.panTo({ lat: -37.6708716, lng: 144.8430578 });
+      map.panTo({ lat: -37.840935, lng: 144.946457 });
       map.setZoom(12);
     }
   }, [map, selectedPlace, selectedPickup, selectedDestination]);
@@ -111,7 +111,7 @@ const RecenterButton = ({ selectedPickup, selectedDestination }) => {
     if (!bounds.isEmpty()) {
       map.fitBounds(bounds, 80);
     } else {
-      map.panTo({ lat: -37.6708716, lng: 144.8430578 });
+      map.panTo({ lat: -37.840935, lng: 144.946457 });
       map.setZoom(12);
     }
   };
