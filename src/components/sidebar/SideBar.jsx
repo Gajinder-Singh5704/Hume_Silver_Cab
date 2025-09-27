@@ -211,18 +211,17 @@ const SideBar = ({
     setFare(selectedFare);
   };
 
- 
   const handleDeleteDestination = () => {
-    setDestination(""); 
-    setDestinationLoc(null); 
-    setDestinationSuggestions([]); 
+    setDestination("");
+    setDestinationLoc(null);
+    setDestinationSuggestions([]);
 
     onDestinationSelect(null);
 
     updateRoute(pickupLoc, []);
   };
 
-  const handleDestinationSelect = async(s) => {
+  const handleDestinationSelect = async (s) => {
     setDestination(s.description);
     setDestinationSuggestions([]);
 
@@ -231,22 +230,23 @@ const SideBar = ({
       if (location) {
         setDestinationLoc(location);
         onDestinationSelect(location);
-        updateRoute(pickupLoc,location)
-        calculateFare()
+        console.log("pichup at set dest",pickupLoc)
+        updateRoute(pickupLoc, location);
+        calculateFare();
       }
     } catch (err) {
       console.error("Failed to select destination", err);
     }
-  }
+  };
 
   const handleDeletePickup = () => {
-    setPickup(""); 
-    setPickupLoc(null); 
-    setPickupSuggestions([]); 
+    setPickup("");
+    setPickupLoc(null);
+    setPickupSuggestions([]);
 
     setDestination("");
     setDestinationLoc([]);
-    setDestinationSuggestions([])
+    setDestinationSuggestions([]);
 
     // Notify parent that pickup is now empty
     onDestinationSelect(null);
@@ -270,7 +270,7 @@ const SideBar = ({
     } catch (err) {
       console.error("Failed to select pickup", err);
     }
-  }; 
+  };
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
@@ -280,6 +280,8 @@ const SideBar = ({
 
   const updateRoute = (pickup, dest) => {
     console.log("Calling calculate");
+    console.log("destination",dest)
+    console.log("pickup",pickup)
     if (!pickup || !dest) {
       setDistanceKm("");
       setHasToll(false);
@@ -298,7 +300,7 @@ const SideBar = ({
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
-        console.log("result",result)
+        console.log("result", result);
         if (status === "OK" && result.routes.length > 0) {
           const leg = result.routes[0].legs.reduce(
             (acc, l) => {
@@ -328,8 +330,7 @@ const SideBar = ({
 
           setHasToll(toll > 0);
           setTollPrice(toll);
-          console.log("Toll Cost:", toll);
-          calculateFare(); // If you already include tolls in fare calculation
+          console.log("Toll Cost:", toll); // If you already include tolls in fare calculation
         } else {
           console.error("Directions request failed:", status);
           setDistanceKm("");
@@ -487,7 +488,7 @@ const SideBar = ({
     setAllFares([]);
   };
 
-  console.log("luggage modal ", isLuggageModalOpen);
+  console.log("pickup ",pickupLoc);
 
   // Validate if a place is in Victoria (AU)
   const isInVictoria = async (location) => {
@@ -526,176 +527,113 @@ const SideBar = ({
     });
   };
 
- useEffect(() => {
-  let lastWrapper = null;
+  useEffect(() => {
+    let lastWrapper = null;
 
-  const movePacInto = (wrapperEl) => {
-    if (!wrapperEl) return;
-    const pacs = document.querySelectorAll(".pac-container");
-    pacs.forEach((pac) => {
-      if (wrapperEl.contains(pac)) return; // already inside
-      try {
-        wrapperEl.appendChild(pac);
-        pac.style.position = "absolute";
-        pac.style.top = "100%";
-        pac.style.left = "0";
-        pac.style.width = "100%";
-        pac.style.zIndex = "2000";
-      } catch (e) {
-        console.warn("Failed to move pac-container:", e);
-      }
-    });
-  };
+    const movePacInto = (wrapperEl) => {
+      if (!wrapperEl) return;
+      const pacs = document.querySelectorAll(".pac-container");
+      pacs.forEach((pac) => {
+        if (wrapperEl.contains(pac)) return; // already inside
+        try {
+          wrapperEl.appendChild(pac);
+          pac.style.position = "absolute";
+          pac.style.top = "100%";
+          pac.style.left = "0";
+          pac.style.width = "100%";
+          pac.style.zIndex = "2000";
+        } catch (e) {
+          console.warn("Failed to move pac-container:", e);
+        }
+      });
+    };
 
-  const ensurePacInActiveWrapper = () => {
-    const active = document.activeElement;
-    if (!active) return;
+    const ensurePacInActiveWrapper = () => {
+      const active = document.activeElement;
+      if (!active) return;
 
-    const wrapper = active.closest(".relative");
-    if (!wrapper || wrapper === lastWrapper) return;
+      const wrapper = active.closest(".relative");
+      if (!wrapper || wrapper === lastWrapper) return;
 
-    movePacInto(wrapper);
-    lastWrapper = wrapper; // remember where we placed it
-  };
+      movePacInto(wrapper);
+      lastWrapper = wrapper; // remember where we placed it
+    };
 
-  // Run when focus changes
-  const onFocusHandler = () => {
-    ensurePacInActiveWrapper();
-  };
+    // Run when focus changes
+    const onFocusHandler = () => {
+      ensurePacInActiveWrapper();
+    };
 
-  if (pickupInputRef?.current) {
-    pickupInputRef.current.addEventListener("focus", onFocusHandler);
-  }
-  if (destinationRef?.current) {
-    destinationRef.current.addEventListener("focus", onFocusHandler);
-  }
-
-  // Watch for DOM mutations (when Google re-creates pac)
-  const observer = new MutationObserver(() => {
-    ensurePacInActiveWrapper();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  return () => {
-    observer.disconnect();
     if (pickupInputRef?.current) {
-      pickupInputRef.current.removeEventListener("focus", onFocusHandler);
+      pickupInputRef.current.addEventListener("focus", onFocusHandler);
     }
     if (destinationRef?.current) {
-      destinationRef.current.removeEventListener("focus", onFocusHandler);
+      destinationRef.current.addEventListener("focus", onFocusHandler);
     }
+
+    // Watch for DOM mutations (when Google re-creates pac)
+    const observer = new MutationObserver(() => {
+      ensurePacInActiveWrapper();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      if (pickupInputRef?.current) {
+        pickupInputRef.current.removeEventListener("focus", onFocusHandler);
+      }
+      if (destinationRef?.current) {
+        destinationRef.current.removeEventListener("focus", onFocusHandler);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+  if (!window.google?.maps?.places) return;
+
+  const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
+
+  // Pickup autocomplete
+  const pickupAutocomplete = new window.google.maps.places.Autocomplete(
+    pickupInputRef.current,
+    options
+  );
+  pickupAutocomplete.addListener("place_changed", async () => {
+    const place = pickupAutocomplete.getPlace();
+    if (!place?.geometry) return;
+    const location = {
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng(),
+    };
+    setPickup(place.formatted_address);
+    setPickupLoc(location);
+    onPickupSelect(location);
+  });
+
+  // Destination autocomplete
+  const destAutocomplete = new window.google.maps.places.Autocomplete(
+    destinationRef.current,
+    options
+  );
+  destAutocomplete.addListener("place_changed", async () => {
+    const place = destAutocomplete.getPlace();
+    if (!place?.geometry) return;
+    const location = {
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng(),
+    };
+    setDestination(place.formatted_address);
+    setDestinationLoc(location);
+    onDestinationSelect(location);
+    console.log("pichup at set dest",pickupLoc)
+  });
+
+  return () => {
+    window.google.maps.event.clearInstanceListeners(pickupAutocomplete);
+    window.google.maps.event.clearInstanceListeners(destAutocomplete);
   };
 }, []);
 
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        clearInterval(interval);
-
-        if (destinationRef.current) {
-          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
-          const autoPickup = new window.google.maps.places.Autocomplete(
-            destinationRef.current,
-            options
-          );
-
-          autoPickup.addListener("place_changed", async () => {
-            const place = autoPickup.getPlace();
-            if (!place || !place.geometry) return;
-
-            setDestination(place.formatted_address);
-
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            };
-            try {
-              // Validate using your helper
-              const insideVIC = await isInVictoria(location);
-              if (!insideVIC) {
-                setIsNoServiceOpen(true);
-                console.log("No Service Open is : " + isNoServiceOpen);
-                // alert("Pickup must be within Victoria, Australia.");
-                // revert the visible input (optional) so user knows selection failed
-                setDestination("");
-                return; // STOP: do not set pickupLoc, do not update route
-              }
-
-              // valid: set location and notify parent & map
-              setDestinationLoc(location);
-              console.log("object",location)
-              onDestinationSelect(location);
-
-              // Update route now that pickup is valid
-              updateRoute(pickupLoc, location);
-            } catch (err) {
-              console.error("Failed to validate destination location:", err);
-              // optionally revert UI
-              setPickup("");
-            }
-            // ✅ Make behavior consistent: trigger route update
-            updateRoute(pickupLoc, location);
-          });
-        }
-
-        // Attach pickup autocomplete
-        if (pickupInputRef.current) {
-          const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
-          const autoPickup = new window.google.maps.places.Autocomplete(
-            pickupInputRef.current,
-            options
-          );
-
-          autoPickup.addListener("place_changed", async () => {
-            const place = autoPickup.getPlace();
-            if (!place || !place.geometry) return;
-
-            setPickup(place.formatted_address);
-
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            };
-            try {
-              // Validate using your helper
-              const insideVIC = await isInVictoria(location);
-              if (!insideVIC) {
-                setIsNoServiceOpen(true);
-                console.log("No Service Open is : " + isNoServiceOpen);
-                // alert("Pickup must be within Victoria, Australia.");
-                // revert the visible input (optional) so user knows selection failed
-                setPickup("");
-                return; // STOP: do not set pickupLoc, do not update route
-              }
-
-              // valid: set location and notify parent & map
-              setPickupLoc(location);
-              console.log("pick",location)
-              onPickupSelect(location);
-
-              // Update route now that pickup is valid
-              updateRoute(location, destinationLoc);
-            } catch (err) {
-              console.error("Failed to validate pickup location:", err);
-              // optionally revert UI
-              setPickup("");
-            }
-            // ✅ Make behavior consistent: trigger route update
-            updateRoute(location, destinationLoc);
-          });
-        }
-      }
-    }, 300);
-
-    return () => clearInterval(interval);
-  }, [
-    destination,
-    pickupLoc,
-    destinationLoc,
-    onDestinationSelect,
-    onPickupSelect,
-  ]);
 
   useEffect(() => {
     if (distanceKm) calculateFare();
@@ -719,6 +657,10 @@ const SideBar = ({
       setTimeType(determineTimeType(dateObj));
     }
   }, [bookingMode, dateVal, hourVal, minuteVal]);
+
+  useEffect(() => {
+    updateRoute(pickupLoc, destinationLoc);
+}, [destinationLoc]);
 
   return (
     <>
@@ -803,16 +745,16 @@ const SideBar = ({
                 onClose={() => setIsNoServiceOpen(false)}
               />
 
-               <div className="mb-4 relative">
+              <div className="mb-4 relative">
                 <TextField
-                  inputRef={destinationRef} 
+                  inputRef={destinationRef}
                   label="Add Destination (required)"
                   variant="outlined"
                   fullWidth
                   required
                   placeholder="Add your Destination location"
                   value={destination}
-                  disabled = {pickupLoc? false :true}
+                  disabled={pickupLoc ? false : true}
                   onChange={(e) => setDestination(e.target.value)} // just update local state
                   InputProps={{
                     endAdornment: (
