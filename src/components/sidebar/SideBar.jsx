@@ -858,16 +858,16 @@ const SideBar = ({
           <form onSubmit={handleSubmit} autoComplete="off">
             {/* Step 1 */}
             <div className="px-5 py-6">
-              <h3 className="text-sm mb-4 hidden md:flex">
-                Step 1 of 4 <b className="ml-2"> Booking details</b>
+              <h3 className="text-sm mb-4">
+                Step 1 of 4 - <b> Booking details</b>
               </h3>
 
-              <h2 className="md:hidden text-2xl text-bold mb-2">
+              {/* <h2 className="md:hidden text-2xl text-bold mb-2">
                 Fare Estimates Calculator
               </h2>
               <h3 className="md:hidden mb-4 text-sm">
                 Please enter a valid pickup and destination{" "}
-              </h3>
+              </h3> */}
 
               <div className="mb-4 relative">
                 <TextField
@@ -1166,8 +1166,7 @@ const SideBar = ({
             {/* Step 2 */}
             <div className="px-5 py-6">
               <h3 className="text-sm mt-4 mb-4">
-                {" "}
-                Step 2 of 4 <b>Contact details</b>
+                Step 2 of 4 - <b>Contact details</b>
               </h3>
 
               <div className="mb-4">
@@ -1248,8 +1247,7 @@ const SideBar = ({
             {/* Step 3 Payment */}
             <div className="px-5 py-3">
               <h3 className="text-sm mt-2 mb-4">
-                {" "}
-                Step 3 of 4 <b>Payment</b>
+                Step 3 of 4 - <b>Payment</b>
               </h3>
 
               <PaymentDropdown
@@ -1267,7 +1265,7 @@ const SideBar = ({
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
               <h3 className="text-sm mb-4">
-                Step 4 of 4 <b>Driver Instruction</b>
+                Step 4 of 4 - <b> Driver Instruction</b>
               </h3>
 
               <div className="mb-4">
