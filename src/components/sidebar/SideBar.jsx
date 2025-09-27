@@ -22,12 +22,10 @@ import { seatDetails } from "../../data/data.jsx";
 import SeatDetails from "./SeatDetails.jsx";
 import LuggageModal from "./LuggageModal.jsx";
 import { toast } from "react-toastify";
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-
-
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 
 const SideBar = ({
   onPickupSelect,
@@ -39,66 +37,65 @@ const SideBar = ({
   const serviceRef = useRef(null);
   const sessionTokenRef = useRef(null);
 
-  const melbourneNow = SIDEBAR_CONSTANTS.getMelbourneNow()
-const roundedNow = new Date(melbourneNow);
-roundedNow.setSeconds(0, 0);
+  const melbourneNow = SIDEBAR_CONSTANTS.getMelbourneNow();
+  const roundedNow = new Date(melbourneNow);
+  roundedNow.setSeconds(0, 0);
 
+  // Melbourne "now"
+  const melNow = () =>
+    new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
+    );
 
+  // max date = today + 15 days
+  const maxBookingDate = () => {
+    const d = melNow();
+    d.setDate(d.getDate() + 15);
+    return d;
+  };
 
-// Melbourne "now"
-const melNow = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" }));
+  // Check if date string is today
+  const isToday = (yyyyMmDd) =>
+    yyyyMmDd === melNow().toISOString().split("T")[0];
 
-// max date = today + 15 days
-const maxBookingDate = () => {
-  const d = melNow();
-  d.setDate(d.getDate() + 15);
-  return d;
-};
+  // Return Melbourne now + 10 minutes
+  const minLaterDate = () => {
+    const n = melNow();
+    n.setSeconds(0, 0);
+    n.setMinutes(n.getMinutes() + 10);
+    return n;
+  };
 
-// Check if date string is today
-const isToday = (yyyyMmDd) =>
-  yyyyMmDd === melNow().toISOString().split("T")[0];
+  // Build minTime for TimePicker
+  const buildMinTime = (yyyyMmDd) => {
+    if (!isToday(yyyyMmDd)) return undefined;
+    const min = minLaterDate();
+    const base = new Date(`${yyyyMmDd}T00:00:00`);
+    const sameDayMin = new Date(base);
+    sameDayMin.setHours(min.getHours(), min.getMinutes(), 0, 0);
 
-// Return Melbourne now + 10 minutes
-const minLaterDate = () => {
-  const n = melNow();
-  n.setSeconds(0, 0);
-  n.setMinutes(n.getMinutes() + 10);
-  return n;
-};
+    // If it rolled into tomorrow (e.g. 23:55 + 10m = next day),
+    // clamp to 23:59 so user must pick tomorrow
+    if (sameDayMin.toDateString() !== base.toDateString()) {
+      const endOfDay = new Date(base);
+      endOfDay.setHours(23, 59, 0, 0);
+      return endOfDay;
+    }
+    return sameDayMin;
+  };
 
-// Build minTime for TimePicker
-const buildMinTime = (yyyyMmDd) => {
-  if (!isToday(yyyyMmDd)) return undefined;
-  const min = minLaterDate();
-  const base = new Date(`${yyyyMmDd}T00:00:00`);
-  const sameDayMin = new Date(base);
-  sameDayMin.setHours(min.getHours(), min.getMinutes(), 0, 0);
-
-  // If it rolled into tomorrow (e.g. 23:55 + 10m = next day),
-  // clamp to 23:59 so user must pick tomorrow
-  if (sameDayMin.toDateString() !== base.toDateString()) {
-    const endOfDay = new Date(base);
-    endOfDay.setHours(23, 59, 0, 0);
-    return endOfDay;
-  }
-  return sameDayMin;
-};
-
-// Clamp a chosen time to ≥ now+10m if it's today
-const clampToMinIfPast = (yyyyMmDd, h, m) => {
-  if (!isToday(yyyyMmDd)) return [h, m];
-  const sel = new Date(`${yyyyMmDd}T${h}:${m}:00`);
-  const min = buildMinTime(yyyyMmDd);
-  if (min && sel < min) {
-    const hh = String(min.getHours()).padStart(2, "0");
-    const mm = String(min.getMinutes()).padStart(2, "0");
-    return [hh, mm];
-  }
-  return [h, m];
-};
-
+  // Clamp a chosen time to ≥ now+10m if it's today
+  const clampToMinIfPast = (yyyyMmDd, h, m) => {
+    if (!isToday(yyyyMmDd)) return [h, m];
+    const sel = new Date(`${yyyyMmDd}T${h}:${m}:00`);
+    const min = buildMinTime(yyyyMmDd);
+    if (min && sel < min) {
+      const hh = String(min.getHours()).padStart(2, "0");
+      const mm = String(min.getMinutes()).padStart(2, "0");
+      return [hh, mm];
+    }
+    return [h, m];
+  };
 
   // AU bounds (rough): SW & NE corners (same as modal)
   const AU_BOUNDS = useRef({
@@ -131,7 +128,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
 
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
-  const paymentDropdownRef = useRef(null)
+  const paymentDropdownRef = useRef(null);
   const [pickupLoc, setPickupLoc] = useState(null);
   const [destinationLoc, setDestinationLoc] = useState(null);
 
@@ -140,7 +137,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
   // route & toll
   const [distanceKm, setDistanceKm] = useState("");
   const [hasToll, setHasToll] = useState(false);
-  const [error, setError] = useState("")
+  const [error, setError] = useState("");
   // const [selectedPaymentMode, setSelectedPaymentMode] = useState(null)
 
   // booking time
@@ -296,18 +293,17 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
     setFare(selectedFare);
   };
 
- 
   const handleDeleteDestination = () => {
-    setDestination(""); 
-    setDestinationLoc(null); 
-    setDestinationSuggestions([]); 
+    setDestination("");
+    setDestinationLoc(null);
+    setDestinationSuggestions([]);
 
     onDestinationSelect(null);
 
     updateRoute(pickupLoc, []);
   };
 
-  const handleDestinationSelect = async(s) => {
+  const handleDestinationSelect = async (s) => {
     setDestination(s.description);
     setDestinationSuggestions([]);
 
@@ -316,22 +312,22 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
       if (location) {
         setDestinationLoc(location);
         onDestinationSelect(location);
-        updateRoute(pickupLoc,location)
-        calculateFare()
+        updateRoute(pickupLoc, location);
+        calculateFare();
       }
     } catch (err) {
       console.error("Failed to select destination", err);
     }
-  }
+  };
 
   const handleDeletePickup = () => {
-    setPickup(""); 
-    setPickupLoc(null); 
-    setPickupSuggestions([]); 
+    setPickup("");
+    setPickupLoc(null);
+    setPickupSuggestions([]);
 
     setDestination("");
     setDestinationLoc([]);
-    setDestinationSuggestions([])
+    setDestinationSuggestions([]);
 
     // Notify parent that pickup is now empty
     onDestinationSelect(null);
@@ -355,7 +351,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
     } catch (err) {
       console.error("Failed to select pickup", err);
     }
-  }; 
+  };
 
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
@@ -383,7 +379,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
-        console.log("result",result)
+        console.log("result", result);
         if (status === "OK" && result.routes.length > 0) {
           const leg = result.routes[0].legs.reduce(
             (acc, l) => {
@@ -519,7 +515,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
     if (ref?.current) {
       ref.current.scrollIntoView({
         behavior: "smooth", // smooth scroll
-        block: "start",     // align at top (use "center" or "end" if needed)
+        block: "start", // align at top (use "center" or "end" if needed)
       });
     }
   };
@@ -536,25 +532,23 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
     }
   };
 
-
   const handleSubmit = (e) => {
     e.preventDefault();
     const bookingTime = `${hourVal}:${minuteVal}`;
-    const bookingDate = `${dateVal}`
+    const bookingDate = `${dateVal}`;
     const selectedCarData = {
       selectedCar: `${selected.name}`,
-      passengers: `${selected.passengers}`
-    }
+      passengers: `${selected.passengers}`,
+    };
     if (!selectedPayment) {
-      scrollToRef(paymentDropdownRef)
+      scrollToRef(paymentDropdownRef);
       setError("Please select a payment method *");
-      return
+      return;
     } else {
-      setError("")
-      scrollToTopOrNavbar()
+      setError("");
+      scrollToTopOrNavbar();
       // window.location.reload();
       // scrollToRef(topRef);
-
     }
 
     const formData = {
@@ -609,7 +603,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
     setMinuteVal(mm);
 
     // recalc picker minTime on next render & clear any internal input cache
-    setPickerKey(k => k + 1);
+    setPickerKey((k) => k + 1);
 
     setTimeType(2);
     setFare(null);
@@ -619,7 +613,6 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
     onPickupSelect(null);
     onDestinationSelect(null);
     setAllFares([]);
-
   };
 
   console.log("luggage modal ", isLuggageModalOpen);
@@ -661,67 +654,66 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
     });
   };
 
- useEffect(() => {
-  let lastWrapper = null;
+  useEffect(() => {
+    let lastWrapper = null;
 
-  const movePacInto = (wrapperEl) => {
-    if (!wrapperEl) return;
-    const pacs = document.querySelectorAll(".pac-container");
-    pacs.forEach((pac) => {
-      if (wrapperEl.contains(pac)) return; // already inside
-      try {
-        wrapperEl.appendChild(pac);
-        pac.style.position = "absolute";
-        pac.style.top = "100%";
-        pac.style.left = "0";
-        pac.style.width = "100%";
-        pac.style.zIndex = "2000";
-      } catch (e) {
-        console.warn("Failed to move pac-container:", e);
-      }
-    });
-  };
+    const movePacInto = (wrapperEl) => {
+      if (!wrapperEl) return;
+      const pacs = document.querySelectorAll(".pac-container");
+      pacs.forEach((pac) => {
+        if (wrapperEl.contains(pac)) return; // already inside
+        try {
+          wrapperEl.appendChild(pac);
+          pac.style.position = "absolute";
+          pac.style.top = "100%";
+          pac.style.left = "0";
+          pac.style.width = "100%";
+          pac.style.zIndex = "2000";
+        } catch (e) {
+          console.warn("Failed to move pac-container:", e);
+        }
+      });
+    };
 
-  const ensurePacInActiveWrapper = () => {
-    const active = document.activeElement;
-    if (!active) return;
+    const ensurePacInActiveWrapper = () => {
+      const active = document.activeElement;
+      if (!active) return;
 
-    const wrapper = active.closest(".relative");
-    if (!wrapper || wrapper === lastWrapper) return;
+      const wrapper = active.closest(".relative");
+      if (!wrapper || wrapper === lastWrapper) return;
 
-    movePacInto(wrapper);
-    lastWrapper = wrapper; // remember where we placed it
-  };
+      movePacInto(wrapper);
+      lastWrapper = wrapper; // remember where we placed it
+    };
 
-  // Run when focus changes
-  const onFocusHandler = () => {
-    ensurePacInActiveWrapper();
-  };
+    // Run when focus changes
+    const onFocusHandler = () => {
+      ensurePacInActiveWrapper();
+    };
 
-  if (pickupInputRef?.current) {
-    pickupInputRef.current.addEventListener("focus", onFocusHandler);
-  }
-  if (destinationRef?.current) {
-    destinationRef.current.addEventListener("focus", onFocusHandler);
-  }
-
-  // Watch for DOM mutations (when Google re-creates pac)
-  const observer = new MutationObserver(() => {
-    ensurePacInActiveWrapper();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  return () => {
-    observer.disconnect();
     if (pickupInputRef?.current) {
-      pickupInputRef.current.removeEventListener("focus", onFocusHandler);
+      pickupInputRef.current.addEventListener("focus", onFocusHandler);
     }
     if (destinationRef?.current) {
-      destinationRef.current.removeEventListener("focus", onFocusHandler);
+      destinationRef.current.addEventListener("focus", onFocusHandler);
     }
-  };
-}, []);
 
+    // Watch for DOM mutations (when Google re-creates pac)
+    const observer = new MutationObserver(() => {
+      ensurePacInActiveWrapper();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      if (pickupInputRef?.current) {
+        pickupInputRef.current.removeEventListener("focus", onFocusHandler);
+      }
+      if (destinationRef?.current) {
+        destinationRef.current.removeEventListener("focus", onFocusHandler);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -759,7 +751,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
 
               // valid: set location and notify parent & map
               setDestinationLoc(location);
-              console.log("object",location)
+              console.log("object", location);
               onDestinationSelect(location);
 
               // Update route now that pickup is valid
@@ -806,7 +798,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
 
               // valid: set location and notify parent & map
               setPickupLoc(location);
-              console.log("pick",location)
+              console.log("pick", location);
               onPickupSelect(location);
 
               // Update route now that pickup is valid
@@ -857,7 +849,7 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
 
   useEffect(() => {
     updateRoute(pickupLoc, destinationLoc);
-  }, [pickup,destinationLoc]);
+  }, [pickup, destinationLoc]);
 
   return (
     <>
@@ -940,16 +932,16 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
                 onClose={() => setIsNoServiceOpen(false)}
               />
 
-               <div className="mb-4 relative">
+              <div className="mb-4 relative">
                 <TextField
-                  inputRef={destinationRef} 
+                  inputRef={destinationRef}
                   label="Add Destination (required)"
                   variant="outlined"
                   fullWidth
                   required
                   placeholder="Add your Destination location"
                   value={destination}
-                  disabled = {pickupLoc? false :true}
+                  disabled={pickupLoc ? false : true}
                   onChange={(e) => setDestination(e.target.value)} // just update local state
                   InputProps={{
                     endAdornment: (
@@ -1038,89 +1030,97 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
               </RadioGroup>
             </div>
 
-{bookingMode === "later" && (
-  <div className="px-3 py-2">
-    <div className="flex flex-col md:flex-col gap-4">
-      <div className="flex-1">
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            key={`date-${pickerKey}`}
-            label="Pickup date"
-            value={dateVal ? new Date(dateVal) : null}
-            onChange={(newVal) => {
-              if (!newVal) return;
-              const y = newVal.getFullYear();
-              const m = String(newVal.getMonth() + 1).padStart(2, "0");
-              const d = String(newVal.getDate()).padStart(2, "0");
-              const next = `${y}-${m}-${d}`;
-              setDateVal(next);
+            {bookingMode === "later" && (
+              <div className="px-3 py-2">
+                <div className="flex flex-col md:flex-col gap-4">
+                  <div className="flex-1">
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        key={`date-${pickerKey}`}
+                        label="Pickup date"
+                        value={dateVal ? new Date(dateVal) : null}
+                        onChange={(newVal) => {
+                          if (!newVal) return;
+                          const y = newVal.getFullYear();
+                          const m = String(newVal.getMonth() + 1).padStart(
+                            2,
+                            "0"
+                          );
+                          const d = String(newVal.getDate()).padStart(2, "0");
+                          const next = `${y}-${m}-${d}`;
+                          setDateVal(next);
 
-              if (isToday(next)) {
-                const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
-                setHourVal(h);
-                setMinuteVal(mi);
-              }
-            }}
-            maxDate={maxBookingDate()}
-            disablePast
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                sx: {
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
-                  "& label.Mui-focused": { color: "gray" },
-                },
-              },
-            }}
-          />
-        </LocalizationProvider>
-      </div>
+                          if (isToday(next)) {
+                            const [h, mi] = clampToMinIfPast(
+                              next,
+                              hourVal,
+                              minuteVal
+                            );
+                            setHourVal(h);
+                            setMinuteVal(mi);
+                          }
+                        }}
+                        maxDate={maxBookingDate()}
+                        disablePast
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            required: true,
+                            sx: {
+                              "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                                borderColor: fixedColor,
+                              },
+                              "& label.Mui-focused": { color: "gray" },
+                            },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
 
-      <div className="flex-1">
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <TimePicker
-            key={`time-${pickerKey}`}
-            label="Pickup time"
-            value={
-              hourVal && minuteVal
-                ? new Date(
-                    `${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(
-                      2,
-                      "0"
-                    )}:00`
-                  )
-                : null
-            }
-            onChange={(newVal) => {
-              if (!newVal) return;
-              let h = String(newVal.getHours()).padStart(2, "0");
-              let m = String(newVal.getMinutes()).padStart(2, "0");
-              [h, m] = clampToMinIfPast(dateVal, h, m);
-              setHourVal(h);
-              setMinuteVal(m);
-            }}
-            // minTime={buildMinTime(dateVal)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                sx: {
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                    borderColor: fixedColor,
-                  },
-                  "& label.Mui-focused": { color: "gray" },
-                },
-              },
-              actionBar: { actions: ["accept", "cancel"] },
-            }}
-          />
-        </LocalizationProvider>
-      </div>
-    </div>
-  </div>
-)}
-
+                  <div className="flex-1">
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <TimePicker
+                        key={`time-${pickerKey}`}
+                        label="Pickup time"
+                        value={
+                          hourVal && minuteVal
+                            ? new Date(
+                                `${dateVal}T${hourVal.padStart(
+                                  2,
+                                  "0"
+                                )}:${minuteVal.padStart(2, "0")}:00`
+                              )
+                            : null
+                        }
+                        onChange={(newVal) => {
+                          if (!newVal) return;
+                          let h = String(newVal.getHours()).padStart(2, "0");
+                          let m = String(newVal.getMinutes()).padStart(2, "0");
+                          [h, m] = clampToMinIfPast(dateVal, h, m);
+                          setHourVal(h);
+                          setMinuteVal(m);
+                        }}
+                        // minTime={buildMinTime(dateVal)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            required: true,
+                            sx: {
+                              "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                                borderColor: fixedColor,
+                              },
+                              "& label.Mui-focused": { color: "gray" },
+                            },
+                          },
+                          actionBar: { actions: ["accept", "cancel"] },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* // ...existing code... */}
 
@@ -1267,7 +1267,6 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
               <h3 className="text-sm mb-4">
-                {" "}
                 Step 4 of 4 <b>Driver Instruction</b>
               </h3>
 
@@ -1278,33 +1277,25 @@ const clampToMinIfPast = (yyyyMmDd, h, m) => {
                   fullWidth
                   multiline
                   rows={3}
-                  inputProps={{
-                    maxLength: 350,
-                  }}
+                  inputProps={{ maxLength: 350 }}
                   value={instruction}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setInstruction(value);
-                  }}
+                  onChange={(e) => setInstruction(e.target.value)}
                   placeholder="e.g. Unit, Gate and floor numbers"
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       "&.Mui-focused fieldset": {
-                        borderColor: `${fixedColor}`, // outline color on focus
+                        borderColor: `${fixedColor}`,
                       },
                     },
-                    "& label.Mui-focused": {
-                      color: "gray", // label color on focus
-                    },
+                    "& label.Mui-focused": { color: "gray" },
                   }}
                 />
               </div>
-            </div>
 
-            <div className="mt-3">
+              {/* Request Booking Button */}
               <button
                 type="submit"
-                className="w-[80%] ml-[10%] px-2 py-3 border border-gray-500 rounded-md cursor-pointer mb-4"
+                className="w-full py-3 rounded-md bg-orange-500 text-white font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500"
               >
                 Request Booking
               </button>
