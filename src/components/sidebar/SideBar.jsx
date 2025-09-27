@@ -22,8 +22,71 @@ import { seatDetails } from "../../data/data.jsx";
 import SeatDetails from "./SeatDetails.jsx";
 import LuggageModal from "./LuggageModal.jsx";
 import { toast } from "react-toastify";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 
 const melbourneNow = SIDEBAR_CONSTANTS.getMelbourneNow()
+const roundedNow = new Date(melbourneNow);
+roundedNow.setSeconds(0, 0);
+
+
+
+// Melbourne "now"
+const melNow = () =>
+  new Date(new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" }));
+
+// max date = today + 15 days
+const maxBookingDate = () => {
+  const d = melNow();
+  d.setDate(d.getDate() + 15);
+  return d;
+};
+
+// Check if date string is today
+const isToday = (yyyyMmDd) =>
+  yyyyMmDd === melNow().toISOString().split("T")[0];
+
+// Return Melbourne now + 10 minutes
+const minLaterDate = () => {
+  const n = melNow();
+  n.setSeconds(0, 0);
+  n.setMinutes(n.getMinutes() + 10);
+  return n;
+};
+
+// Build minTime for TimePicker
+const buildMinTime = (yyyyMmDd) => {
+  if (!isToday(yyyyMmDd)) return undefined;
+  const min = minLaterDate();
+  const base = new Date(`${yyyyMmDd}T00:00:00`);
+  const sameDayMin = new Date(base);
+  sameDayMin.setHours(min.getHours(), min.getMinutes(), 0, 0);
+
+  // If it rolled into tomorrow (e.g. 23:55 + 10m = next day),
+  // clamp to 23:59 so user must pick tomorrow
+  if (sameDayMin.toDateString() !== base.toDateString()) {
+    const endOfDay = new Date(base);
+    endOfDay.setHours(23, 59, 0, 0);
+    return endOfDay;
+  }
+  return sameDayMin;
+};
+
+// Clamp a chosen time to ≥ now+10m if it's today
+const clampToMinIfPast = (yyyyMmDd, h, m) => {
+  if (!isToday(yyyyMmDd)) return [h, m];
+  const sel = new Date(`${yyyyMmDd}T${h}:${m}:00`);
+  const min = buildMinTime(yyyyMmDd);
+  if (min && sel < min) {
+    const hh = String(min.getHours()).padStart(2, "0");
+    const mm = String(min.getMinutes()).padStart(2, "0");
+    return [hh, mm];
+  }
+  return [h, m];
+};
+
 
 const SideBar = ({
   onPickupSelect,
@@ -40,6 +103,8 @@ const SideBar = ({
     sw: { lat: -44.0, lng: 112.0 },
     ne: { lat: -10.0, lng: 154.0 },
   });
+
+  const [pickerKey, setPickerKey] = useState(0);
 
   // debounce refs for pickup and per-destination
   const debouncePickupRef = useRef(null);
@@ -60,7 +125,7 @@ const SideBar = ({
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [tollPrice, setTollPrice] = useState(0);
   const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
-const topRef = useRef(null);
+  const topRef = useRef(null);
 
   const [pickup, setPickup] = useState("");
   const pickupInputRef = useRef(null);
@@ -632,16 +697,16 @@ const topRef = useRef(null);
   };
 
   const scrollToTopOrNavbar = () => {
-  const isLarge = window.matchMedia("(min-width: 1024px)").matches; // Tailwind lg
-  if (isLarge) {
-    scrollToRef(topRef);
-  } else {
-    document.getElementById("navbar")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
-};
+    const isLarge = window.matchMedia("(min-width: 1024px)").matches; // Tailwind lg
+    if (isLarge) {
+      scrollToRef(topRef);
+    } else {
+      document.getElementById("navbar")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
 
 
   const handleSubmit = (e) => {
@@ -660,7 +725,7 @@ const topRef = useRef(null);
       setError("")
       scrollToTopOrNavbar()
       // window.location.reload();
-          // scrollToRef(topRef);
+      // scrollToRef(topRef);
 
     }
 
@@ -686,6 +751,7 @@ const topRef = useRef(null);
     console.log("Booking Data:", formData);
 
     // Reset all fields
+    // Reset all fields
     setPickup("");
     setPickupLoc(null);
     setPickupSuggestions([]);
@@ -698,18 +764,33 @@ const topRef = useRef(null);
     setIsOn(true);
     setSelected(defaultVehicleOptions[0]);
     setSelectedPayment(null);
-    setBookingMode("now");
-    setDateVal(melbourneNow.toISOString().split("T")[0]);
-    setHourVal(melbourneNow.getHours().toString().padStart(2, "0"));
-    setMinuteVal(melbourneNow.getMinutes().toString().padStart(2, "0"));
+
+    // fresh Melbourne "now" at submit time
+    const now = melNow();
+    const todayStr = now.toISOString().split("T")[0];
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+
+    // optionally hide the pickers again
+    setBookingMode("now"); // pickers are inside bookingMode === "later"
+
+    // reset picker-controlled values
+    setDateVal(todayStr);
+    setHourVal(hh);
+    setMinuteVal(mm);
+
+    // recalc picker minTime on next render & clear any internal input cache
+    setPickerKey(k => k + 1);
+
     setTimeType(2);
     setFare(null);
     setHasToll(false);
     setDistanceKm("");
     setContactError("");
-    onPickupSelect(null);    
-    onDestinationsSelect([])
+    onPickupSelect(null);
+    onDestinationsSelect([]);
     setAllFares([]);
+
   };
 
   // ===== VIC validator (unchanged) =====
@@ -977,65 +1058,89 @@ const topRef = useRef(null);
               </RadioGroup>
             </div>
 
-            {bookingMode === "later" && (
-              <div className="px-3 py-2">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1 font-medium">Pickup date</label>
-                    <input
-                      type="date"
-                      className="w-full border rounded px-3 py-2"
-                      value={dateVal}
-                      onChange={(e) => setDateVal(e.target.value)}
-                      required
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1 font-medium">Pickup time</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        ref={timeInputRef}
-                        type="time"
-                        className="w-full border rounded px-3 py-2"
-                        value={`${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}`}
-                        onFocus={(e) => {
-                          setShowDone(true);
-                          e.target.showPicker?.();
-                        }}
-                        onBlur={() => {
-                          setTimeout(() => setShowDone(false), 150);
-                        }}
-                        onChange={(e) => {
-                          const [h, m] = e.target.value.split(":");
-                          setHourVal(h);
-                          setMinuteVal(m);
-                        }}
-                        required
-                        step="60"
-                        min={
-                          dateVal === new Date().toISOString().split("T")[0]
-                            ? new Date().toTimeString().slice(0, 5)
-                            : "00:00"
-                        }
-                      />
-                      {showDone && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            timeInputRef.current?.blur();
-                            setShowDone(false);
-                          }}
-                          className="px-3 py-2 rounded bg-blue-500 text-white text-sm"
-                        >
-                          Done
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+{bookingMode === "later" && (
+  <div className="px-3 py-2">
+    <div className="flex flex-col md:flex-col gap-4">
+      <div className="flex-1">
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <DatePicker
+            key={`date-${pickerKey}`}
+            label="Pickup date"
+            value={dateVal ? new Date(dateVal) : null}
+            onChange={(newVal) => {
+              if (!newVal) return;
+              const y = newVal.getFullYear();
+              const m = String(newVal.getMonth() + 1).padStart(2, "0");
+              const d = String(newVal.getDate()).padStart(2, "0");
+              const next = `${y}-${m}-${d}`;
+              setDateVal(next);
+
+              if (isToday(next)) {
+                const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
+                setHourVal(h);
+                setMinuteVal(mi);
+              }
+            }}
+            maxDate={maxBookingDate()}
+            disablePast
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                required: true,
+                sx: {
+                  "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                  "& label.Mui-focused": { color: "gray" },
+                },
+              },
+            }}
+          />
+        </LocalizationProvider>
+      </div>
+
+      <div className="flex-1">
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <TimePicker
+            key={`time-${pickerKey}`}
+            label="Pickup time"
+            value={
+              hourVal && minuteVal
+                ? new Date(
+                    `${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(
+                      2,
+                      "0"
+                    )}:00`
+                  )
+                : null
+            }
+            onChange={(newVal) => {
+              if (!newVal) return;
+              let h = String(newVal.getHours()).padStart(2, "0");
+              let m = String(newVal.getMinutes()).padStart(2, "0");
+              [h, m] = clampToMinIfPast(dateVal, h, m);
+              setHourVal(h);
+              setMinuteVal(m);
+            }}
+            // minTime={buildMinTime(dateVal)}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                required: true,
+                sx: {
+                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                    borderColor: fixedColor,
+                  },
+                  "& label.Mui-focused": { color: "gray" },
+                },
+              },
+              actionBar: { actions: ["accept", "cancel"] },
+            }}
+          />
+        </LocalizationProvider>
+      </div>
+    </div>
+  </div>
+)}
+
 
             {/* Fixed Price */}
             <div className="w-full bg-[#F8F6F2] px-4 py-5">
