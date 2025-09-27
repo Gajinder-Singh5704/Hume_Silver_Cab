@@ -1049,12 +1049,13 @@ const SideBar = ({
                             setMinuteVal(mi);
                           }
                         }}
+                        desktopModeMediaQuery="@media (max-width: 0px)"
                         maxDate={maxBookingDate()}
                         disablePast
                         slotProps={{
                           textField: {
                             fullWidth: true,
-                            error : false,
+                            error: false,
                             required: false,
                             onClick: () => setDateOpen(true),               // open on click anywhere
                             onKeyDown: (e) => {
@@ -1064,6 +1065,7 @@ const SideBar = ({
                               if (e.key === "Enter" || e.key === " ") setDateOpen(true);
                             },
                             onPaste: (e) => e.preventDefault(),
+                            onFocus: (e) => e.target.blur(),
                             inputProps: {
                               readOnly: true,                               // block manual typing
                               inputMode: "none",                            // suppress mobile keyboards
@@ -1091,6 +1093,8 @@ const SideBar = ({
                         open={timeOpen}
                         onOpen={() => setTimeOpen(true)}
                         onClose={() => setTimeOpen(false)}
+                        desktopModeMediaQuery="@media (max-width: 0px)"
+
                         value={
                           hourVal && minuteVal
                             ? new Date(`${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}:00`)
@@ -1109,6 +1113,7 @@ const SideBar = ({
                             fullWidth: true,
                             required: true,
                             onClick: () => setTimeOpen(true),
+                            onFocus: (e) => e.target.blur(),   // ← stops Android keyboard
                             onKeyDown: (e) => {
                               if (e.key !== "Tab") e.preventDefault();
                               if (e.key === "Enter" || e.key === " ") setTimeOpen(true);
