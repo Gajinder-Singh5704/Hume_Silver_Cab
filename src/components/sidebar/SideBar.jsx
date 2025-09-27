@@ -366,8 +366,8 @@ const SideBar = ({
 
   const updateRoute = (pickup, dest) => {
     console.log("Calling calculate");
-    console.log("destination",dest)
-    console.log("pickup",pickup)
+    console.log("destination", dest);
+    console.log("pickup", pickup);
     if (!pickup || !dest) {
       setDistanceKm("");
       setHasToll(false);
@@ -626,7 +626,7 @@ const SideBar = ({
 
   };
 
-  console.log("pickup ",pickupLoc);
+  console.log("pickup ", pickupLoc);
 
   // Validate if a place is in Victoria (AU)
   const isInVictoria = async (location) => {
@@ -842,7 +842,7 @@ const SideBar = ({
 
   useEffect(() => {
     updateRoute(pickupLoc, destinationLoc);
-}, [destinationLoc]);
+  }, [pickup,destinationLoc]);
 
   return (
     <>
