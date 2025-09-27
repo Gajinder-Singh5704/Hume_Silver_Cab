@@ -533,7 +533,6 @@ const SideBar = ({
   };
 
   const scrollToTopOrNavbar = () => {
-    console.log("object")
     const isLarge = window.matchMedia("(min-width: 768px)").matches; // Tailwind lg
     if (isLarge) {
       scrollToRef(topRef);
