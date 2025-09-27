@@ -38,6 +38,8 @@ const SideBar = ({
   const serviceRef = useRef(null);
   const sessionTokenRef = useRef(null);
 
+  const [calenderOpen, setCalenderOpen] = useState(false);
+
   const melbourneNow = SIDEBAR_CONSTANTS.getMelbourneNow();
   const roundedNow = new Date(melbourneNow);
   roundedNow.setSeconds(0, 0);
@@ -195,12 +197,12 @@ const SideBar = ({
       "Friday",
       "Saturday",
     ];
-    console.log(
-      `Calculated time type: ${timeType} | Day: ${dayNames[day]
-      } | Time: ${hour24.toString().padStart(2, "0")}:${minute
-        .toString()
-        .padStart(2, "0")}`
-    );
+    // console.log(
+    //   `Calculated time type: ${timeType} | Day: ${dayNames[day]
+    //   } | Time: ${hour24.toString().padStart(2, "0")}:${minute
+    //     .toString()
+    //     .padStart(2, "0")}`
+    // );
 
     return timeType;
   };
@@ -208,10 +210,10 @@ const SideBar = ({
   // set initial and later booking time type
 
   const calculateFare = () => {
-    console.log("=== Fare Calculation Started ===");
+    // console.log("=== Fare Calculation Started ===");
 
     if (!distanceKm) {
-      console.log("❌ No distance available — aborting fare calculation.");
+      // console.log("❌ No distance available — aborting fare calculation.");
       setAllFares([]); // clear when no distance
       return null;
     }
@@ -289,7 +291,7 @@ const SideBar = ({
     ];
 
     setAllFares(faresArray);
-    console.log("All fares:", faresArray);
+    // console.log("All fares:", faresArray);
 
     // also keep the current selected fare for UI
     const vehicleName = selected?.name || "Sedan";
@@ -361,13 +363,13 @@ const SideBar = ({
   // Handle when user selects a payment method
   const handlePaymentSelect = (paymentMethod) => {
     setSelectedPayment(paymentMethod);
-    console.log("Selected payment:", paymentMethod);
+    // console.log("Selected payment:", paymentMethod);
   };
 
   const updateRoute = (pickup, dest) => {
-    console.log("Calling calculate");
-    console.log("destination", dest);
-    console.log("pickup", pickup);
+    // console.log("Calling calculate");
+    // console.log("destination", dest);
+    // console.log("pickup", pickup);
     if (!pickup || !dest) {
       setDistanceKm("");
       setHasToll(false);
@@ -387,7 +389,7 @@ const SideBar = ({
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
-        console.log("result", result)
+        // console.log("result", result)
         if (status === "OK" && result.routes.length > 0) {
           const leg = result.routes[0].legs.reduce(
             (acc, l) => {
@@ -402,9 +404,9 @@ const SideBar = ({
           setDistanceKm(km);
 
           // --- DEBUG: log each instruction separately ---
-          console.log("Route Instructions:");
+          // console.log("Route Instructions:");
           leg.steps.forEach((step, idx) => {
-            console.log(`${idx + 1}. ${step.instructions}`);
+            // console.log(`${idx + 1}. ${step.instructions}`);
           });
 
           const stepsText = leg.steps
@@ -417,9 +419,9 @@ const SideBar = ({
 
           setHasToll(toll > 0);
           setTollPrice(toll);
-          console.log("Toll Cost:", toll); // If you already include tolls in fare calculation
+          // console.log("Toll Cost:", toll); // If you already include tolls in fare calculation
         } else {
-          console.error("Directions request failed:", status);
+          // console.error("Directions request failed:", status);
           setDistanceKm("");
           setHasToll(false);
           setFare(null);
@@ -438,24 +440,24 @@ const SideBar = ({
     // Normalize each known road alias inside the text
     Object.keys(roadAliases).forEach((alias) => {
       if (plainText.includes(alias)) {
-        console.log(
-          `Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`
-        );
+        // console.log(
+        //   `Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`
+        // );
         plainText = plainText.replaceAll(alias, roadAliases[alias]);
       }
     });
 
-    console.log("=== Toll Calculation ===");
-    console.log("Normalized steps text:", plainText);
+    // console.log("=== Toll Calculation ===");
+    // console.log("Normalized steps text:", plainText);
 
     tolls.forEach((entry) => {
       const normalizedEntry = normalizeRoad(entry.entryPoint);
       const entryIndex = plainText.indexOf(normalizedEntry);
 
       if (entryIndex !== -1) {
-        console.log(
-          `✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`
-        );
+        // console.log(
+        //   `✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`
+        // );
 
         // Track farthest exit match
         let farthestExit = null;
@@ -466,9 +468,9 @@ const SideBar = ({
           const exitIndex = plainText.indexOf(normalizedExit);
 
           if (exitIndex !== -1 && exitIndex > entryIndex) {
-            console.log(
-              `   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`
-            );
+            // console.log(
+            //   `   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`
+            // );
             if (exitIndex > farthestExitIndex) {
               farthestExitIndex = exitIndex;
               farthestExit = exit;
@@ -477,21 +479,21 @@ const SideBar = ({
         });
 
         if (farthestExit) {
-          console.log(
-            `   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`
-          );
+          // console.log(
+          //   `   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`
+          // );
           toll = Math.max(toll, farthestExit.price);
         } else {
-          console.log(
-            `   ⚠ No exits matched after entry point: ${normalizedEntry}`
-          );
+          // console.log(
+          //   `   ⚠ No exits matched after entry point: ${normalizedEntry}`
+          // );
         }
       } else {
-        console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
+        // console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
       }
     });
 
-    console.log("💰 Final calculated toll:", toll);
+    // console.log("💰 Final calculated toll:", toll);
     return toll;
   };
 
@@ -622,7 +624,7 @@ const SideBar = ({
     setAllFares([]);
   };
 
-  console.log("pickup ", pickupLoc);
+  // console.log("pickup ", pickupLoc);
 
   // Validate if a place is in Victoria (AU)
   const isInVictoria = async (location) => {
@@ -921,7 +923,7 @@ const SideBar = ({
                 onClose={() => setIsNoServiceOpen(false)}
               />
 
-              <div className="mb-4 relative">
+              <div className="mb-0 relative">
                 <TextField
                   inputRef={destinationRef}
                   label="Add Destination (required)"
@@ -982,7 +984,7 @@ const SideBar = ({
             </div>
 
             {/* Booking now/later radio - controlled */}
-            <div className="flex  justify-around ml-6 w-full  items-center">
+            <div className=" mb-4 flex  justify-around ml-6 w-full  items-center">
               <RadioGroup
                 row
                 value={bookingMode}
@@ -995,7 +997,7 @@ const SideBar = ({
                     <Radio
                       sx={{
                         color: "black",
-                        "&.Mui-checked": { color: "green" },
+                        "&.Mui-checked": { color: "#f4b20bff" },
                         p: 1,
                       }}
                     />
@@ -1009,7 +1011,7 @@ const SideBar = ({
                     <Radio
                       sx={{
                         color: "black",
-                        "&.Mui-checked": { color: "green" },
+                        "&.Mui-checked": { color: "#f4b20bff" },
                         p: 1,
                       }}
                     />
@@ -1022,41 +1024,48 @@ const SideBar = ({
             {bookingMode === "later" && (
               <div className="px-3 py-2">
                 <div className="flex flex-col md:flex-col gap-4">
-                  <div className="flex-1">
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DatePicker
-                        key={`date-${pickerKey}`}
-                        label="Pickup date"
-                        value={dateVal ? new Date(dateVal) : null}
-                        onChange={(newVal) => {
-                          if (!newVal) return;
-                          const y = newVal.getFullYear();
-                          const m = String(newVal.getMonth() + 1).padStart(2, "0");
-                          const d = String(newVal.getDate()).padStart(2, "0");
-                          const next = `${y}-${m}-${d}`;
-                          setDateVal(next);
+                 <div className="flex-1" onClick={() => setCalenderOpen(true)}>
+  <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <DatePicker
+      open={calenderOpen}
+      onOpen={() => setCalenderOpen(true)}
+      onClose={() => setCalenderOpen(false)}
+      onAccept={()=> setCalenderOpen(false)}
+      key={`date-${pickerKey}`}
+      label="Pickup date"
+      value={dateVal ? new Date(dateVal) : null}
+      onChange={(newVal) => {
+        if (!newVal) return;
+        const y = newVal.getFullYear();
+        const m = String(newVal.getMonth() + 1).padStart(2, "0");
+        const d = String(newVal.getDate()).padStart(2, "0");
+        const next = `${y}-${m}-${d}`;
+        setDateVal(next);
 
-                          if (isToday(next)) {
-                            const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
-                            setHourVal(h);
-                            setMinuteVal(mi);
-                          }
-                        }}
-                        maxDate={maxBookingDate()}
-                        disablePast
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            required: true,
-                            sx: {
-                              "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
-                              "& label.Mui-focused": { color: "gray" },
-                            },
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
-                  </div>
+        if (isToday(next)) {
+          const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
+          setHourVal(h);
+          setMinuteVal(mi);
+        }
+        setCalenderOpen(false)
+      }}
+      maxDate={maxBookingDate()}
+      disablePast
+      slotProps={{
+        textField: {
+          fullWidth: true,
+          required: true,
+          sx: {
+            "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+            "& label.Mui-focused": { color: "gray" },
+          },
+        },
+        actionBar: { actions: ["accept", "cancel"] },
+      }}
+    />
+  </LocalizationProvider>
+</div>
+
 
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -1173,7 +1182,7 @@ const SideBar = ({
               </div>
 
               <div className="flex items-center justify-center gap-2 w-full">
-                <div className="w-[20%] border rounded-sm h-14 flex items-center justify-center gap-1">
+                <div className={`w-[20%] border border-gray-300  rounded-sm h-14 flex items-center justify-center gap-1`} >
                   <img
                     className="h-5"
                     src={images.aus}
@@ -1241,7 +1250,7 @@ const SideBar = ({
               />
             </div>
 
-            {error && <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>}
+            {!selectedPayment && <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>}
 
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">

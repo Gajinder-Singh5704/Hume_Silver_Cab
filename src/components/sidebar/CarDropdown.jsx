@@ -18,7 +18,6 @@ const CarDropdown = ({
 
   const options = vehicleOptions.length > 0 ? vehicleOptions : defaultVehicleOptions;
 
-
   const currentSelection = selectedOption
     ? options.find((o) => o.id === selectedOption.id) ?? selectedOption
     : options[0];
@@ -44,9 +43,8 @@ const CarDropdown = ({
 
   const renderFare = (val, fallback, fixedPrice = true) => {
     if (val === null || val === undefined || val === "") return fallback ?? "";
-
     if (typeof val === "number") {
-      if (fixedPrice) {
+      if (isFixedPrice) {
         return `$${val.toFixed(2)}`; // keep decimals for fixed price
       } else {
         const min = Math.round(val - 5);
@@ -203,11 +201,11 @@ const CarDropdown = ({
                       {isFixedPrice ? (
                         <>
                           <LockIcon className="mr-1" color="orange" size={12} />
-                           <span className="font-bold">  {renderFare(getFareFor(option), option.destRequired)}</span>
+                          {renderFare(getFareFor(option), option.destRequired)}
                         
                         </>
                       ) : (
-                        <span className="font-bold">  {renderFare(getFareFor(option), option.destRequired)}</span>
+                        renderFare(getFareFor(option), option.destRequired)
                       )}
                     </p>
                   </div>
