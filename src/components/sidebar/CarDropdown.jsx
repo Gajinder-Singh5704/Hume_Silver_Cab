@@ -10,8 +10,8 @@ const CarDropdown = ({
   title = "More vehicle/service options",
   label,
   isLuggageModal,
-  changeVehicleText = () => {},
-  onVehicleDetailOpenChange = () => {},
+  changeVehicleText = () => { },
+  onVehicleDetailOpenChange = () => { },
   allFares = []
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,7 +23,7 @@ const CarDropdown = ({
     ? options.find((o) => o.id === selectedOption.id) ?? selectedOption
     : options[0];
 
-    // console.log("current Selected Car ",currentSelection)
+  // console.log("current Selected Car ",currentSelection)
 
   const toggleDropdown = () => setIsOpen(v => !v);
 
@@ -107,7 +107,7 @@ const CarDropdown = ({
           role="button"
           tabIndex={0}
           onClick={toggleDropdown}
-          className="relative px-2 py-4 cursor-pointer bg-orange-50"
+          className="relative px-2 py-4 cursor-pointer bg-orange-50 border-b border-black"
         >
           <div className="absolute top-0 left-0 h-full w-2 bg-orange-500" />
 
