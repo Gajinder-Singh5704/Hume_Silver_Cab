@@ -323,7 +323,7 @@ const SideBar = ({
     } catch (err) {
       console.error("Failed to select destination", err);
     }
-  }
+  };
 
   const handleDeletePickup = () => {
     setPickup("");
@@ -332,7 +332,7 @@ const SideBar = ({
 
     setDestination("");
     setDestinationLoc([]);
-    setDestinationSuggestions([])
+    setDestinationSuggestions([]);
 
     // Notify parent that pickup is now empty
     onDestinationSelect(null);
@@ -366,6 +366,8 @@ const SideBar = ({
 
   const updateRoute = (pickup, dest) => {
     console.log("Calling calculate");
+    console.log("destination",dest)
+    console.log("pickup",pickup)
     if (!pickup || !dest) {
       setDistanceKm("");
       setHasToll(false);
@@ -415,8 +417,7 @@ const SideBar = ({
 
           setHasToll(toll > 0);
           setTollPrice(toll);
-          console.log("Toll Cost:", toll);
-          calculateFare(); // If you already include tolls in fare calculation
+          console.log("Toll Cost:", toll); // If you already include tolls in fare calculation
         } else {
           console.error("Directions request failed:", status);
           setDistanceKm("");
@@ -625,7 +626,7 @@ const SideBar = ({
 
   };
 
-  console.log("luggage modal ", isLuggageModalOpen);
+  console.log("pickup ",pickupLoc);
 
   // Validate if a place is in Victoria (AU)
   const isInVictoria = async (location) => {
@@ -838,6 +839,10 @@ const SideBar = ({
       setTimeType(determineTimeType(dateObj));
     }
   }, [bookingMode, dateVal, hourVal, minuteVal]);
+
+  useEffect(() => {
+    updateRoute(pickupLoc, destinationLoc);
+}, [destinationLoc]);
 
   return (
     <>
