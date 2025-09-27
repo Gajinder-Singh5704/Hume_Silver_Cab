@@ -55,6 +55,9 @@ const SideBar = ({
     return d;
   };
 
+  const [dateOpen, setDateOpen] = useState(false);
+  const [timeOpen, setTimeOpen] = useState(false);
+
   // Check if date string is today
   const isToday = (yyyyMmDd) =>
     yyyyMmDd === melNow().toISOString().split("T")[0];
@@ -838,7 +841,7 @@ const SideBar = ({
 
   useEffect(() => {
     updateRoute(pickupLoc, destinationLoc);
-  }, [pickup,destinationLoc]);
+  }, [pickup, destinationLoc]);
 
   return (
     <>
@@ -1019,6 +1022,7 @@ const SideBar = ({
               </RadioGroup>
             </div>
 
+
             {bookingMode === "later" && (
               <div className="px-3 py-2">
                 <div className="flex flex-col md:flex-col gap-4">
@@ -1027,6 +1031,9 @@ const SideBar = ({
                       <DatePicker
                         key={`date-${pickerKey}`}
                         label="Pickup date"
+                        open={dateOpen}
+                        onOpen={() => setDateOpen(true)}
+                        onClose={() => setDateOpen(false)}
                         value={dateVal ? new Date(dateVal) : null}
                         onChange={(newVal) => {
                           if (!newVal) return;
@@ -1047,11 +1054,29 @@ const SideBar = ({
                         slotProps={{
                           textField: {
                             fullWidth: true,
-                            required: true,
+                            error : false,
+                            required: false,
+                            onClick: () => setDateOpen(true),               // open on click anywhere
+                            onKeyDown: (e) => {
+                              // allow Tab for accessibility, Block other keys from editing
+                              if (e.key !== "Tab") e.preventDefault();
+                              // open on Enter/Space if focused
+                              if (e.key === "Enter" || e.key === " ") setDateOpen(true);
+                            },
+                            onPaste: (e) => e.preventDefault(),
+                            inputProps: {
+                              readOnly: true,                               // block manual typing
+                              inputMode: "none",                            // suppress mobile keyboards
+                              tabIndex: 0,
+                            },
                             sx: {
+                              cursor: "pointer",
                               "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
                               "& label.Mui-focused": { color: "gray" },
                             },
+                          },
+                          openPickerButton: {
+                            onClick: () => setDateOpen(true),
                           },
                         }}
                       />
@@ -1063,14 +1088,12 @@ const SideBar = ({
                       <TimePicker
                         key={`time-${pickerKey}`}
                         label="Pickup time"
+                        open={timeOpen}
+                        onOpen={() => setTimeOpen(true)}
+                        onClose={() => setTimeOpen(false)}
                         value={
                           hourVal && minuteVal
-                            ? new Date(
-                              `${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(
-                                2,
-                                "0"
-                              )}:00`
-                            )
+                            ? new Date(`${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}:00`)
                             : null
                         }
                         onChange={(newVal) => {
@@ -1081,17 +1104,29 @@ const SideBar = ({
                           setHourVal(h);
                           setMinuteVal(m);
                         }}
-                        // minTime={buildMinTime(dateVal)}
                         slotProps={{
                           textField: {
                             fullWidth: true,
                             required: true,
+                            onClick: () => setTimeOpen(true),
+                            onKeyDown: (e) => {
+                              if (e.key !== "Tab") e.preventDefault();
+                              if (e.key === "Enter" || e.key === " ") setTimeOpen(true);
+                            },
+                            onPaste: (e) => e.preventDefault(),
+                            inputProps: {
+                              readOnly: true,
+                              inputMode: "none",
+                              tabIndex: 0,
+                            },
                             sx: {
-                              "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                                borderColor: fixedColor,
-                              },
+                              cursor: "pointer",
+                              "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
                               "& label.Mui-focused": { color: "gray" },
                             },
+                          },
+                          openPickerButton: {
+                            onClick: () => setTimeOpen(true),
                           },
                           actionBar: { actions: ["accept", "cancel"] },
                         }}
