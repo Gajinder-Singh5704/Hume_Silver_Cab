@@ -21,7 +21,7 @@ import PaymentDropdown from "./PaymentDropdown.jsx";
 import { seatDetails } from "../../data/data.jsx";
 import SeatDetails from "./SeatDetails.jsx";
 import LuggageModal from "./LuggageModal.jsx";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -56,6 +56,9 @@ const SideBar = ({
     d.setDate(d.getDate() + 15);
     return d;
   };
+
+  const [dateOpen, setDateOpen] = useState(false);
+  const [timeOpen, setTimeOpen] = useState(false);
 
   // Check if date string is today
   const isToday = (yyyyMmDd) =>
@@ -530,7 +533,8 @@ const SideBar = ({
   };
 
   const scrollToTopOrNavbar = () => {
-    const isLarge = window.matchMedia("(min-width: 1024px)").matches; // Tailwind lg
+    console.log("object")
+    const isLarge = window.matchMedia("(min-width: 768px)").matches; // Tailwind lg
     if (isLarge) {
       scrollToRef(topRef);
     } else {
@@ -562,12 +566,9 @@ const SideBar = ({
 
     const formData = {
       pickup,
-      pickupLoc,
       destination,
-      destinationLoc,
       passenger,
       contact,
-
       bookingDate,
       bookingTime,
       selectedCarData,
@@ -840,7 +841,7 @@ const SideBar = ({
 
   useEffect(() => {
     updateRoute(pickupLoc, destinationLoc);
-  }, [pickup,destinationLoc]);
+  }, [pickup, destinationLoc]);
 
   return (
     <>
@@ -1021,65 +1022,78 @@ const SideBar = ({
               </RadioGroup>
             </div>
 
+
             {bookingMode === "later" && (
               <div className="px-3 py-2">
                 <div className="flex flex-col md:flex-col gap-4">
-                 <div className="flex-1" onClick={() => setCalenderOpen(true)}>
-  <LocalizationProvider dateAdapter={AdapterDateFns}>
-    <DatePicker
-      open={calenderOpen}
-      onOpen={() => setCalenderOpen(true)}
-      onClose={() => setCalenderOpen(false)}
-      onAccept={()=> setCalenderOpen(false)}
-      key={`date-${pickerKey}`}
-      label="Pickup date"
-      value={dateVal ? new Date(dateVal) : null}
-      onChange={(newVal) => {
-        if (!newVal) return;
-        const y = newVal.getFullYear();
-        const m = String(newVal.getMonth() + 1).padStart(2, "0");
-        const d = String(newVal.getDate()).padStart(2, "0");
-        const next = `${y}-${m}-${d}`;
-        setDateVal(next);
+                  <div className="flex-1">
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        key={`date-${pickerKey}`}
+                        label="Pickup date"
+                        open={dateOpen}
+                        onOpen={() => setDateOpen(true)}
+                        onClose={() => setDateOpen(false)}
+                        value={dateVal ? new Date(dateVal) : null}
+                        onChange={(newVal) => {
+                          if (!newVal) return;
+                          const y = newVal.getFullYear();
+                          const m = String(newVal.getMonth() + 1).padStart(2, "0");
+                          const d = String(newVal.getDate()).padStart(2, "0");
+                          const next = `${y}-${m}-${d}`;
+                          setDateVal(next);
 
-        if (isToday(next)) {
-          const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
-          setHourVal(h);
-          setMinuteVal(mi);
-        }
-        setCalenderOpen(false)
-      }}
-      maxDate={maxBookingDate()}
-      disablePast
-      slotProps={{
-        textField: {
-          fullWidth: true,
-          required: true,
-          sx: {
-            "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
-            "& label.Mui-focused": { color: "gray" },
-          },
-        },
-        actionBar: { actions: ["accept", "cancel"] },
-      }}
-    />
-  </LocalizationProvider>
-</div>
-
+                          if (isToday(next)) {
+                            const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
+                            setHourVal(h);
+                            setMinuteVal(mi);
+                          }
+                        }}
+                        maxDate={maxBookingDate()}
+                        disablePast
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error : false,
+                            required: false,
+                            onClick: () => setDateOpen(true),               // open on click anywhere
+                            onKeyDown: (e) => {
+                              // allow Tab for accessibility, Block other keys from editing
+                              if (e.key !== "Tab") e.preventDefault();
+                              // open on Enter/Space if focused
+                              if (e.key === "Enter" || e.key === " ") setDateOpen(true);
+                            },
+                            onPaste: (e) => e.preventDefault(),
+                            inputProps: {
+                              readOnly: true,                               // block manual typing
+                              inputMode: "none",                            // suppress mobile keyboards
+                              tabIndex: 0,
+                            },
+                            sx: {
+                              cursor: "pointer",
+                              "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                              "& label.Mui-focused": { color: "gray" },
+                            },
+                          },
+                          openPickerButton: {
+                            onClick: () => setDateOpen(true),
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
 
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
                       <TimePicker
                         key={`time-${pickerKey}`}
                         label="Pickup time"
+                        open={timeOpen}
+                        onOpen={() => setTimeOpen(true)}
+                        onClose={() => setTimeOpen(false)}
                         value={
                           hourVal && minuteVal
-                            ? new Date(
-                              `${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(
-                                2,
-                                "0"
-                              )}:00`
-                            )
+                            ? new Date(`${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}:00`)
                             : null
                         }
                         onChange={(newVal) => {
@@ -1090,17 +1104,29 @@ const SideBar = ({
                           setHourVal(h);
                           setMinuteVal(m);
                         }}
-                        // minTime={buildMinTime(dateVal)}
                         slotProps={{
                           textField: {
                             fullWidth: true,
                             required: true,
+                            onClick: () => setTimeOpen(true),
+                            onKeyDown: (e) => {
+                              if (e.key !== "Tab") e.preventDefault();
+                              if (e.key === "Enter" || e.key === " ") setTimeOpen(true);
+                            },
+                            onPaste: (e) => e.preventDefault(),
+                            inputProps: {
+                              readOnly: true,
+                              inputMode: "none",
+                              tabIndex: 0,
+                            },
                             sx: {
-                              "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                                borderColor: fixedColor,
-                              },
+                              cursor: "pointer",
+                              "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
                               "& label.Mui-focused": { color: "gray" },
                             },
+                          },
+                          openPickerButton: {
+                            onClick: () => setTimeOpen(true),
                           },
                           actionBar: { actions: ["accept", "cancel"] },
                         }}

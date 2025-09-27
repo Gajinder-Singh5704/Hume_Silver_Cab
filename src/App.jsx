@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import { ToastContainer } from "react-toastify";
+import {Toaster} from "react-hot-toast"
 
 function App() {
 
@@ -9,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home/>}/>
       </Routes>
-      <ToastContainer position="top-right" autoClose={3000} />
+      <Toaster position="top-right" autoClose={3000} />
     </>
   );
 }
