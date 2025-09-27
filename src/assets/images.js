@@ -6,6 +6,7 @@ import reactLogo from "./images/react.svg";
 import sedan from "./images/Sedan.png";
 import silver from "./images/Silver.png";
 import suv from "./images/SUV.jpeg";
+import aus from "./images/ausLogo.png"
 
 const images = {
   cabcharge,
@@ -16,6 +17,7 @@ const images = {
   sedan,
   silver,
   suv,
+  aus
 };
 
 export default images;
