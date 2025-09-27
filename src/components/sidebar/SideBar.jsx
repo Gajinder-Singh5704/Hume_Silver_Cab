@@ -57,6 +57,8 @@ const SideBar = ({
   // route & toll
   const [distanceKm, setDistanceKm] = useState("");
   const [hasToll, setHasToll] = useState(false);
+  const [error ,setError] = useState("")
+  // const [selectedPaymentMode, setSelectedPaymentMode] = useState(null)
 
   // booking time
   const [bookingMode, setBookingMode] = useState("now"); // "now" | "later"
@@ -434,7 +436,26 @@ const SideBar = ({
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Gather all form data
+    const bookingTime = `${hourVal}:${minuteVal}`;
+    const bookingDate = `${dateVal}`
+    const selectedCarData = {
+      selectedCar : `${selected.name}`,
+      passengers  : `${selected.passengers}`
+    }
+    if(!selectedPayment){
+
+      setError("Please select a payment method *");
+      return
+      
+    } else{
+      setError("")
+    }
+
+    
+
+    
+    
+
     const formData = {
       pickup,
       pickupLoc,
@@ -442,18 +463,15 @@ const SideBar = ({
       destinationLoc,
       passenger,
       contact,
-      instruction,
-      isOn,
-      selected,
-      selectedPayment,
-      bookingMode,
-      dateVal,
-      hourVal,
-      minuteVal,
-      timeType,
-      fare,
-      hasToll,
+      pickup,
+      destination,
+      bookingDate,
+      bookingTime,
+      selectedCarData,
+      selectedPaymentMode: `${selectedPayment.name}`,
       distanceKm,
+      instruction,     
+      fare,      
     };
 
     toast.success("🎉 Booking Requested Successfully!", {
@@ -483,9 +501,10 @@ const SideBar = ({
     setHasToll(false);
     setDistanceKm("");
     setContactError("");
-    onPickupSelect(setPickupLoc);
-    onDestinationSelect(setDestinationLoc);
+    onPickupSelect(null);
+    onDestinationSelect(null);
     setAllFares([]);
+    // setSelectedPaymentMode(null)
   };
 
   console.log("pickup ", pickupLoc);
@@ -1068,7 +1087,7 @@ const SideBar = ({
             </div>
 
             {/* Step 3 Payment */}
-            <div className="px-5 py-6">
+            <div className="px-5 py-3">
               <h3 className="text-sm mt-2 mb-4">
                 {" "}
                 Step 3 of 4 <b>Payment</b>
@@ -1078,9 +1097,12 @@ const SideBar = ({
                 selectedOption={selectedPayment}
                 onOptionSelect={handlePaymentSelect}
                 title="Select payment method"
-                className="mb-4"
+                className="mb-0"
+                required
               />
             </div>
+
+            {error && <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>}
 
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
