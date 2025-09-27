@@ -34,7 +34,7 @@ const PaymentDropdown = forwardRef(({
       {/* Floating Label - hide completely when value is selected */}
       {!hasValue && (
         <label
-          className={`absolute left-3 transition-all duration-200 pointer-events-none ${
+          className={`absolute left-3 transition-all duration-200  pointer-events-none ${
             isFocused || isOpen
               ? '-top-2 text-xs bg-white px-1 text-gray-500 z-10'
               : 'top-4 text-base text-gray-500'
@@ -50,15 +50,15 @@ const PaymentDropdown = forwardRef(({
         onClick={toggleDropdown}
         onFocus={() => setIsFocused(true)}
         onBlur={() => !isOpen && setIsFocused(false)}
-        className={`w-full min-h-[56px] px-3 pt-2 pb-2 border rounded-md text-left bg-white transition-all duration-200 focus:outline-none ${
+        className={`w-full min-h-[56px] px-3 pt-2 pb-2 border rounded-md text-left bg-white transition-all duration-200 focus:outline-none cursor-pointer  ${
           isFocused || isOpen
             ? 'border-orange-500 border-2'
             : 'border-gray-300 hover:border-orange-500'
         }`}
       >
-        <div className="flex items-center justify-between min-h-[40px]">
+        <div className="flex items-center justify-between min-h-[40px] cursor-pointer ">
           {hasValue ? (
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-1 min-w-0 ">
               {currentSelection.icon}
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-gray-800 truncate">
@@ -82,7 +82,7 @@ const PaymentDropdown = forwardRef(({
         <>
           {/* Overlay */}
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-10 "
             onClick={() => {
               setIsOpen(false);
               setIsFocused(false);
@@ -90,12 +90,12 @@ const PaymentDropdown = forwardRef(({
           />
 
           {/* Options Container */}
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-20 max-h-80 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-20 max-h-80 overflow-y-auto ">
             {options.map((option, index) => (
               <button
                 key={option.id}
                 onClick={() => handleOptionSelect(option)}
-                className={`w-full px-4 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                className={`w-full px-4 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer ${
                   index === 0 ? 'rounded-t-lg' : ''
                 } ${index === options.length - 1 ? 'rounded-b-lg' : ''}`}
               >

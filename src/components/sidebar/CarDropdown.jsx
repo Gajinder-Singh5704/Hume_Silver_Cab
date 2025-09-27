@@ -89,7 +89,7 @@ const CarDropdown = ({
         type="button"
         onClick={toggleDropdown}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDropdown(); }}
-        className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 rounded-t-lg border-b hover:bg-gray-100 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 rounded-t-lg border-b hover:bg-gray-100 transition-colors cursor-pointer"
       >
         <span className="text-gray-700 font-medium">{title}</span>
         {isOpen ? (
@@ -105,20 +105,20 @@ const CarDropdown = ({
           role="button"
           tabIndex={0}
           onClick={toggleDropdown}
-          className="relative px-2 py-4 cursor-pointer bg-orange-50 border-b border-black"
+          className="relative px-2 py-4 cursor-pointer bg-orange-50 border-b  border-black"
         >
-          <div className="absolute top-0 left-0 h-full w-2 bg-orange-500" />
+          <div className="absolute top-0 left-0 h-full w-2 bg-orange-500 " />
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-between ">
+            <div className="flex items-center space-x-3 ">
               {currentSelection?.image && (
                 <img src={currentSelection.image} alt={currentSelection.name} className="h-14 w-20" />
               )}
               <div>
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-semibold text-sm text-gray-800">{currentSelection?.name}</h3>
+                <div className="flex items-center space-x-2 ">
+                  <h3 className="font-semibold text-sm text-gray-800 ">{currentSelection?.name}</h3>
                   <Info
-                    className="w-4 h-4 text-gray-400"
+                    className="w-4 h-4 text-gray-400 "
                     onClick={(e) => handleInfoClick(e, currentSelection?.id)}
                   />
                 </div>
@@ -167,7 +167,7 @@ const CarDropdown = ({
                     handleSelect(option);
                   }
                 }}
-                className={`relative w-full px-2 py-4 text-left transition border-b border-gray-200
+                className={`relative w-full px-2 py-4 text-left transition border-b border-gray-200 cursor-pointer
                   ${idx === options.length - 1 ? "last:border-b-0 rounded-b-lg" : ""}
                   ${isSelected ? "bg-orange-50" : "hover:bg-orange-100"}`}
               >
@@ -201,11 +201,10 @@ const CarDropdown = ({
                       {isFixedPrice ? (
                         <>
                           <LockIcon className="mr-1" color="orange" size={12} />
-                          {renderFare(getFareFor(option), option.destRequired)}
-                        
+                          <span className="font-bold"> {renderFare(getFareFor(option), option.destRequired)}</span>
                         </>
                       ) : (
-                        renderFare(getFareFor(option), option.destRequired)
+                        <span className="font-bold">{renderFare(getFareFor(option), option.destRequired)}</span>
                       )}
                     </p>
                   </div>

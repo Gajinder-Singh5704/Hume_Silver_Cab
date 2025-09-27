@@ -860,8 +860,9 @@ const SideBar = ({
                 Please enter a valid pickup and destination{" "}
               </h3> */}
 
-              <div className="mb-4 relative">
+              <div className="mb-4 relative ">
                 <TextField
+                  
                   inputRef={pickupInputRef} // attach ref here
                   label="Add pickup (required)"
                   variant="outlined"
@@ -984,7 +985,7 @@ const SideBar = ({
             </div>
 
             {/* Booking now/later radio - controlled */}
-            <div className=" mb-4 flex  justify-around ml-6 w-full  items-center">
+            <div className=" mb-4 flex  justify-around ml-6 w-full  items-center ">
               <RadioGroup
                 row
                 value={bookingMode}
@@ -1308,7 +1309,7 @@ const SideBar = ({
               {/* Request Booking Button */}
               <button
                 type="submit"
-                className="w-full py-3 rounded-md bg-orange-500 text-white font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500"
+                className="w-full py-3 rounded-md bg-orange-500 text-white font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer"
               >
                 Request Booking
               </button>
