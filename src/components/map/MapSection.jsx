@@ -10,12 +10,12 @@ import {
 /** Draw a native google.maps.Polyline on the map for the given path.
  *  path: array of { lat: number, lng: number }
  */
-const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
+const DirectionsOverlay = ({ origin, selectedDestination }) => {
   const map = useMap();
   const directionsRendererRef = React.useRef(null);
   useEffect(() => {
     if (!map || !window.google || !window.google.maps) return;
-    // if (!origin || !destination) return;
+    // if (!origin || !selectedDestination) return;
 
     const directionsService = new window.google.maps.DirectionsService();
     if (!directionsRendererRef.current) {
@@ -31,24 +31,17 @@ const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
       );
     }
 
-     if (!origin || !destination) {
-    // clear all polylines
-    directionsRendererRef.current.setDirections({ routes: [] });
-    return;
-  }
-
-    // Filter out null waypoints
-    const validWaypoints = waypoints.filter(Boolean).map((wp) => ({
-      location: wp,
-      stopover: true,
-    }));
+    if (!origin || !selectedDestination) {
+      // clear all polylines
+      directionsRendererRef.current.setDirections({ routes: [] });
+      return;
+    }
 
     directionsService.route(
       {
         origin,
-        destination,
+        destination: selectedDestination,
         travelMode: window.google.maps.TravelMode.DRIVING,
-        waypoints: validWaypoints,
         optimizeWaypoints: false,
       },
       (result, status) => {
@@ -59,12 +52,12 @@ const DirectionsOverlay = ({ origin, waypoints = [], destination }) => {
         }
       }
     );
-  }, [map, origin, destination, JSON.stringify(waypoints)]);
+  }, [map, origin, selectedDestination]);
 
   return null;
 };
 
-const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
+const MapUpdater = ({ selectedPlace, selectedPickup, selectedDestination }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -73,40 +66,38 @@ const MapUpdater = ({ selectedPlace, selectedPickup, destinations }) => {
     const bounds = new window.google.maps.LatLngBounds();
     const hasPlace = selectedPlace;
     const hasPickup = !!selectedPickup;
-    const hasDests = destinations.some(Boolean);
+    const hasDests = !!selectedDestination;
 
     if (hasPickup) {
       bounds.extend(selectedPickup);
     }
-    destinations.forEach((dest) => {
-      if (dest) bounds.extend(dest);
-    });
 
+    if (hasDests) bounds.extend(selectedDestination);
     if (hasPickup && hasDests) {
-      // Case 1: Pickup + destinations → fit bounds
+      // Case 1: Pickup + selectedDestination → fit bounds
       map.fitBounds(bounds, 80);
     } else if (hasPickup) {
       // Case 2: Only pickup → zoom to pickup
       map.panTo(selectedPickup);
       map.setZoom(14);
     } else if (hasDests) {
-      // Case 2b: Only destinations → zoom to them
+      // Case 2b: Only selectedDestination → zoom to them
       map.fitBounds(bounds, 80);
-    } else if (hasPlace) { 
-      map.panTo(selectedPlace)
-      map.setZoom(14)
+    } else if (hasPlace) {
+      map.panTo(selectedPlace);
+      map.setZoom(14);
     } else {
       // Case 3: Neither → reset to default
       map.panTo({ lat: -37.6708716, lng: 144.8430578 });
       map.setZoom(12);
     }
-  }, [map, selectedPlace, selectedPickup, destinations]);
+  }, [map, selectedPlace, selectedPickup, selectedDestination]);
 
   return null;
 };
 
 // Recenter button component
-const RecenterButton = ({ selectedPickup, destinations }) => {
+const RecenterButton = ({ selectedPickup, selectedDestination }) => {
   const map = useMap();
 
   const handleRecenter = () => {
@@ -115,7 +106,7 @@ const RecenterButton = ({ selectedPickup, destinations }) => {
     const bounds = new window.google.maps.LatLngBounds();
 
     if (selectedPickup) bounds.extend(selectedPickup);
-    destinations.forEach((dest) => dest && bounds.extend(dest));
+    selectedDestination.forEach((dest) => dest && bounds.extend(dest));
 
     if (!bounds.isEmpty()) {
       map.fitBounds(bounds, 80);
@@ -135,17 +126,19 @@ const RecenterButton = ({ selectedPickup, destinations }) => {
   );
 };
 
-const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
+const MapSection = ({
+  selectedPlace,
+  selectedPickup,
+  selectedDestination = null,
+}) => {
   // build polyline path: pickup -> dest1 -> dest2 ...
 
   const path = [
     ...(selectedPickup ? [selectedPickup] : []),
-    ...destinations.filter(Boolean),
+    ...(selectedDestination ? [selectedDestination] : []),
   ];
 
   const origin = selectedPickup;
-  const destination = destinations[destinations.length - 1];
-  const waypoints = destinations.slice(0, -1);
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY}>
@@ -165,46 +158,39 @@ const MapSection = ({ selectedPlace, selectedPickup, destinations = [] }) => {
           <MapUpdater
             selectedPlace={selectedPlace}
             selectedPickup={selectedPickup}
-            destinations={destinations}
+            selectedDestination={selectedDestination}
           />
 
           {/* Pickup marker */}
           {selectedPickup && (
             <AdvancedMarker position={selectedPickup}>
-              <Pin background="orange" borderColor="white" glyphColor="white" />
+              <Pin background="orange" borderColor="white" glyphColor="white"/>
             </AdvancedMarker>
           )}
 
-          {/* Destination markers with numbers */}
-          {destinations.map(
-            (dest, idx) =>
-              dest && (
-                <AdvancedMarker key={idx} position={dest}>
-                  <Pin
-                    background="orange"
-                    borderColor="white"
-                    glyphColor="white"
-                    scale={1.2}
-                  >
-                    <span className="text-white font-bold">{idx + 1}</span>
-                  </Pin>
-                </AdvancedMarker>
-              )
+          {/* selectedDestination markers with numbers */}
+          {selectedDestination && (
+            <AdvancedMarker position={selectedDestination}>
+              <Pin
+                background="orange"
+                borderColor="white"
+                glyphColor="white"
+                scale={1.2}
+              />
+            </AdvancedMarker>
           )}
 
           {/* Directions route */}
           {
-           
             <DirectionsOverlay
               origin={origin}
-              waypoints={waypoints}
-              destination={destination}
+              selectedDestination={selectedDestination}
             />
           }
 
           <RecenterButton
             selectedPickup={selectedPickup}
-            destinations={destinations}
+            selectedDestination={selectedDestination}
           />
         </Map>
       </div>

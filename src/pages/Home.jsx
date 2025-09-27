@@ -7,7 +7,7 @@ import SideBar from "../components/sidebar/SideBar.jsx";
 const Home = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedPickup, setSelectedPickup] = useState(null);
-  const [destinations, setSelectedDestinations] = useState([]);
+  const [selectedDestination, setSelectedDestination] = useState(null);
   const [isVehicleDetailOpen, setIsVehicleDetailOpen] = useState(false);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
 
@@ -42,7 +42,7 @@ const Home = () => {
         >
           <SideBar
             onPickupSelect={setSelectedPickup}
-            onDestinationsSelect={setSelectedDestinations}
+            onDestinationSelect={setSelectedDestination}
             onVehicleDetailOpenChange={setIsVehicleDetailOpen}
           />
         </div>
@@ -54,7 +54,7 @@ const Home = () => {
               <MapSection
                 selectedPlace={selectedPlace}
                 selectedPickup={selectedPickup}
-                destinations={destinations}
+                selectedDestination={selectedDestination}
               />
             </div>
           )}
