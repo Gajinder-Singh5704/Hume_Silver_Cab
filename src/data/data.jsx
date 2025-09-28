@@ -60,7 +60,7 @@ export const defaultVehicleOptions = [
 export const defaultPaymentOptions = [
   {
     id: "pay-driver-directly",
-    name: "Pay Driver Directly",
+    name: "Cash",
     description: "Cash or card to driver",
     icon: <Wallet className="w-6 h-6 text-orange-600" />,
     type: "Direct",

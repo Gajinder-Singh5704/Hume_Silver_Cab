@@ -1,5 +1,5 @@
 import { useState,forwardRef } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { defaultPaymentOptions } from '../../data/data.jsx';
 
 const PaymentDropdown = forwardRef(({
