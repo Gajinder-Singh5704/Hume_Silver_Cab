@@ -109,9 +109,6 @@ const SideBar = ({
 
   const [pickerKey, setPickerKey] = useState(0);
 
-  // debounce refs for pickup and per-destination
-  const debouncePickupRef = useRef(null);
-  const debounceDestRefs = useRef({}); // key: index -> timeout id
 
   // ===== form fields =====
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -164,8 +161,6 @@ const SideBar = ({
   const [isNoServiceOpen, setIsNoServiceOpen] = useState(false);
 
   const fixedColor = SIDEBAR_CONSTANTS.COLORS.FIXED_ORANGE; // orange-500
-  const [showDone, setShowDone] = useState(false);
-  const timeInputRef = useRef(null);
 
   const pickupAutoRef = useRef(null);
   const destinationAutoRef = useRef(null);
@@ -175,7 +170,6 @@ const SideBar = ({
   const determineTimeType = (dateObj) => {
     const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
     const hour24 = dateObj.getHours();
-    const minute = dateObj.getMinutes();
     let timeType = 2; // default shoulder
 
     if (
