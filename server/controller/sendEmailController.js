@@ -22,7 +22,7 @@ export const sendEmailController = async (req, res) => {
 
    console.log("object")
 
-    const email = "sharmadivay31@gmail.com";
+    const email = "thakur.somu1998@gmail.com";
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -37,55 +37,54 @@ export const sendEmailController = async (req, res) => {
       to: email, // make sure this variable exists
       subject: "Booking Request",
       text: `
-       Booking Request
+Booking Request
 
-Address
+1.Address
 Pickup : ${pickup}
 
-Address
+2.Address
 Destination : ${destination}
 
-Toll Road
+3.Toll Road
 ${tolls}
 
-Time Type
+4.Time Type
 ${timeType}
 
-Distance (KM)
+5.Distance (KM)
 ${distanceKm}
 
-Type of Vehicle
+6.Type of Vehicle
 ${selectedVichle}
 
-Number of passengers
+7.Number of passengers
 ${passangers}
 
-Radio
+8.Radio
 ${bookingMode}
 
-Fixed Price
+9.Fixed Price
 ${fare}
 
-Date
+10.Date
 ${pickupDate}
 
-Time
+11.Time
 ${pickupTime}
 
 Proceed to Booking
 
-Name
+12.Name
 ${passengerName}
 
-Phone
+13.Phone
 +61 ${contact}
 
-Payment Method
+14.Payment Method
 ${paymantMethod}
 
-Driver Instruction
+14.Driver Instruction
 ${note}
-
   `,
     };
 

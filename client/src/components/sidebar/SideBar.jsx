@@ -1,11 +1,11 @@
+import { lazy, Suspense } from "react";
+
 import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
 import CabUnavailableModal from "./NoServiceModal.jsx";
 import SIDEBAR_CONSTANTS, { TIME_TYPE } from "../../constants/constants.js";
 import { defaultVehicleOptions } from "../../data/data.jsx";
 import {
-  Box,
-  Button,
   FormControlLabel,
   Radio,
   RadioGroup,
@@ -14,18 +14,22 @@ import {
   IconButton,
 } from "@mui/material";
 import { LockIcon } from "lucide-react";
-import ToggleSwitch from "./ToggleSwich.jsx";
-import CarDropdown from "./CarDropdown.jsx";
+import ToggleSwitch from "./ToggleSwich";
+const CarDropdown = lazy(() => import("./CarDropdown"));
 import { getGeocode } from "../../hooks/map.js";
-import PaymentDropdown from "./PaymentDropdown.jsx";
+const PaymentDropdown = lazy(() => import("./PaymentDropdown.jsx"));
 import { seatDetails } from "../../data/data.jsx";
-import SeatDetails from "./SeatDetails.jsx";
-import LuggageModal from "./LuggageModal.jsx";
+const SeatDetails = lazy(() => import("./SeatDetails.jsx"));
+const LuggageModal = lazy(() => import("./LuggageModal.jsx"));
 import { toast } from "react-hot-toast";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+const DatePicker = lazy(() =>
+  import("@mui/x-date-pickers/DatePicker").then(m => ({ default: m.DatePicker }))
+);
+const TimePicker = lazy(() =>
+  import("@mui/x-date-pickers/TimePicker").then(m => ({ default: m.TimePicker }))
+);
 import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
 
@@ -35,12 +39,6 @@ const SideBar = ({
   onVehicleDetailOpenChange,
 }) => {
   // ===== Places service (shared) =====
-  const [placesReady, setPlacesReady] = useState(false);
-  const serviceRef = useRef(null);
-  const sessionTokenRef = useRef(null);
-
-  const [calenderOpen, setCalenderOpen] = useState(false);
-
   const melbourneNow = SIDEBAR_CONSTANTS.getMelbourneNow();
   const roundedNow = new Date(melbourneNow);
   roundedNow.setSeconds(0, 0);
@@ -58,6 +56,7 @@ const SideBar = ({
     return d;
   };
 
+  const [isRequesSend,setIsRequestSend] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
 
@@ -112,9 +111,6 @@ const SideBar = ({
 
   const [pickerKey, setPickerKey] = useState(0);
 
-  // debounce refs for pickup and per-destination
-  const debouncePickupRef = useRef(null);
-  const debounceDestRefs = useRef({}); // key: index -> timeout id
 
   // ===== form fields =====
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -167,8 +163,6 @@ const SideBar = ({
   const [isNoServiceOpen, setIsNoServiceOpen] = useState(false);
 
   const fixedColor = SIDEBAR_CONSTANTS.COLORS.FIXED_ORANGE; // orange-500
-  const [showDone, setShowDone] = useState(false);
-  const timeInputRef = useRef(null);
 
   const pickupAutoRef = useRef(null);
   const destinationAutoRef = useRef(null);
@@ -178,7 +172,6 @@ const SideBar = ({
   const determineTimeType = (dateObj) => {
     const day = dateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
     const hour24 = dateObj.getHours();
-    const minute = dateObj.getMinutes();
     let timeType = 2; // default shoulder
 
     if (
@@ -547,6 +540,7 @@ const SideBar = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsRequestSend(true)
     const bookingTime = `${hourVal}:${minuteVal}`;
     const bookingDate = `${dateVal}`;
     const selectedCarData = {
@@ -557,12 +551,7 @@ const SideBar = ({
       scrollToRef(paymentDropdownRef);
       setError("Please select a payment method *");
       return;
-    } else {
-
-      // window.location.reload();
-      // scrollToRef(topRef);
-    }
-
+    } 
     const formData = {
       pickup,
       destination,
@@ -590,18 +579,15 @@ const SideBar = ({
     });
       setError("");
       scrollToTopOrNavbar();
+      setIsRequestSend(false)
     }else {
        toast.error("Booking Request Failed", {
       position: "top-right",
       autoClose: 3000,
     });
+    setIsRequestSend(false)
     return
     }
-
-  
-    console.log("Booking Data:", formData);
-
-    // Reset all fields
     // Reset all fields
     setPickup("");
     setPickupLoc(null);
@@ -880,7 +866,7 @@ const SideBar = ({
 
               <div className="mb-4 relative ">
                 <TextField
-                  
+
                   inputRef={pickupInputRef} // attach ref here
                   label="Add pickup (required)"
                   variant="outlined"
@@ -1046,109 +1032,118 @@ const SideBar = ({
                 <div className="flex flex-col md:flex-col gap-4">
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DatePicker
-                        key={`date-${pickerKey}`}
-                        label="Pickup date"
-                        open={dateOpen}
-                        onOpen={() => setDateOpen(true)}
-                        onClose={() => setDateOpen(false)}
-                        value={dateVal ? new Date(dateVal) : null}
-                        onChange={(newVal) => {
-                          if (!newVal) return;
-                          const y = newVal.getFullYear();
-                          const m = String(newVal.getMonth() + 1).padStart(2, "0");
-                          const d = String(newVal.getDate()).padStart(2, "0");
-                          const next = `${y}-${m}-${d}`;
-                          setDateVal(next);
+                      < Suspense fallback={null}>
+                        <DatePicker
+                          key={`date-${pickerKey}`}
+                          label="Pickup date"
+                          open={dateOpen}
+                          onOpen={() => setDateOpen(true)}
+                          onClose={() => setDateOpen(false)}
+                          value={dateVal ? new Date(dateVal) : null}
+                          onChange={(newVal) => {
+                            if (!newVal) return;
+                            const y = newVal.getFullYear();
+                            const m = String(newVal.getMonth() + 1).padStart(2, "0");
+                            const d = String(newVal.getDate()).padStart(2, "0");
+                            const next = `${y}-${m}-${d}`;
+                            setDateVal(next);
 
-                          if (isToday(next)) {
-                            const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
-                            setHourVal(h);
-                            setMinuteVal(mi);
-                          }
-                        }}
-                        maxDate={maxBookingDate()}
-                        disablePast
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            error : false,
-                            required: false,
-                            onClick: () => setDateOpen(true),               // open on click anywhere
-                            onKeyDown: (e) => {
-                              // allow Tab for accessibility, Block other keys from editing
-                              if (e.key !== "Tab") e.preventDefault();
-                              // open on Enter/Space if focused
-                              if (e.key === "Enter" || e.key === " ") setDateOpen(true);
+                            if (isToday(next)) {
+                              const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
+                              setHourVal(h);
+                              setMinuteVal(mi);
+                            }
+                          }}
+                          desktopModeMediaQuery="@media (max-width: 0px)"
+                          maxDate={maxBookingDate()}
+                          disablePast
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              error: false,
+                              required: false,
+                              onClick: () => setDateOpen(true),               // open on click anywhere
+                              onKeyDown: (e) => {
+                                // allow Tab for accessibility, Block other keys from editing
+                                if (e.key !== "Tab") e.preventDefault();
+                                // open on Enter/Space if focused
+                                if (e.key === "Enter" || e.key === " ") setDateOpen(true);
+                              },
+                              onPaste: (e) => e.preventDefault(),
+                              onFocus: (e) => e.target.blur(),
+                              inputProps: {
+                                readOnly: true,                               // block manual typing
+                                inputMode: "none",                            // suppress mobile keyboards
+                                tabIndex: 0,
+                              },
+                              sx: {
+                                cursor: "pointer",
+                                "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                                "& label.Mui-focused": { color: "gray" },
+                              },
                             },
-                            onPaste: (e) => e.preventDefault(),
-                            inputProps: {
-                              readOnly: true,                               // block manual typing
-                              inputMode: "none",                            // suppress mobile keyboards
-                              tabIndex: 0,
+                            openPickerButton: {
+                              onClick: () => setDateOpen(true),
                             },
-                            sx: {
-                              cursor: "pointer",
-                              "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
-                              "& label.Mui-focused": { color: "gray" },
-                            },
-                          },
-                          openPickerButton: {
-                            onClick: () => setDateOpen(true),
-                          },
-                        }}
-                      />
+                          }}
+                        />
+                      </Suspense>
                     </LocalizationProvider>
                   </div>
 
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <TimePicker
-                        key={`time-${pickerKey}`}
-                        label="Pickup time"
-                        open={timeOpen}
-                        onOpen={() => setTimeOpen(true)}
-                        onClose={() => setTimeOpen(false)}
-                        value={
-                          hourVal && minuteVal
-                            ? new Date(`${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}:00`)
-                            : null
-                        }
-                        onChange={(newVal) => {
-                          if (!newVal) return;
-                          let h = String(newVal.getHours()).padStart(2, "0");
-                          let m = String(newVal.getMinutes()).padStart(2, "0");
-                          [h, m] = clampToMinIfPast(dateVal, h, m);
-                          setHourVal(h);
-                          setMinuteVal(m);
-                        }}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            required: true,
-                            onClick: () => setTimeOpen(true),
-                            onKeyDown: (e) => {
-                              if (e.key !== "Tab") e.preventDefault();
-                              if (e.key === "Enter" || e.key === " ") setTimeOpen(true);
+                      < Suspense fallback={null}>
+                        <TimePicker
+                          key={`time-${pickerKey}`}
+                          label="Pickup time"
+                          open={timeOpen}
+                          onOpen={() => setTimeOpen(true)}
+                          onClose={() => setTimeOpen(false)}
+                          desktopModeMediaQuery="@media (max-width: 0px)"
+
+                          value={
+                            hourVal && minuteVal
+                              ? new Date(`${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}:00`)
+                              : null
+                          }
+                          onChange={(newVal) => {
+                            if (!newVal) return;
+                            let h = String(newVal.getHours()).padStart(2, "0");
+                            let m = String(newVal.getMinutes()).padStart(2, "0");
+                            [h, m] = clampToMinIfPast(dateVal, h, m);
+                            setHourVal(h);
+                            setMinuteVal(m);
+                          }}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              required: true,
+                              onClick: () => setTimeOpen(true),
+                              onFocus: (e) => e.target.blur(),   // ← stops Android keyboard
+                              onKeyDown: (e) => {
+                                if (e.key !== "Tab") e.preventDefault();
+                                if (e.key === "Enter" || e.key === " ") setTimeOpen(true);
+                              },
+                              onPaste: (e) => e.preventDefault(),
+                              inputProps: {
+                                readOnly: true,
+                                inputMode: "none",
+                                tabIndex: 0,
+                              },
+                              sx: {
+                                cursor: "pointer",
+                                "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                                "& label.Mui-focused": { color: "gray" },
+                              },
                             },
-                            onPaste: (e) => e.preventDefault(),
-                            inputProps: {
-                              readOnly: true,
-                              inputMode: "none",
-                              tabIndex: 0,
+                            openPickerButton: {
+                              onClick: () => setTimeOpen(true),
                             },
-                            sx: {
-                              cursor: "pointer",
-                              "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
-                              "& label.Mui-focused": { color: "gray" },
-                            },
-                          },
-                          openPickerButton: {
-                            onClick: () => setTimeOpen(true),
-                          },
-                          actionBar: { actions: ["accept", "cancel"] },
-                        }}
-                      />
+                            actionBar: { actions: ["accept", "cancel"] },
+                          }}
+                        />
+                      </Suspense>
                     </LocalizationProvider>
                   </div>
                 </div>
@@ -1179,22 +1174,24 @@ const SideBar = ({
               </p>
             </div>
             <div className="w-full ">
-              <CarDropdown
-                selectedOption={selected}
-                onOptionSelect={setSelected}
-                label={
-                  fare
-                    ? isOn
-                      ? `$${fare}`
-                      : `$${Math.round(fare - 5)} - $${Math.round(fare - -15)}`
-                    : "Dest required"
-                }
-                allFares={allFares}
-                changeVehicleText={setVehicleText}
-                isLuggageModal={setIsLuggageModalOpen}
-                isFixedPrice={isOn}
-                onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-              />
+              <Suspense fallback={null}>
+                <CarDropdown
+                  selectedOption={selected}
+                  onOptionSelect={setSelected}
+                  label={
+                    fare
+                      ? isOn
+                        ? `$${fare}`
+                        : `$${Math.round(fare - 5)} - $${Math.round(fare - -15)}`
+                      : "Dest required"
+                  }
+                  allFares={allFares}
+                  changeVehicleText={setVehicleText}
+                  isLuggageModal={setIsLuggageModalOpen}
+                  isFixedPrice={isOn}
+                  onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+                />
+              </Suspense>
             </div>
 
             {/* Step 2 */}
@@ -1284,14 +1281,16 @@ const SideBar = ({
                 Step 3 of 4 - <b>Payment</b>
               </h3>
 
-              <PaymentDropdown
-                selectedOption={selectedPayment}
-                onOptionSelect={handlePaymentSelect}
-                ref={paymentDropdownRef}
-                title="Select payment method"
-                className="mb-0"
-                required
-              />
+              <Suspense fallback={null}>
+                <PaymentDropdown
+                  selectedOption={selectedPayment}
+                  onOptionSelect={handlePaymentSelect}
+                  ref={paymentDropdownRef}
+                  title="Select payment method"
+                  className="mb-0"
+                  required
+                />
+              </Suspense>
             </div>
 
             {!selectedPayment && <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>}
@@ -1327,7 +1326,8 @@ const SideBar = ({
               {/* Request Booking Button */}
               <button
                 type="submit"
-                className="w-full py-3 rounded-md bg-orange-500 text-white font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer"
+                className={`w-full py-3 rounded-md ${isRequesSend ? "bg-orange-50 text-orange-600" : "bg-orange-500 text-white  "} font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
+                disabled = {isRequesSend}
               >
                 Request Booking
               </button>
@@ -1336,43 +1336,85 @@ const SideBar = ({
         </section>
       )}
       {vehicleText === "Next Available" && (
-        <SeatDetails
-          data={seatDetails["Next Available"]}
-          changeVehicleText={setVehicleText}
-          onSelect={setSelected}
-          onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-          changeIsLuggageModal={setIsLuggageModalOpen}
-        />
+        <Suspense fallback={null}>
+          <SeatDetails
+            data={seatDetails["Next Available"]}
+            changeVehicleText={setVehicleText}
+            onSelect={setSelected}
+            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            changeIsLuggageModal={setIsLuggageModalOpen}
+          />
+        </Suspense>
       )}
       {vehicleText === "Silver Service" && (
-        <SeatDetails
-          data={seatDetails["Silver Service"]}
-          changeVehicleText={setVehicleText}
-          onSelect={setSelected}
-          onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-          changeIsLuggageModal={setIsLuggageModalOpen}
-        />
+        <Suspense fallback={null}>
+          <SeatDetails
+            data={seatDetails["Silver Service"]}
+            changeVehicleText={setVehicleText}
+            onSelect={setSelected}
+            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            changeIsLuggageModal={setIsLuggageModalOpen}
+          />
+        </Suspense>
       )}
       {vehicleText === "Suv" && (
-        <SeatDetails
-          data={seatDetails["Suv"]}
-          changeVehicleText={setVehicleText}
-          onSelect={setSelected}
-          onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-          changeIsLuggageModal={setIsLuggageModalOpen}
-        />
+        <Suspense fallback={null}>
+          <SeatDetails
+            data={seatDetails["Suv"]}
+            changeVehicleText={setVehicleText}
+            onSelect={setSelected}
+            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            changeIsLuggageModal={setIsLuggageModalOpen}
+          />
+        </Suspense>
       )}
       {vehicleText === "Maxi Taxi" && (
-        <SeatDetails
-          data={seatDetails["Maxi Taxi"]}
-          changeVehicleText={setVehicleText}
-          onSelect={setSelected}
-          onVehicleDetailOpenChange={onVehicleDetailOpenChange}
-          changeIsLuggageModal={setIsLuggageModalOpen}
-        />
+        <Suspense fallback={null}>
+          <SeatDetails
+            data={seatDetails["Maxi Taxi"]}
+            changeVehicleText={setVehicleText}
+            onSelect={setSelected}
+            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            changeIsLuggageModal={setIsLuggageModalOpen}
+          />
+        </Suspense>
       )}
 
-      {isLuggageModalOpen && <LuggageModal />}
+      {/* Luggage modal */}
+      {isLuggageModalOpen && (
+        <Suspense fallback={null}>
+          <LuggageModal />
+        </Suspense>
+      )}
+
+       {isRequesSend && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="flex flex-col items-center space-y-2 p-6 bg-white rounded-lg shadow-lg">
+            <svg
+              className="animate-spin h-10 w-10 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 018 8h-4l3 3-3 3h4a8 8 0 01-8 8v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+              ></path>
+            </svg>
+            <span className="text-gray-700 font-semibold">Processing your request...</span>
+          </div>
+        </div>
+      )}
+
       {/* show modal — pass open and onClose */}
       <CabUnavailableModal
         open={isNoServiceOpen}
