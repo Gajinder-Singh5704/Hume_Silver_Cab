@@ -5,8 +5,9 @@ const Modal = lazy(() => import("./Modal")); // code-split
 const NavSection = ({ onPlaceSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState("");
-
-  const handleToggle = useCallback(() => setIsOpen(v => !v), []);
+  const handleToggle = () => {
+    setIsOpen(!isOpen)
+  };
   const handlePlaceSelect = useCallback((place) => {
     setSelectedPlace(place?.description ?? "");
     setIsOpen(false);
@@ -47,10 +48,11 @@ const NavSection = ({ onPlaceSelect }) => {
             aria-expanded={isOpen}
             title="Change city / area"
           >
-            <span className="inline-flex items-center gap-2 text-gray-700 overflow-hidden">
-              <MapPin className="w-4 h-4" aria-hidden />
-              {selectedPlace || "Melbourne VIC"}
+            <span className="inline-flex items-center gap-2 text-gray-700 overflow-hidden min-w-0 max-w-full">
+              <MapPin className="w-4 h-4 flex-none" aria-hidden />
+              <span className="truncate">{selectedPlace || "Melbourne VIC"}</span>
             </span>
+
           </button>
 
           <button
