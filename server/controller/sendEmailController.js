@@ -94,7 +94,7 @@ ${note}
       if (error) {
         return res.json({
           success: false,
-          message: "Request Not Send",
+          message:`Request Not Send ${error}`,
         });
       }
 
