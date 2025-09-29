@@ -19,6 +19,11 @@ app.use(
 app.get("/",(req,res)=>{
   res.send("Hellow world")
 })
+
+app.post("/hello",(req,res) => {
+  const {message} = req.body
+  res.json(message)
+})
 app.use("/api/booking",emailRoute)
 
 
