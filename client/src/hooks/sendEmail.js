@@ -3,7 +3,7 @@ import axios from "axios";
 export const sendBooking = async (data) => {
   try {
     const res = await axios.post(
-      "http://localhost:8083/api/booking/send-email",
+      "https://booking-details.onrender.com/api/booking/send-email",
       data,
       {
         headers: {

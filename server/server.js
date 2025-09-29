@@ -16,7 +16,9 @@ app.use(
         origin: "*"
     })
 )
-
+app.get("/",(req,res)=>{
+  res.send("Hellow world")
+})
 app.use("/api/booking",emailRoute)
 
 
