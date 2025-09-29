@@ -24,7 +24,9 @@ export const sendEmailController = async (req, res) => {
 
     const email = "thakur.somu1998@gmail.com";
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+       host: "smtp.gmail.com",
+  port: 465, // use 587 if TLS instead
+  secure: true,
       auth: {
         user: nodemailerSecretes.Email,
         pass: nodemailerSecretes.Pass,
