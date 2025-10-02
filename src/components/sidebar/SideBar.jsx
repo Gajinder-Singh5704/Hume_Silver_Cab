@@ -36,6 +36,7 @@ const TimePicker = lazy(() =>
 );
 import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
+import { tr } from "date-fns/locale";
 
 const SideBar = ({
   onPickupSelect,
@@ -264,7 +265,7 @@ const SideBar = ({
         base =
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].baseFlat +
           distance *
-            SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
+          SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
       } else if (timeType === 2) {
@@ -561,13 +562,8 @@ const SideBar = ({
 
   const handleVehicleDetailOpenChange = ({ open, scrollY = 0 }) => {
     if (open) {
-      // save the scroll before switching
-      scrollRef.current = scrollY;
     } else {
-      // when closing, restore scroll
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: scrollRef.current, behavior: "smooth" });
-      });
+      setScroll(true)
     }
     onVehicleDetailOpenChange(open);
   };
@@ -758,11 +754,11 @@ const SideBar = ({
     // Move pacs immediately in case they already exist
     movePacInto(
       pickupInputRef?.current?.parentNode ||
-        pickupInputRef?.current?.closest?.(".relative")
+      pickupInputRef?.current?.closest?.(".relative")
     );
     movePacInto(
       destinationRef?.current?.parentNode ||
-        destinationRef?.current?.closest?.(".relative")
+      destinationRef?.current?.closest?.(".relative")
     );
 
     // Observe DOM additions (Google adds pac-container to body)
@@ -914,6 +910,26 @@ const SideBar = ({
     };
   }, []); // run once
 
+  const [scrollToPassenger,setScroll] = useState(false)
+  // add this near your other effects
+  useEffect(() => {
+    // when SeatDetails is closed we set vehicleText to "" and the form becomes visible
+    if (!vehicleText && scrollToPassenger) {
+      // wait one paint so the element is in the layout, then scroll
+      requestAnimationFrame(() => {
+        if (passengerNameRef.current) {
+          passengerNameRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+          // optional: focus the TextField input for a nicer UX
+          const input = passengerNameRef.current.querySelector("input");
+          scrollToRef(passengerNameRef)
+          input?.focus?.();
+        }
+        // setScroll(false)
+      });
+    }
+  }, [vehicleText]);
+
+
   useEffect(() => {
     updateRoute(pickupLoc, destinationLoc);
   }, [pickupLoc, destinationLoc]);
@@ -942,10 +958,6 @@ const SideBar = ({
   }, [bookingMode, dateVal, hourVal, minuteVal]);
 
   useEffect(() => {
-    updateRoute(pickupLoc, destinationLoc);
-  }, [pickup, destinationLoc]);
-
-  useEffect(() => {
     axios
       .get("https://api.ipify.org?format=json")
       .then((res) => setIp(res.data.ip))
@@ -964,8 +976,8 @@ const SideBar = ({
 
   return (
     <>
-      {!vehicleText && (
-        <section className=" w-full scroll-container" ref={topRef}>
+      {(
+        <section className={`w-full scroll-container ${vehicleText ? "hidden" : "block"}`} ref={topRef}>
           <form onSubmit={handleSubmit} autoComplete="off">
             {/* Step 1 */}
             <div className="px-5 py-6">
@@ -1233,11 +1245,11 @@ const SideBar = ({
                           value={
                             hourVal && minuteVal
                               ? new Date(
-                                  `${dateVal}T${to24(
-                                    hourVal,
-                                    meridiem
-                                  )}:${minuteVal}:00`
-                                )
+                                `${dateVal}T${to24(
+                                  hourVal,
+                                  meridiem
+                                )}:${minuteVal}:00`
+                              )
                               : null
                           }
                           onChange={(newVal) => {
@@ -1332,8 +1344,8 @@ const SideBar = ({
                       ? isOn
                         ? `$${fare}`
                         : `$${Math.round(fare - 5)} - $${Math.round(
-                            fare - -15
-                          )}`
+                          fare - -15
+                        )}`
                       : "Dest required"
                   }
                   allFares={allFares}
@@ -1479,11 +1491,10 @@ const SideBar = ({
               {/* Request Booking Button */}
               <button
                 type="submit"
-                className={`w-full py-3 rounded-md ${
-                  isRequesSend
+                className={`w-full py-3 rounded-md ${isRequesSend
                     ? "bg-orange-50 text-orange-600"
                     : "bg-orange-500 text-white  "
-                } font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
+                  } font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
                 disabled={isRequesSend}
               >
                 Request Booking
