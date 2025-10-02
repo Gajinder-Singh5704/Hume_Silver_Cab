@@ -59,12 +59,7 @@ const CarDropdown = ({
 
   const handleInfoClick = (e, id) => {
     e.stopPropagation();
-      // find Y position of the clicked element
-  const elementTop = e.currentTarget.getBoundingClientRect().top + window.scrollY;
-
-  // pass both: "open details" and "scrollY"
-  onVehicleDetailOpenChange({ open: true, scrollY: elementTop });
-    // onVehicleDetailOpenChange(true);
+    onVehicleDetailOpenChange(true);
     if (id === "maxi-taxi" && typeof isLuggageModal === "function") {
       isLuggageModal(true);
     }
@@ -135,21 +130,25 @@ const CarDropdown = ({
               <p className="text-sm font-medium text-gray-800">
                 {isFixedPrice ? "Fixed Price" : currentSelection?.fareEstimate}
               </p>
-              <p className="text-sm flex items-center  text-gray-600">
+              <p className="text-sm flex items-center text-gray-600">
                 {isFixedPrice ? (
                   <>
                     <LockIcon className="mr-1" color="orange" size={12} />
-                    <span className="font-bold">{label}</span>
-                    
+                    <span className="font-bold">
+                      {renderFare(getFareFor(currentSelection), currentSelection?.destRequired)}
+                    </span>
                   </>
                 ) : (
-                  <span className="font-bold">{label}</span>
+                  <span className="font-bold">
+                    {renderFare(getFareFor(currentSelection), currentSelection?.destRequired)}
+                  </span>
                 )}
               </p>
             </div>
           </div>
         </div>
       )}
+
 
       {/* WHEN OPEN: show all options */}
       {isOpen && (
