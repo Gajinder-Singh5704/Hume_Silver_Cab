@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
 import CabUnavailableModal from "./NoServiceModal.jsx";
@@ -25,10 +25,14 @@ import { toast } from "react-hot-toast";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 const DatePicker = lazy(() =>
-  import("@mui/x-date-pickers/DatePicker").then(m => ({ default: m.DatePicker }))
+  import("@mui/x-date-pickers/DatePicker").then((m) => ({
+    default: m.DatePicker,
+  }))
 );
 const TimePicker = lazy(() =>
-  import("@mui/x-date-pickers/TimePicker").then(m => ({ default: m.TimePicker }))
+  import("@mui/x-date-pickers/TimePicker").then((m) => ({
+    default: m.TimePicker,
+  }))
 );
 import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
@@ -110,7 +114,8 @@ const SideBar = ({
   });
 
   const [pickerKey, setPickerKey] = useState(0);
-
+  const scrollRef = useRef(0);
+  const [ip, setIp] = useState(null);
 
   // ===== form fields =====
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -154,7 +159,9 @@ const SideBar = ({
   const [minuteVal, setMinuteVal] = useState(
     melbourneNow.getMinutes().toString().padStart(2, "0")
   );
-  const [meridiem, setMeridiem] = useState(melbourneNow.getHours() >= 12 ? "PM" : "AM"); // NEW
+  const [meridiem, setMeridiem] = useState(
+    melbourneNow.getHours() >= 12 ? "PM" : "AM"
+  ); // NEW
 
   const [timeType, setTimeType] = useState(2); // number-3
   const [fare, setFare] = useState(null);
@@ -163,19 +170,20 @@ const SideBar = ({
   const [vehicleText, setVehicleText] = useState("");
   const [isNoServiceOpen, setIsNoServiceOpen] = useState(false);
 
-
-
   const fixedColor = SIDEBAR_CONSTANTS.COLORS.FIXED_ORANGE; // orange-500
 
   const pickupAutoRef = useRef(null);
   const destinationAutoRef = useRef(null);
   const passengerNameRef = useRef(null);
   const to24 = (h12, ampm) =>
-    String((parseInt(h12, 10) % 12) + (ampm === "PM" ? 12 : 0)).padStart(2, "0");
+    String((parseInt(h12, 10) % 12) + (ampm === "PM" ? 12 : 0)).padStart(
+      2,
+      "0"
+    );
 
   const to12 = (h24) => {
     const ampm = h24 >= 12 ? "PM" : "AM";
-    const h12 = (h24 % 12) || 12;
+    const h12 = h24 % 12 || 12;
     return { h12: String(h12).padStart(2, "0"), ampm };
   };
 
@@ -256,7 +264,7 @@ const SideBar = ({
         base =
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].baseFlat +
           distance *
-          SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
+            SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
       } else if (timeType === 2) {
@@ -310,7 +318,6 @@ const SideBar = ({
     setFare(selectedFare);
   };
 
-
   const handleDeleteDestination = () => {
     setDestination("");
     setDestinationLoc(null);
@@ -330,8 +337,8 @@ const SideBar = ({
       if (location) {
         setDestinationLoc(location);
         onDestinationSelect(location);
-        updateRoute(pickupLoc, location)
-        calculateFare()
+        updateRoute(pickupLoc, location);
+        calculateFare();
       }
     } catch (err) {
       console.error("Failed to select destination", err);
@@ -385,7 +392,7 @@ const SideBar = ({
       setDistanceKm("");
       setHasToll(false);
       setFare(null);
-      setAllFares([])
+      setAllFares([]);
       return;
     }
     setHasToll(false);
@@ -552,6 +559,27 @@ const SideBar = ({
     }
   };
 
+  const handleVehicleDetailOpenChange = ({ open, scrollY = 0 }) => {
+    if (open) {
+      // save the scroll before switching
+      scrollRef.current = scrollY;
+    } else {
+      // when closing, restore scroll
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollRef.current, behavior: "smooth" });
+      });
+    }
+    onVehicleDetailOpenChange(open);
+  };
+
+  const formdate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedPayment) {
@@ -560,11 +588,11 @@ const SideBar = ({
       return;
     }
     if (!isAuMobileValid(contact)) {
-      scrollToRef(passengerNameRef)
+      scrollToRef(passengerNameRef);
       setContactError("Number must start with 0 and be 10 digits.");
       return; // stop here
     }
-    setIsRequestSend(true)
+    setIsRequestSend(true);
     const bookingTime = `${hourVal}:${minuteVal} ${meridiem} `;
     const bookingDate = `${dateVal}`;
     const selectedCarData = {
@@ -581,15 +609,16 @@ const SideBar = ({
       passangers: selectedCarData.passengers,
       bookingMode,
       fare,
-      pickupDate: bookingDate,
+      pickupDate: formdate(bookingDate),
       pickupTime: bookingTime,
       passengerName: passenger,
       contact,
       paymantMethod: `${selectedPayment.name}`,
       note: instruction || "",
       timeType,
+      ipAddress: ip,
     };
-    const res = await sendBooking(formData)
+    const res = await sendBooking(formData);
     // console.log("Received data:", res);
     if (res.success) {
       // toast.success("🎉 Booking Requested Successfully!", {
@@ -597,17 +626,17 @@ const SideBar = ({
       //   autoClose: 6000,
 
       // });
-      window.location.href = "https://humesilvercabservices.com.au/thank-you/"
+      window.location.href = "https://humesilvercabservices.com.au/thank-you/";
       setError("");
       scrollToTopOrNavbar();
-      setIsRequestSend(false)
+      setIsRequestSend(false);
     } else {
       toast.error("Booking Request Failed", {
         position: "top-right",
         autoClose: 6000,
       });
-      setIsRequestSend(false)
-      return
+      setIsRequestSend(false);
+      return;
     }
     // Reset all fields
     setPickup("");
@@ -727,13 +756,22 @@ const SideBar = ({
     }
 
     // Move pacs immediately in case they already exist
-    movePacInto(pickupInputRef?.current?.parentNode || pickupInputRef?.current?.closest?.(".relative"));
-    movePacInto(destinationRef?.current?.parentNode || destinationRef?.current?.closest?.(".relative"));
+    movePacInto(
+      pickupInputRef?.current?.parentNode ||
+        pickupInputRef?.current?.closest?.(".relative")
+    );
+    movePacInto(
+      destinationRef?.current?.parentNode ||
+        destinationRef?.current?.closest?.(".relative")
+    );
 
     // Observe DOM additions (Google adds pac-container to body)
     const observer = new MutationObserver(() => {
       const active = document.activeElement;
-      if (active && (active === pickupInputRef.current || active === destinationRef.current)) {
+      if (
+        active &&
+        (active === pickupInputRef.current || active === destinationRef.current)
+      ) {
         const wrapper = active.parentNode || active.closest(".relative");
         movePacInto(wrapper);
       }
@@ -754,7 +792,7 @@ const SideBar = ({
   useEffect(() => {
     if (!sessionStorage.getItem("firstLoadDone")) {
       sessionStorage.setItem("firstLoadDone", "true");
-      console.log("Reloading")
+      console.log("Reloading");
       window.location.reload();
     }
   }, []);
@@ -772,7 +810,10 @@ const SideBar = ({
             const check = () =>
               window.google?.maps ? resolve() : setTimeout(check, 50);
             check();
-            setTimeout(() => reject(new Error("Maps JS failed to appear")), 15000);
+            setTimeout(
+              () => reject(new Error("Maps JS failed to appear")),
+              15000
+            );
           });
         }
 
@@ -790,8 +831,14 @@ const SideBar = ({
         };
 
         const { places } = window.google.maps;
-        pickupAutoRef.current = new places.Autocomplete(pickupInputRef.current, options);
-        destinationAutoRef.current = new places.Autocomplete(destinationRef.current, options);
+        pickupAutoRef.current = new places.Autocomplete(
+          pickupInputRef.current,
+          options
+        );
+        destinationAutoRef.current = new places.Autocomplete(
+          destinationRef.current,
+          options
+        );
 
         // PICKUP listener
         pickupAutoRef.current.addListener("place_changed", async () => {
@@ -850,11 +897,15 @@ const SideBar = ({
     return () => {
       cancelled = true;
       if (pickupAutoRef.current) {
-        window.google?.maps?.event?.clearInstanceListeners?.(pickupAutoRef.current);
+        window.google?.maps?.event?.clearInstanceListeners?.(
+          pickupAutoRef.current
+        );
         pickupAutoRef.current = null;
       }
       if (destinationAutoRef.current) {
-        window.google?.maps?.event?.clearInstanceListeners?.(destinationAutoRef.current);
+        window.google?.maps?.event?.clearInstanceListeners?.(
+          destinationAutoRef.current
+        );
         destinationAutoRef.current = null;
       }
       // Safety: keep only one pac container
@@ -862,7 +913,6 @@ const SideBar = ({
       pacs.forEach((el, idx) => idx > 0 && el.remove());
     };
   }, []); // run once
-
 
   useEffect(() => {
     updateRoute(pickupLoc, destinationLoc);
@@ -895,6 +945,23 @@ const SideBar = ({
     updateRoute(pickupLoc, destinationLoc);
   }, [pickup, destinationLoc]);
 
+  useEffect(() => {
+    axios
+      .get("https://api.ipify.org?format=json")
+      .then((res) => setIp(res.data.ip))
+      .catch((err) => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    // Reset scroll when page reloads/mounts
+    window.scrollTo(0, 0);
+
+    // Optional: disable browser's scroll restoration
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
   return (
     <>
       {!vehicleText && (
@@ -915,7 +982,6 @@ const SideBar = ({
 
               <div className="mb-4 relative ">
                 <TextField
-
                   inputRef={pickupInputRef} // attach ref here
                   label="Add pickup (required)"
                   variant="outlined"
@@ -1075,13 +1141,12 @@ const SideBar = ({
               </RadioGroup>
             </div>
 
-
             {bookingMode === "later" && (
               <div className="px-3 py-2">
                 <div className="flex flex-col md:flex-col gap-4">
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      < Suspense fallback={null}>
+                      <Suspense fallback={null}>
                         <DatePicker
                           key={`date-${pickerKey}`}
                           label="Pickup date"
@@ -1092,13 +1157,20 @@ const SideBar = ({
                           onChange={(newVal) => {
                             if (!newVal) return;
                             const y = newVal.getFullYear();
-                            const m = String(newVal.getMonth() + 1).padStart(2, "0");
+                            const m = String(newVal.getMonth() + 1).padStart(
+                              2,
+                              "0"
+                            );
                             const d = String(newVal.getDate()).padStart(2, "0");
                             const next = `${y}-${m}-${d}`;
                             setDateVal(next);
 
                             if (isToday(next)) {
-                              const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
+                              const [h, mi] = clampToMinIfPast(
+                                next,
+                                hourVal,
+                                minuteVal
+                              );
                               setHourVal(h);
                               setMinuteVal(mi);
                             }
@@ -1111,23 +1183,25 @@ const SideBar = ({
                               fullWidth: true,
                               error: false,
                               required: false,
-                              onClick: () => setDateOpen(true),               // open on click anywhere
+                              onClick: () => setDateOpen(true), // open on click anywhere
                               onKeyDown: (e) => {
                                 // allow Tab for accessibility, Block other keys from editing
                                 if (e.key !== "Tab") e.preventDefault();
                                 // open on Enter/Space if focused
-                                if (e.key === "Enter" || e.key === " ") setDateOpen(true);
+                                if (e.key === "Enter" || e.key === " ")
+                                  setDateOpen(true);
                               },
                               onPaste: (e) => e.preventDefault(),
                               onFocus: (e) => e.target.blur(),
                               inputProps: {
-                                readOnly: true,                               // block manual typing
-                                inputMode: "none",                            // suppress mobile keyboards
+                                readOnly: true, // block manual typing
+                                inputMode: "none", // suppress mobile keyboards
                                 tabIndex: 0,
                               },
                               sx: {
                                 cursor: "pointer",
-                                "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                                "& .MuiOutlinedInput-root.Mui-focused fieldset":
+                                  { borderColor: fixedColor },
                                 "& label.Mui-focused": { color: "gray" },
                               },
                             },
@@ -1142,9 +1216,9 @@ const SideBar = ({
 
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      < Suspense fallback={null}>
+                      <Suspense fallback={null}>
                         <TimePicker
-                          ampm                                  // ← force 12-hour UI
+                          ampm // ← force 12-hour UI
                           key={`time-${pickerKey}`}
                           label="Pickup time"
                           open={timeOpen}
@@ -1158,7 +1232,12 @@ const SideBar = ({
                           // Build a Date from your 12h parts + meridiem
                           value={
                             hourVal && minuteVal
-                              ? new Date(`${dateVal}T${to24(hourVal, meridiem)}:${minuteVal}:00`)
+                              ? new Date(
+                                  `${dateVal}T${to24(
+                                    hourVal,
+                                    meridiem
+                                  )}:${minuteVal}:00`
+                                )
                               : null
                           }
                           onChange={(newVal) => {
@@ -1166,13 +1245,19 @@ const SideBar = ({
 
                             // Get 24h from picker, then convert/store as 12h + AM/PM
                             const h24 = newVal.getHours();
-                            const m = String(newVal.getMinutes()).padStart(2, "0");
+                            const m = String(newVal.getMinutes()).padStart(
+                              2,
+                              "0"
+                            );
                             const { h12, ampm } = to12(h24);
 
                             // If it's today, clamp against "now + 10m"
-                            let H = h24.toString().padStart(2, "0"), M = m;
+                            let H = h24.toString().padStart(2, "0"),
+                              M = m;
                             [H, M] = clampToMinIfPast(dateVal, H, M); // returns 24h
-                            const { h12: clampedH12, ampm: clampedAmPm } = to12(parseInt(H, 10));
+                            const { h12: clampedH12, ampm: clampedAmPm } = to12(
+                              parseInt(H, 10)
+                            );
 
                             setHourVal(clampedH12);
                             setMinuteVal(M);
@@ -1186,17 +1271,25 @@ const SideBar = ({
                               onFocus: (e) => e.target.blur(),
                               onKeyDown: (e) => {
                                 if (e.key !== "Tab") e.preventDefault();
-                                if (e.key === "Enter" || e.key === " ") setTimeOpen(true);
+                                if (e.key === "Enter" || e.key === " ")
+                                  setTimeOpen(true);
                               },
                               onPaste: (e) => e.preventDefault(),
-                              inputProps: { readOnly: true, inputMode: "none", tabIndex: 0 },
+                              inputProps: {
+                                readOnly: true,
+                                inputMode: "none",
+                                tabIndex: 0,
+                              },
                               sx: {
                                 cursor: "pointer",
-                                "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                                "& .MuiOutlinedInput-root.Mui-focused fieldset":
+                                  { borderColor: fixedColor },
                                 "& label.Mui-focused": { color: "gray" },
                               },
                             },
-                            openPickerButton: { onClick: () => setTimeOpen(true) },
+                            openPickerButton: {
+                              onClick: () => setTimeOpen(true),
+                            },
                             actionBar: { actions: ["accept", "cancel"] },
                           }}
                         />
@@ -1206,7 +1299,6 @@ const SideBar = ({
                 </div>
               </div>
             )}
-
 
             {/* // ...existing code... */}
 
@@ -1239,14 +1331,16 @@ const SideBar = ({
                     fare
                       ? isOn
                         ? `$${fare}`
-                        : `$${Math.round(fare - 5)} - $${Math.round(fare - -15)}`
+                        : `$${Math.round(fare - 5)} - $${Math.round(
+                            fare - -15
+                          )}`
                       : "Dest required"
                   }
                   allFares={allFares}
                   changeVehicleText={setVehicleText}
                   isLuggageModal={setIsLuggageModalOpen}
                   isFixedPrice={isOn}
-                  onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+                  onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
                 />
               </Suspense>
             </div>
@@ -1280,12 +1374,10 @@ const SideBar = ({
               </div>
 
               <div className="flex items-center justify-center gap-2 w-full">
-                <div className={`w-[20%] border border-gray-300  rounded-sm h-14 flex items-center justify-center gap-1`} >
-                  <img
-                    className="h-5"
-                    src={images.aus}
-                    alt="AU"
-                  />
+                <div
+                  className={`w-[20%] border border-gray-300  rounded-sm h-14 flex items-center justify-center gap-1`}
+                >
+                  <img className="h-5" src={images.aus} alt="AU" />
                   {SIDEBAR_CONSTANTS.CONTACT.AU_PHONE_PREFIX}
                 </div>
                 <div className="flex-grow">
@@ -1296,15 +1388,19 @@ const SideBar = ({
                     required
                     type="tel"
                     inputProps={{
-                      maxLength: 10,          // allow only 10 chars
-                      inputMode: "numeric",   // mobile numeric keyboard
+                      maxLength: 10, // allow only 10 chars
+                      inputMode: "numeric", // mobile numeric keyboard
                     }}
                     value={contact}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
                       setContact(value);
                       if (!isAuMobileValid(value)) {
-                        setContactError("Number must start with 0 and be 10 digits.");
+                        setContactError(
+                          "Number must start with 0 and be 10 digits."
+                        );
                       } else {
                         setContactError("");
                       }
@@ -1348,7 +1444,9 @@ const SideBar = ({
               </Suspense>
             </div>
 
-            {!selectedPayment && <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>}
+            {!selectedPayment && (
+              <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>
+            )}
 
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
@@ -1381,7 +1479,11 @@ const SideBar = ({
               {/* Request Booking Button */}
               <button
                 type="submit"
-                className={`w-full py-3 rounded-md ${isRequesSend ? "bg-orange-50 text-orange-600" : "bg-orange-500 text-white  "} font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
+                className={`w-full py-3 rounded-md ${
+                  isRequesSend
+                    ? "bg-orange-50 text-orange-600"
+                    : "bg-orange-500 text-white  "
+                } font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
                 disabled={isRequesSend}
               >
                 Request Booking
@@ -1396,7 +1498,7 @@ const SideBar = ({
             data={seatDetails["Next Available"]}
             changeVehicleText={setVehicleText}
             onSelect={setSelected}
-            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
             changeIsLuggageModal={setIsLuggageModalOpen}
           />
         </Suspense>
@@ -1407,7 +1509,7 @@ const SideBar = ({
             data={seatDetails["Silver Service"]}
             changeVehicleText={setVehicleText}
             onSelect={setSelected}
-            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
             changeIsLuggageModal={setIsLuggageModalOpen}
           />
         </Suspense>
@@ -1418,7 +1520,7 @@ const SideBar = ({
             data={seatDetails["Suv"]}
             changeVehicleText={setVehicleText}
             onSelect={setSelected}
-            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
             changeIsLuggageModal={setIsLuggageModalOpen}
           />
         </Suspense>
@@ -1429,7 +1531,7 @@ const SideBar = ({
             data={seatDetails["Maxi Taxi"]}
             changeVehicleText={setVehicleText}
             onSelect={setSelected}
-            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
             changeIsLuggageModal={setIsLuggageModalOpen}
           />
         </Suspense>
@@ -1465,7 +1567,9 @@ const SideBar = ({
                 d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 018 8h-4l3 3-3 3h4a8 8 0 01-8 8v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
               ></path>
             </svg>
-            <span className="text-gray-700 font-semibold">Processing your request...</span>
+            <span className="text-gray-700 font-semibold">
+              Processing your request...
+            </span>
           </div>
         </div>
       )}

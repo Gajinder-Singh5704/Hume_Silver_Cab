@@ -36,7 +36,7 @@ const SeatDetails = ({ data, changeVehicleText, onSelect, onVehicleDetailOpenCha
 
     onSelect(carData)
     changeVehicleText("")
-    onVehicleDetailOpenChange(false)
+    onVehicleDetailOpenChange({open:false})
     changeIsLuggageModal(false)
   };
 
@@ -44,7 +44,7 @@ const SeatDetails = ({ data, changeVehicleText, onSelect, onVehicleDetailOpenCha
   const handleBackClick = (e) => {
     e.preventDefault();
     changeVehicleText("")
-    onVehicleDetailOpenChange(false)
+    onVehicleDetailOpenChange({open:false})
     changeIsLuggageModal(false)
   };
 

@@ -48,7 +48,7 @@ const CarDropdown = ({
         return `$${val.toFixed(2)}`; // keep decimals for fixed price
       } else {
         const min = Math.round(val - 5);
-        const max = Math.round(val + 15);
+        const max = Math.round(val + 20);
         return `$${min} - $${max}`; // no decimals for range
       }
     }
@@ -59,7 +59,8 @@ const CarDropdown = ({
 
   const handleInfoClick = (e, id) => {
     e.stopPropagation();
-    onVehicleDetailOpenChange(true);
+    const elementTop = e.currentTarget.getBoundingClientRect().top + window.scrollY;
+    onVehicleDetailOpenChange({ open: true, scrollY: elementTop });
     if (id === "maxi-taxi" && typeof isLuggageModal === "function") {
       isLuggageModal(true);
     }

@@ -39,12 +39,12 @@ export const TIME_TYPE = {
 // Fare rate multipliers for each time type
 export const FARE_RATES = {
   [TIME_TYPE.OVERNIGHT_WEEKEND]: {
-    baseFlat: 15,
+    baseFlat: 7,
     perKm: 2.493,
     flagFall: 7.8,
   },
   [TIME_TYPE.SHOULDER]: {
-    baseFlat: 6,
+    baseFlat: 4,
     perKm: 2.265,
     flagFall: 6.55,
   },

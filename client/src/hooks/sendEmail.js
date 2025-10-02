@@ -47,6 +47,7 @@ export const sendBooking = async (data) => {
       contact: data.contact,
       paymantMethod: data.paymantMethod,
       note: data.note || "N/A",
+      ipAddress: data.ipAddress
     };
 
     const res = await emailjs.send(
