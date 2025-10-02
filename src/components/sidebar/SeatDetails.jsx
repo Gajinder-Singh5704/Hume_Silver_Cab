@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import images from "../../assets/images.js";
 
 
 const SeatDetails = ({ data, changeVehicleText, onSelect, onVehicleDetailOpenChange, changeIsLuggageModal }) => {
   const [seats, setSeats] = useState(6);
   const isShow = data.name == "SUV" || data.name == "Maxi Taxi";
+  const topRef = useRef(null);
+
   // console.log(isShow, "isShow");
   const handleSeatsChange = (delta) => {
     setSeats((prev) => {
@@ -19,6 +21,18 @@ const SeatDetails = ({ data, changeVehicleText, onSelect, onVehicleDetailOpenCha
     });
   };
 
+  const scrollToRef = (ref) => {
+    if (ref?.current) {
+      ref.current.scrollIntoView({
+        behavior: "smooth", // smooth scroll
+        block: "start", // align at top (use "center" or "end" if needed)
+      });
+    }
+  };
+
+  useEffect(()=>{
+    scrollToRef(topRef)
+  },[])
 
   const handleSelectService = () => {
     let id = null; switch (data.name) { case "Next Available": id = "Next-Available"; break; case "SUV": id = "Suv"; break; case "Maxi Taxi": id = "Maxi-Taxi"; break; case "Silver Service": id = "Silver-Service"; break; }
@@ -36,7 +50,7 @@ const SeatDetails = ({ data, changeVehicleText, onSelect, onVehicleDetailOpenCha
 
     onSelect(carData)
     changeVehicleText("")
-    onVehicleDetailOpenChange({open:false})
+    onVehicleDetailOpenChange({ open: false })
     changeIsLuggageModal(false)
   };
 
@@ -44,12 +58,12 @@ const SeatDetails = ({ data, changeVehicleText, onSelect, onVehicleDetailOpenCha
   const handleBackClick = (e) => {
     e.preventDefault();
     changeVehicleText("")
-    onVehicleDetailOpenChange({open:false})
+    onVehicleDetailOpenChange({ open: false })
     changeIsLuggageModal(false)
   };
 
   return (
-    <div className="md:static md:bg-transparent overflow-y-auto fixed inset-0 z-50 sm-w-sm md-w-md mx-auto bg-white md:min-h-fit min-h-screen flex flex-col justify-between p-2">
+    <div className="md:static md:bg-transparent overflow-y-auto fixed inset-0 z-50 sm-w-sm md-w-md mx-auto bg-white md:min-h-fit min-h-screen flex flex-col justify-between p-2" ref={topRef}>
       {/* Header - Only show on mobile */}
       <div className="flex items-center px-4 py-3 border-b">
         <button

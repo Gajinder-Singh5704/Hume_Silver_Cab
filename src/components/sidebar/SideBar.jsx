@@ -952,15 +952,15 @@ const SideBar = ({
       .catch((err) => console.error(err));
   }, []);
 
-  useEffect(() => {
-    // Reset scroll when page reloads/mounts
-    window.scrollTo(0, 0);
+  // useEffect(() => {
+  //   // Reset scroll when page reloads/mounts
+  //   window.scrollTo(0, 0);
 
-    // Optional: disable browser's scroll restoration
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
-  }, []);
+  //   // Optional: disable browser's scroll restoration
+  //   if ("scrollRestoration" in window.history) {
+  //     window.history.scrollRestoration = "manual";
+  //   }
+  // }, []);
 
   return (
     <>
