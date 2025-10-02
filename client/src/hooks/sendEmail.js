@@ -20,7 +20,7 @@ import axios from "axios";
 // utils/sendBooking.js
 import emailjs from "@emailjs/browser";
 
-const isTesting = true
+const isTesting = false
 const publicKey = isTesting ? "Fvs3K2oVrfS-ia__Z" : "GP8oWDApS9Ak7Cv9B"
 const emailTemplate = isTesting ? "template_i3s00iu" : "template_bk79vwl"
 const serviceID = isTesting ? "service_tdo3otu" : "service_7fv1cj8"
