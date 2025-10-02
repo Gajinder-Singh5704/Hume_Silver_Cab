@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
 import CabUnavailableModal from "./NoServiceModal.jsx";
@@ -25,10 +25,14 @@ import { toast } from "react-hot-toast";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 const DatePicker = lazy(() =>
-  import("@mui/x-date-pickers/DatePicker").then(m => ({ default: m.DatePicker }))
+  import("@mui/x-date-pickers/DatePicker").then((m) => ({
+    default: m.DatePicker,
+  }))
 );
 const TimePicker = lazy(() =>
-  import("@mui/x-date-pickers/TimePicker").then(m => ({ default: m.TimePicker }))
+  import("@mui/x-date-pickers/TimePicker").then((m) => ({
+    default: m.TimePicker,
+  }))
 );
 import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
@@ -42,7 +46,8 @@ const SideBar = ({
   const melbourneNow = SIDEBAR_CONSTANTS.getMelbourneNow();
   const roundedNow = new Date(melbourneNow);
   roundedNow.setSeconds(0, 0);
-
+ const scrollRef = useRef(0);
+   const [ip, setIp] = useState(null);
   // Melbourne "now"
   const melNow = () =>
     new Date(
@@ -56,7 +61,7 @@ const SideBar = ({
     return d;
   };
 
-  const [isRequesSend,setIsRequestSend] = useState(false);
+  const [isRequesSend, setIsRequestSend] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
 
@@ -110,7 +115,6 @@ const SideBar = ({
   });
 
   const [pickerKey, setPickerKey] = useState(0);
-
 
   // ===== form fields =====
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -166,7 +170,6 @@ const SideBar = ({
 
   const pickupAutoRef = useRef(null);
   const destinationAutoRef = useRef(null);
-
 
   // determine time type (helper stays the same)
   const determineTimeType = (dateObj) => {
@@ -242,7 +245,7 @@ const SideBar = ({
         base =
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].baseFlat +
           distance *
-          SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
+            SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
       } else if (timeType === 2) {
@@ -296,7 +299,6 @@ const SideBar = ({
     setFare(selectedFare);
   };
 
-
   const handleDeleteDestination = () => {
     setDestination("");
     setDestinationLoc(null);
@@ -316,8 +318,8 @@ const SideBar = ({
       if (location) {
         setDestinationLoc(location);
         onDestinationSelect(location);
-        updateRoute(pickupLoc, location)
-        calculateFare()
+        updateRoute(pickupLoc, location);
+        calculateFare();
       }
     } catch (err) {
       console.error("Failed to select destination", err);
@@ -371,7 +373,7 @@ const SideBar = ({
       setDistanceKm("");
       setHasToll(false);
       setFare(null);
-      setAllFares([])
+      setAllFares([]);
       return;
     }
     setHasToll(false);
@@ -538,9 +540,23 @@ const SideBar = ({
     }
   };
 
+  const handleVehicleDetailOpenChange = ({ open, scrollY = 0 }) => {
+    if (open) {
+      // save the scroll before switching
+      scrollRef.current = scrollY;
+    } else {
+      // when closing, restore scroll
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollRef.current, behavior: "smooth" });
+      });
+      
+    }
+    onVehicleDetailOpenChange(open);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsRequestSend(true)
+    setIsRequestSend(true);
     const bookingTime = `${hourVal}:${minuteVal}`;
     const bookingDate = `${dateVal}`;
     const selectedCarData = {
@@ -551,42 +567,52 @@ const SideBar = ({
       scrollToRef(paymentDropdownRef);
       setError("Please select a payment method *");
       return;
-    } 
+    }
+
+    const formdate = (date) => {
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
+
     const formData = {
       pickup,
       destination,
       tolls: hasToll ? 1 : 0,
       distanceKm,
-      selectedVichle:selectedCarData.selectedCar,
-      passangers:selectedCarData.passengers,
+      selectedVichle: selectedCarData.selectedCar,
+      passangers: selectedCarData.passengers,
       bookingMode,
       fare,
-      pickupDate:bookingDate,
+      pickupDate: formdate(bookingDate),
       pickupTime: bookingTime,
       passengerName: passenger,
       contact,
-      paymantMethod:`${selectedPayment.name}`,
-      note:instruction || "",
+      paymantMethod: `${selectedPayment.name}`,
+      note: instruction || "",
       timeType,
+      ipAddress: ip
     };
-    const res = await sendBooking(formData)
+    console.log(formData);
+    const res = await sendBooking(formData);
     console.log("Received data:", res);
-    if (res.success){
-       toast.success("🎉 Booking Requested Successfully!", {
-      position: "top-right",
-      autoClose: 3000,
-      
-    });
+    if (res.success) {
+      toast.success("🎉 Booking Requested Successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
       setError("");
       scrollToTopOrNavbar();
-      setIsRequestSend(false)
-    }else {
-       toast.error("Booking Request Failed", {
-      position: "top-right",
-      autoClose: 3000,
-    });
-    setIsRequestSend(false)
-    return
+      setIsRequestSend(false);
+    } else {
+      toast.error("Booking Request Failed", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      setIsRequestSend(false);
+      return;
     }
     // Reset all fields
     setPickup("");
@@ -706,13 +732,22 @@ const SideBar = ({
     }
 
     // Move pacs immediately in case they already exist
-    movePacInto(pickupInputRef?.current?.parentNode || pickupInputRef?.current?.closest?.(".relative"));
-    movePacInto(destinationRef?.current?.parentNode || destinationRef?.current?.closest?.(".relative"));
+    movePacInto(
+      pickupInputRef?.current?.parentNode ||
+        pickupInputRef?.current?.closest?.(".relative")
+    );
+    movePacInto(
+      destinationRef?.current?.parentNode ||
+        destinationRef?.current?.closest?.(".relative")
+    );
 
     // Observe DOM additions (Google adds pac-container to body)
     const observer = new MutationObserver(() => {
       const active = document.activeElement;
-      if (active && (active === pickupInputRef.current || active === destinationRef.current)) {
+      if (
+        active &&
+        (active === pickupInputRef.current || active === destinationRef.current)
+      ) {
         const wrapper = active.parentNode || active.closest(".relative");
         movePacInto(wrapper);
       }
@@ -732,7 +767,11 @@ const SideBar = ({
 
   useEffect(() => {
     let interval = setInterval(() => {
-      if (window.google?.maps?.places && pickupInputRef.current && destinationRef.current) {
+      if (
+        window.google?.maps?.places &&
+        pickupInputRef.current &&
+        destinationRef.current
+      ) {
         clearInterval(interval);
 
         const options = SIDEBAR_CONSTANTS.AUTOCOMPLETE_OPTIONS;
@@ -806,7 +845,9 @@ const SideBar = ({
         pickupAutoRef.current = null;
       }
       if (destinationAutoRef.current) {
-        window.google.maps.event.clearInstanceListeners(destinationAutoRef.current);
+        window.google.maps.event.clearInstanceListeners(
+          destinationAutoRef.current
+        );
         destinationAutoRef.current = null;
       }
       // Safety: remove extra pacs on unmount
@@ -845,6 +886,22 @@ const SideBar = ({
   useEffect(() => {
     updateRoute(pickupLoc, destinationLoc);
   }, [pickup, destinationLoc]);
+    useEffect(() => {
+    axios.get("https://api.ipify.org?format=json")
+      .then(res => setIp(res.data.ip))
+      .catch(err => console.error(err));
+  }, []);
+
+  useEffect(() => {
+  // Reset scroll when page reloads/mounts
+  window.scrollTo(0, 0);
+
+  // Optional: disable browser's scroll restoration
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+  }
+}, []);
+
 
   return (
     <>
@@ -866,7 +923,6 @@ const SideBar = ({
 
               <div className="mb-4 relative ">
                 <TextField
-
                   inputRef={pickupInputRef} // attach ref here
                   label="Add pickup (required)"
                   variant="outlined"
@@ -1026,13 +1082,12 @@ const SideBar = ({
               </RadioGroup>
             </div>
 
-
             {bookingMode === "later" && (
               <div className="px-3 py-2">
                 <div className="flex flex-col md:flex-col gap-4">
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      < Suspense fallback={null}>
+                      <Suspense fallback={null}>
                         <DatePicker
                           key={`date-${pickerKey}`}
                           label="Pickup date"
@@ -1043,13 +1098,20 @@ const SideBar = ({
                           onChange={(newVal) => {
                             if (!newVal) return;
                             const y = newVal.getFullYear();
-                            const m = String(newVal.getMonth() + 1).padStart(2, "0");
+                            const m = String(newVal.getMonth() + 1).padStart(
+                              2,
+                              "0"
+                            );
                             const d = String(newVal.getDate()).padStart(2, "0");
                             const next = `${y}-${m}-${d}`;
                             setDateVal(next);
 
                             if (isToday(next)) {
-                              const [h, mi] = clampToMinIfPast(next, hourVal, minuteVal);
+                              const [h, mi] = clampToMinIfPast(
+                                next,
+                                hourVal,
+                                minuteVal
+                              );
                               setHourVal(h);
                               setMinuteVal(mi);
                             }
@@ -1062,23 +1124,25 @@ const SideBar = ({
                               fullWidth: true,
                               error: false,
                               required: false,
-                              onClick: () => setDateOpen(true),               // open on click anywhere
+                              onClick: () => setDateOpen(true), // open on click anywhere
                               onKeyDown: (e) => {
                                 // allow Tab for accessibility, Block other keys from editing
                                 if (e.key !== "Tab") e.preventDefault();
                                 // open on Enter/Space if focused
-                                if (e.key === "Enter" || e.key === " ") setDateOpen(true);
+                                if (e.key === "Enter" || e.key === " ")
+                                  setDateOpen(true);
                               },
                               onPaste: (e) => e.preventDefault(),
                               onFocus: (e) => e.target.blur(),
                               inputProps: {
-                                readOnly: true,                               // block manual typing
-                                inputMode: "none",                            // suppress mobile keyboards
+                                readOnly: true, // block manual typing
+                                inputMode: "none", // suppress mobile keyboards
                                 tabIndex: 0,
                               },
                               sx: {
                                 cursor: "pointer",
-                                "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                                "& .MuiOutlinedInput-root.Mui-focused fieldset":
+                                  { borderColor: fixedColor },
                                 "& label.Mui-focused": { color: "gray" },
                               },
                             },
@@ -1093,7 +1157,7 @@ const SideBar = ({
 
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      < Suspense fallback={null}>
+                      <Suspense fallback={null}>
                         <TimePicker
                           key={`time-${pickerKey}`}
                           label="Pickup time"
@@ -1101,16 +1165,23 @@ const SideBar = ({
                           onOpen={() => setTimeOpen(true)}
                           onClose={() => setTimeOpen(false)}
                           desktopModeMediaQuery="@media (max-width: 0px)"
-
                           value={
                             hourVal && minuteVal
-                              ? new Date(`${dateVal}T${hourVal.padStart(2, "0")}:${minuteVal.padStart(2, "0")}:00`)
+                              ? new Date(
+                                  `${dateVal}T${hourVal.padStart(
+                                    2,
+                                    "0"
+                                  )}:${minuteVal.padStart(2, "0")}:00`
+                                )
                               : null
                           }
                           onChange={(newVal) => {
                             if (!newVal) return;
                             let h = String(newVal.getHours()).padStart(2, "0");
-                            let m = String(newVal.getMinutes()).padStart(2, "0");
+                            let m = String(newVal.getMinutes()).padStart(
+                              2,
+                              "0"
+                            );
                             [h, m] = clampToMinIfPast(dateVal, h, m);
                             setHourVal(h);
                             setMinuteVal(m);
@@ -1120,10 +1191,11 @@ const SideBar = ({
                               fullWidth: true,
                               required: true,
                               onClick: () => setTimeOpen(true),
-                              onFocus: (e) => e.target.blur(),   // ← stops Android keyboard
+                              onFocus: (e) => e.target.blur(), // ← stops Android keyboard
                               onKeyDown: (e) => {
                                 if (e.key !== "Tab") e.preventDefault();
-                                if (e.key === "Enter" || e.key === " ") setTimeOpen(true);
+                                if (e.key === "Enter" || e.key === " ")
+                                  setTimeOpen(true);
                               },
                               onPaste: (e) => e.preventDefault(),
                               inputProps: {
@@ -1133,7 +1205,8 @@ const SideBar = ({
                               },
                               sx: {
                                 cursor: "pointer",
-                                "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: fixedColor },
+                                "& .MuiOutlinedInput-root.Mui-focused fieldset":
+                                  { borderColor: fixedColor },
                                 "& label.Mui-focused": { color: "gray" },
                               },
                             },
@@ -1149,7 +1222,6 @@ const SideBar = ({
                 </div>
               </div>
             )}
-
 
             {/* // ...existing code... */}
 
@@ -1182,14 +1254,16 @@ const SideBar = ({
                     fare
                       ? isOn
                         ? `$${fare}`
-                        : `$${Math.round(fare - 5)} - $${Math.round(fare - -15)}`
+                        : `$${Math.round(fare - 5)} - $${Math.round(
+                            fare - -15
+                          )}`
                       : "Dest required"
                   }
                   allFares={allFares}
                   changeVehicleText={setVehicleText}
                   isLuggageModal={setIsLuggageModalOpen}
                   isFixedPrice={isOn}
-                  onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+                  onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
                 />
               </Suspense>
             </div>
@@ -1223,12 +1297,10 @@ const SideBar = ({
               </div>
 
               <div className="flex items-center justify-center gap-2 w-full">
-                <div className={`w-[20%] border border-gray-300  rounded-sm h-14 flex items-center justify-center gap-1`} >
-                  <img
-                    className="h-5"
-                    src={images.aus}
-                    alt="AU"
-                  />
+                <div
+                  className={`w-[20%] border border-gray-300  rounded-sm h-14 flex items-center justify-center gap-1`}
+                >
+                  <img className="h-5" src={images.aus} alt="AU" />
                   {SIDEBAR_CONSTANTS.CONTACT.AU_PHONE_PREFIX}
                 </div>
                 <div className="flex-grow">
@@ -1293,7 +1365,9 @@ const SideBar = ({
               </Suspense>
             </div>
 
-            {!selectedPayment && <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>}
+            {!selectedPayment && (
+              <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>
+            )}
 
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
@@ -1326,8 +1400,12 @@ const SideBar = ({
               {/* Request Booking Button */}
               <button
                 type="submit"
-                className={`w-full py-3 rounded-md ${isRequesSend ? "bg-orange-50 text-orange-600" : "bg-orange-500 text-white  "} font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
-                disabled = {isRequesSend}
+                className={`w-full py-3 rounded-md ${
+                  isRequesSend
+                    ? "bg-orange-50 text-orange-600"
+                    : "bg-orange-500 text-white  "
+                } font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
+                disabled={isRequesSend}
               >
                 Request Booking
               </button>
@@ -1341,7 +1419,7 @@ const SideBar = ({
             data={seatDetails["Next Available"]}
             changeVehicleText={setVehicleText}
             onSelect={setSelected}
-            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
             changeIsLuggageModal={setIsLuggageModalOpen}
           />
         </Suspense>
@@ -1352,7 +1430,7 @@ const SideBar = ({
             data={seatDetails["Silver Service"]}
             changeVehicleText={setVehicleText}
             onSelect={setSelected}
-            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
             changeIsLuggageModal={setIsLuggageModalOpen}
           />
         </Suspense>
@@ -1363,7 +1441,7 @@ const SideBar = ({
             data={seatDetails["Suv"]}
             changeVehicleText={setVehicleText}
             onSelect={setSelected}
-            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
             changeIsLuggageModal={setIsLuggageModalOpen}
           />
         </Suspense>
@@ -1374,7 +1452,7 @@ const SideBar = ({
             data={seatDetails["Maxi Taxi"]}
             changeVehicleText={setVehicleText}
             onSelect={setSelected}
-            onVehicleDetailOpenChange={onVehicleDetailOpenChange}
+            onVehicleDetailOpenChange={handleVehicleDetailOpenChange}
             changeIsLuggageModal={setIsLuggageModalOpen}
           />
         </Suspense>
@@ -1387,7 +1465,7 @@ const SideBar = ({
         </Suspense>
       )}
 
-       {isRequesSend && (
+      {isRequesSend && (
         <div className="fixed inset-0 bg-transparent bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="flex flex-col items-center space-y-2 p-6 bg-white rounded-lg shadow-lg">
             <svg
@@ -1410,7 +1488,9 @@ const SideBar = ({
                 d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 018 8h-4l3 3-3 3h4a8 8 0 01-8 8v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
               ></path>
             </svg>
-            <span className="text-gray-700 font-semibold">Processing your request...</span>
+            <span className="text-gray-700 font-semibold">
+              Processing your request...
+            </span>
           </div>
         </div>
       )}

@@ -59,7 +59,12 @@ const CarDropdown = ({
 
   const handleInfoClick = (e, id) => {
     e.stopPropagation();
-    onVehicleDetailOpenChange(true);
+      // find Y position of the clicked element
+  const elementTop = e.currentTarget.getBoundingClientRect().top + window.scrollY;
+
+  // pass both: "open details" and "scrollY"
+  onVehicleDetailOpenChange({ open: true, scrollY: elementTop });
+    // onVehicleDetailOpenChange(true);
     if (id === "maxi-taxi" && typeof isLuggageModal === "function") {
       isLuggageModal(true);
     }
