@@ -238,7 +238,7 @@ const SideBar = ({
       return null;
     }
 
-    const distance = parseInt(distanceKm);
+    const distance = parseFloat(distanceKm);
     const tollCost = hasToll ? parseFloat(tollPrice) : 0;
     const bookingFees = SIDEBAR_CONSTANTS.FEES.BOOKING_FEE;
 
@@ -281,20 +281,15 @@ const SideBar = ({
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].flagFall;
       }
-
-      let fareValue = Math.max(base, SIDEBAR_CONSTANTS.FEES.MIN_FARE);
-      fareValue += vehicleSurcharge + bookingFees;
-
+      base += vehicleSurcharge + bookingFees;
+      
       if (isAirportPickup(pickup)) {
-        fareValue += SIDEBAR_CONSTANTS.FEES.AIRPORT_SURCHARGE;
+        base += SIDEBAR_CONSTANTS.FEES.AIRPORT_SURCHARGE;
       }
-
-      // return number (not string) so it's easier to format later if needed
+      let fareValue = Math.max(base, SIDEBAR_CONSTANTS.FEES.MIN_FARE);
       return Number(fareValue.toFixed(2));
     };
 
-    // NOTE: use ids that match your options' ids (lowercase dashed form).
-    // If your options use different ids, update these strings to match.
     const faresArray = [
       {
         id: "next-available",

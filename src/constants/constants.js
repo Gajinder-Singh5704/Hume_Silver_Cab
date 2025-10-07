@@ -16,7 +16,7 @@ export const LIMITS = {
 };
 
 export const FEES = {
-  BOOKING_FEE: 4,
+  BOOKING_FEE: 3.32,
   MIN_FARE: 40,
   AIRPORT_SURCHARGE: 4.68,
 };
@@ -39,17 +39,17 @@ export const TIME_TYPE = {
 // Fare rate multipliers for each time type
 export const FARE_RATES = {
   [TIME_TYPE.OVERNIGHT_WEEKEND]: {
-    baseFlat: 7,
+    baseFlat: 0,
     perKm: 2.493,
     flagFall: 7.8,
   },
   [TIME_TYPE.SHOULDER]: {
-    baseFlat: 4,
+    baseFlat: 0,
     perKm: 2.265,
     flagFall: 6.55,
   },
   [TIME_TYPE.NORMAL]: {
-    baseFlat: 5,
+    baseFlat: 0,
     perKm: 2.037,
     flagFall: 5.25,
   },
