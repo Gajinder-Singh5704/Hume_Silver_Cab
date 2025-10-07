@@ -281,12 +281,12 @@ const SideBar = ({
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].flagFall;
       }
-      base += vehicleSurcharge + bookingFees;
-      
+      base += bookingFees;
       if (isAirportPickup(pickup)) {
         base += SIDEBAR_CONSTANTS.FEES.AIRPORT_SURCHARGE;
       }
       let fareValue = Math.max(base, SIDEBAR_CONSTANTS.FEES.MIN_FARE);
+      fareValue += vehicleSurcharge;
       return Number(fareValue.toFixed(2));
     };
 
