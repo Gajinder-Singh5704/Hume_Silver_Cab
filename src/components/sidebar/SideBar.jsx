@@ -5,6 +5,7 @@ import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
 import CabUnavailableModal from "./NoServiceModal.jsx";
 import SIDEBAR_CONSTANTS, { TIME_TYPE } from "../../constants/constants.js";
 import { defaultVehicleOptions } from "../../data/data.jsx";
+import WhoopsModal from "./WhoopsModal.jsx";
 import {
   FormControlLabel,
   Radio,
@@ -64,6 +65,7 @@ const SideBar = ({
   const [isRequesSend, setIsRequestSend] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
+  const [isWhoopModalOpen, setWhoopModal] = useState(false)
 
   // Check if date string is today
   const isToday = (yyyyMmDd) =>
@@ -314,6 +316,16 @@ const SideBar = ({
     setFare(selectedFare);
   };
 
+  const handlePickupChange = (e) => {
+     setPickupLoc(null)
+     setPickup(e.target.value)
+  }
+
+   const handleDestChange = (e) => {
+     setDestinationLoc(null)
+     setDestination(e.target.value)
+  }
+
   const handleDeleteDestination = () => {
     setDestination("");
     setDestinationLoc(null);
@@ -555,7 +567,7 @@ const SideBar = ({
     }
   };
 
-  const handleVehicleDetailOpenChange = ({ open, scrollY = 0 }) => {
+  const handleVehicleDetailOpenChange = ({ open }) => {
     if (open) {
     } else {
       setScroll(true)
@@ -573,6 +585,20 @@ const SideBar = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (pickupLoc == null) {
+      setPickup("")
+      scrollToRef(topRef)
+      setWhoopModal(true)
+      return
+    }
+
+    if (destinationLoc == null) {
+      setDestination("")
+      scrollToRef(topRef)
+      setWhoopModal(true)
+      return
+    }
+
     if (!selectedPayment) {
       scrollToRef(paymentDropdownRef);
       setError("Please select a payment method *");
@@ -996,7 +1022,7 @@ const SideBar = ({
                   required
                   placeholder="Add your pickup location"
                   value={pickup}
-                  onChange={(e) => setPickup(e.target.value)} // just update local state
+                  onChange={(e) => handlePickupChange(e)} // just update local state
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -1060,7 +1086,7 @@ const SideBar = ({
                   placeholder="Add your Destination location"
                   value={destination}
                   disabled={pickupLoc ? false : true}
-                  onChange={(e) => setDestination(e.target.value)} // just update local state
+                  onChange={(e) => handleDestChange(e)} // just update local state
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -1584,6 +1610,11 @@ const SideBar = ({
       <CabUnavailableModal
         open={isNoServiceOpen}
         onClose={() => setIsNoServiceOpen(false)}
+      />
+      <WhoopsModal
+        open={isWhoopModalOpen}
+        onClose={() => setWhoopModal(false)}
+        onOk={() => console.log("User acknowledged the modal")}
       />
     </>
   );
