@@ -289,6 +289,14 @@ const SideBar = ({
       }
       let fareValue = Math.max(base, SIDEBAR_CONSTANTS.FEES.MIN_FARE);
       fareValue += vehicleSurcharge;
+      // console.log("Distance is : "+distance)
+      // console.log("Price before updating: "+fareValue)
+
+      if (distance > 17 && distance < 30){
+        fareValue += 10
+        // console.log("Distance is : "+distance)
+        // console.log("Updated Fare: "+fareValue)
+      }
       return Number(fareValue.toFixed(2));
     };
 

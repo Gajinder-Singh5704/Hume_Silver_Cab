@@ -25,8 +25,8 @@ export const FEES = {
 export const VEHICLE_SURCHARGES = {
   Sedan: 0,
   SilverService: 11,
-  SUV: 17.8,
-  MaxiTaxi: 17.8,
+  SUV: 30.8,
+  MaxiTaxi: 30.8,
 };
 
 // Time type constants (to make the magic numbers explicit)
