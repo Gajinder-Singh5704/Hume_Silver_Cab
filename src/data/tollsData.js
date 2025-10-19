@@ -5,7 +5,8 @@ export const roadAliases = {
   "footscray rd": "footscray rd",
   "dynon rd": "dynon rd",
   "monash fwy": "monash fwy",
-  "burnley st": "burnley st"
+  "burnley st": "burnley st",
+  "brunswick": "brunswick rd"
   // Add more aliases as you encounter them
 };
 
