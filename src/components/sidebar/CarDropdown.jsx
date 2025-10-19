@@ -125,6 +125,7 @@ const CarDropdown = ({
                   />
                 </div>
                 <p className="text-sm text-gray-600">{currentSelection?.passengers}</p>
+                <p className="text-sm text-gray-600">{currentSelection?.charges}</p>
               </div>
             </div>
 
@@ -196,6 +197,7 @@ const CarDropdown = ({
                         />
                       </div>
                       <p className="text-sm text-gray-600">{option.passengers}</p>
+                       <p className="text-sm text-gray-600">{option.charges}</p>
                     </div>
                   </div>
 
@@ -213,6 +215,7 @@ const CarDropdown = ({
                         <span className="font-bold">{renderFare(getFareFor(option), option.destRequired)}</span>
                       )}
                     </p>
+                    
                   </div>
                 </div>
               </button>
