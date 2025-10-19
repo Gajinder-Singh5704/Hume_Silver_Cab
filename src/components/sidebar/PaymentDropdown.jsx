@@ -8,7 +8,7 @@ const PaymentDropdown = forwardRef(({
   onOptionSelect = () => {},
   title = "Payment method",
   className = "",
-  inputRef // <-- optional legacy prop
+  inputRef
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);

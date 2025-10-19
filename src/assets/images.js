@@ -7,6 +7,8 @@ import sedan from "./images/Sedan.png";
 import silver from "./images/Silver.png";
 import suv from "./images/SUV.jpeg";
 import aus from "./images/ausLogo.png"
+import creditcard from "./images/creditcard.png"
+import cash from "./images/cash.png"
 
 const images = {
   cabcharge,
@@ -17,7 +19,9 @@ const images = {
   sedan,
   silver,
   suv,
-  aus
+  aus,
+  creditcard,
+  cash
 };
 
 export default images;

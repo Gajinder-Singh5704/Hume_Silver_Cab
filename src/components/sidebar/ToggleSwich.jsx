@@ -6,7 +6,7 @@ export default function ToggleSwitch({ enabled, onToggle }) {
       className={`flex items-center w-14 h-8 p-1 rounded-full cursor-pointer select-none transition-colors ${
         enabled ? "bg-green-500" : "bg-gray-300"
       }`}
-      onClick={() => onToggle(!enabled)}
+       onClick={onToggle}
     >
       {/* Sliding circle */}
       <div

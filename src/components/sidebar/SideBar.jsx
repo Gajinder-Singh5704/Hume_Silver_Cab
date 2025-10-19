@@ -742,6 +742,17 @@ const SideBar = ({
     });
   };
 
+  const handleToggle = () => {
+     if (!selectedPayment || !selectedPayment.id) {
+      setIsOn((prev) => !prev);
+      return
+  }
+    if (selectedPayment.id !== "CabCharge FastCard" && selectedPayment.id !== "MPTP") {
+      setIsOn((prev) => !prev);
+    } else {
+      setIsOn(false)
+    }
+  }
   useEffect(() => {
     // Utility: move all pac containers into the provided wrapper element
     const movePacInto = (wrapperEl) => {
@@ -993,6 +1004,17 @@ const SideBar = ({
       .catch((err) => console.error(err));
   }, []);
 
+  useEffect (() => {
+      if (!selectedPayment || !selectedPayment.id) {
+      setIsOn((prev) => !prev);
+      return
+  }
+    if (selectedPayment.id !== "CabCharge FastCard" && selectedPayment.id !== "MPTP") {
+      setIsOn((prev) => !prev);
+    } else {
+      setIsOn(false)
+    }
+  },[selectedPayment])
   // useEffect(() => {
   //   // Reset scroll when page reloads/mounts
   //   window.scrollTo(0, 0);
@@ -1342,6 +1364,27 @@ const SideBar = ({
             )}
 
             {/* // ...existing code... */}
+                 {/* Step 2 Payment */}
+            <div className="px-5 py-3 mb-4">
+              <h3 className="text-sm mt-2 mb-4">
+                Step 2 of 4 - <b>Payment</b>
+              </h3>
+
+              <Suspense fallback={null}>
+                <PaymentDropdown
+                  selectedOption={selectedPayment}
+                  onOptionSelect={handlePaymentSelect}
+                  ref={paymentDropdownRef}
+                  title="Select payment method"
+                  className="mb-0"
+                  required
+                />
+              </Suspense>
+            </div>
+
+            {!selectedPayment && (
+              <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>
+            )}
 
             {/* Fixed Price block */}
             <div className="w-full bg-[#F8F6F2] px-4 py-5">
@@ -1356,7 +1399,7 @@ const SideBar = ({
                   </span>
                 </div>
 
-                <ToggleSwitch enabled={isOn} onToggle={setIsOn} />
+                <ToggleSwitch enabled={isOn} onToggle={handleToggle} />
               </div>
 
               <p className="mt-2">
@@ -1386,10 +1429,10 @@ const SideBar = ({
               </Suspense>
             </div>
 
-            {/* Step 2 */}
+            {/* Step 3 */}
             <div className="px-5 py-6">
               <h3 className="text-sm mt-4 mb-4">
-                Step 2 of 4 - <b>Contact details</b>
+                Step 3 of 4 - <b>Contact details</b>
               </h3>
 
               <div className="mb-4" ref={passengerNameRef}>
@@ -1466,28 +1509,6 @@ const SideBar = ({
                 <p className="text-red-600 text-sm mt-1">{contactError}</p>
               )}
             </div>
-
-            {/* Step 3 Payment */}
-            <div className="px-5 py-3">
-              <h3 className="text-sm mt-2 mb-4">
-                Step 3 of 4 - <b>Payment</b>
-              </h3>
-
-              <Suspense fallback={null}>
-                <PaymentDropdown
-                  selectedOption={selectedPayment}
-                  onOptionSelect={handlePaymentSelect}
-                  ref={paymentDropdownRef}
-                  title="Select payment method"
-                  className="mb-0"
-                  required
-                />
-              </Suspense>
-            </div>
-
-            {!selectedPayment && (
-              <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>
-            )}
 
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
