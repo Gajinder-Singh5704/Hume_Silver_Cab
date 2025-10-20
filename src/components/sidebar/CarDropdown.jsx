@@ -47,8 +47,8 @@ const CarDropdown = ({
       if (isFixedPrice) {
         return `$${val.toFixed(2)}`; // keep decimals for fixed price
       } else {
-        const min = Math.round(val - 5);
-        const max = Math.round(val + 20);
+        const min = Math.round(val - 8);
+        const max = Math.round(val + 17);
         return `$${min} - $${max}`; // no decimals for range
       }
     }
