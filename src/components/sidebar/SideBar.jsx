@@ -243,7 +243,7 @@ const SideBar = ({
     const distance = parseFloat(distanceKm);
     const tollCost = hasToll ? parseFloat(tollPrice) : 0;
     const bookingFees = SIDEBAR_CONSTANTS.FEES.BOOKING_FEE;
-    console.log("Toll price is :" + tollCost)
+
     // helper to compute per-vehicle fare
     const computeLocal = (vehicleName) => {
       let vehicleSurcharge = 0;
@@ -292,7 +292,7 @@ const SideBar = ({
       // console.log("Distance is : "+distance)
       // console.log("Price before updating: "+fareValue)
 
-      if (distance > 17 && distance < 30) {
+      if (distance > 17 && distance < 30){
         fareValue += 5
         // console.log("Distance is : "+distance)
         // console.log("Updated Fare: "+fareValue)
@@ -325,13 +325,13 @@ const SideBar = ({
   };
 
   const handlePickupChange = (e) => {
-    setPickupLoc(null)
-    setPickup(e.target.value)
+     setPickupLoc(null)
+     setPickup(e.target.value)
   }
 
-  const handleDestChange = (e) => {
-    setDestinationLoc(null)
-    setDestination(e.target.value)
+   const handleDestChange = (e) => {
+     setDestinationLoc(null)
+     setDestination(e.target.value)
   }
 
   const handleDeleteDestination = () => {
@@ -449,20 +449,7 @@ const SideBar = ({
 
           // Determine toll road usage
           // ---- Toll calculation ---- //
-          (async () => {
-            const origin = { pickupLoc };
-            const destination = { destinationLoc };
-
-            const routeData = await getRouteWithTolls(origin, destination);
-
-            if (routeData) {
-              console.log("Duration:", routeData.duration);
-              console.log("Distance (m):", routeData.distance);
-              console.log("Toll Cost:", routeData.tollCost);
-            }
-          })();
-
-          const toll = 0;
+          const toll = calculateToll(stepsText);
 
           setHasToll(toll > 0);
           setTollPrice(toll);
@@ -477,77 +464,6 @@ const SideBar = ({
     );
   };
 
-  async function getRouteWithTolls(origin, destination) {
-    const apiKey = "AIzaSyDw3M5t0CkfParfvaMwTwrJNGSk-ZFKYNQ"; // 🔑 Replace with your actual key
-
-    const url = "https://routes.googleapis.com/directions/v2:computeRoutes";
-
-    const body = {
-      origin: {
-        location: { latLng: { latitude: origin.lat, longitude: origin.lng } }
-      },
-      destination: {
-        location: { latLng: { latitude: destination.lat, longitude: destination.lng } }
-      },
-      travelMode: "DRIVE",
-      extraComputations: ["TOLLS"],
-      routeModifiers: {
-        vehicleInfo: { emissionType: "GASOLINE" },
-        tollPasses: ["US_MA_EZPASSMA", "US_WA_GOOD_TO_GO"]
-      }
-    };
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": apiKey,
-          "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.travelAdvisory.tollInfo,routes.legs.travelAdvisory.tollInfo"
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const route = data.routes?.[0];
-
-      if (!route) {
-        console.warn("No route found in response:", data);
-        return null;
-      }
-
-      // Extract key info
-      const duration = route.duration;
-      const distance = route.distanceMeters;
-      const tollInfo = route.travelAdvisory?.tollInfo;
-
-      // Optional: format toll price nicely if available
-      let tollCost = "No tolls";
-      if (tollInfo?.estimatedPrice?.length) {
-        const price = tollInfo.estimatedPrice[0];
-        const units = Number(price.units || 0);
-        const nanos = (price.nanos || 0) / 1e9;
-        tollCost = `${price.currencyCode} ${(units + nanos).toFixed(2)}`;
-      }
-
-      return {
-        duration,
-        distance,
-        tollCost,
-        raw: route
-      };
-
-    } catch (error) {
-      console.error("Error fetching route:", error);
-      return null;
-    }
-  }
-
-
   // ---- Helpers ---- //
   const calculateToll = (stepsText) => {
     let toll = 0;
@@ -558,24 +474,24 @@ const SideBar = ({
     // Normalize each known road alias inside the text
     Object.keys(roadAliases).forEach((alias) => {
       if (plainText.includes(alias)) {
-        console.log(
-          `Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`
-        );
+        // console.log(
+        //   `Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`
+        // );
         plainText = plainText.replaceAll(alias, roadAliases[alias]);
       }
     });
 
-    console.log("=== Toll Calculation ===");
-    console.log("Normalized steps text:", plainText);
+    // console.log("=== Toll Calculation ===");
+    // console.log("Normalized steps text:", plainText);
 
     tolls.forEach((entry) => {
       const normalizedEntry = normalizeRoad(entry.entryPoint);
       const entryIndex = plainText.indexOf(normalizedEntry);
 
       if (entryIndex !== -1) {
-        console.log(
-          `✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`
-        );
+        // console.log(
+        //   `✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`
+        // );
 
         // Track farthest exit match
         let farthestExit = null;
@@ -586,9 +502,9 @@ const SideBar = ({
           const exitIndex = plainText.indexOf(normalizedExit);
 
           if (exitIndex !== -1 && exitIndex > entryIndex) {
-            console.log(
-              `   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`
-            );
+            // console.log(
+            //   `   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`
+            // );
             if (exitIndex > farthestExitIndex) {
               farthestExitIndex = exitIndex;
               farthestExit = exit;
@@ -597,21 +513,21 @@ const SideBar = ({
         });
 
         if (farthestExit) {
-          console.log(
-            `   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`
-          );
+          // console.log(
+          //   `   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`
+          // );
           toll = Math.max(toll, farthestExit.price);
         } else {
-          console.log(
-            `   ⚠ No exits matched after entry point: ${normalizedEntry}`
-          );
+          // console.log(
+          //   `   ⚠ No exits matched after entry point: ${normalizedEntry}`
+          // );
         }
       } else {
-        console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
+        // console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
       }
     });
 
-    console.log("💰 Final calculated toll:", toll);
+    // console.log("💰 Final calculated toll:", toll);
     return toll;
   };
 
@@ -826,17 +742,6 @@ const SideBar = ({
     });
   };
 
-  const handleToggle = () => {
-     if (!selectedPayment || !selectedPayment.id) {
-      setIsOn((prev) => !prev);
-      return
-  }
-    if (selectedPayment.id !== "CabCharge FastCard" && selectedPayment.id !== "MPTP") {
-      setIsOn((prev) => !prev);
-    } else {
-      setIsOn(false)
-    }
-  }
   useEffect(() => {
     // Utility: move all pac containers into the provided wrapper element
     const movePacInto = (wrapperEl) => {
@@ -1034,7 +939,7 @@ const SideBar = ({
     };
   }, []); // run once
 
-  const [scrollToPassenger, setScroll] = useState(false)
+  const [scrollToPassenger,setScroll] = useState(false)
   // add this near your other effects
   useEffect(() => {
     // when SeatDetails is closed we set vehicleText to "" and the form becomes visible
@@ -1088,17 +993,6 @@ const SideBar = ({
       .catch((err) => console.error(err));
   }, []);
 
-  useEffect (() => {
-      if (!selectedPayment || !selectedPayment.id) {
-      setIsOn((prev) => !prev);
-      return
-  }
-    if (selectedPayment.id !== "CabCharge FastCard" && selectedPayment.id !== "MPTP") {
-      setIsOn((prev) => !prev);
-    } else {
-      setIsOn(false)
-    }
-  },[selectedPayment])
   // useEffect(() => {
   //   // Reset scroll when page reloads/mounts
   //   window.scrollTo(0, 0);
@@ -1448,27 +1342,6 @@ const SideBar = ({
             )}
 
             {/* // ...existing code... */}
-                 {/* Step 2 Payment */}
-            <div className="px-5 py-3 mb-4">
-              <h3 className="text-sm mt-2 mb-4">
-                Step 2 of 4 - <b>Payment</b>
-              </h3>
-
-              <Suspense fallback={null}>
-                <PaymentDropdown
-                  selectedOption={selectedPayment}
-                  onOptionSelect={handlePaymentSelect}
-                  ref={paymentDropdownRef}
-                  title="Select payment method"
-                  className="mb-0"
-                  required
-                />
-              </Suspense>
-            </div>
-
-            {!selectedPayment && (
-              <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>
-            )}
 
             {/* Fixed Price block */}
             <div className="w-full bg-[#F8F6F2] px-4 py-5">
@@ -1483,7 +1356,7 @@ const SideBar = ({
                   </span>
                 </div>
 
-                <ToggleSwitch enabled={isOn} onToggle={handleToggle} />
+                <ToggleSwitch enabled={isOn} onToggle={setIsOn} />
               </div>
 
               <p className="mt-2">
@@ -1513,10 +1386,10 @@ const SideBar = ({
               </Suspense>
             </div>
 
-            {/* Step 3 */}
+            {/* Step 2 */}
             <div className="px-5 py-6">
               <h3 className="text-sm mt-4 mb-4">
-                Step 3 of 4 - <b>Contact details</b>
+                Step 2 of 4 - <b>Contact details</b>
               </h3>
 
               <div className="mb-4" ref={passengerNameRef}>
@@ -1594,6 +1467,28 @@ const SideBar = ({
               )}
             </div>
 
+            {/* Step 3 Payment */}
+            <div className="px-5 py-3">
+              <h3 className="text-sm mt-2 mb-4">
+                Step 3 of 4 - <b>Payment</b>
+              </h3>
+
+              <Suspense fallback={null}>
+                <PaymentDropdown
+                  selectedOption={selectedPayment}
+                  onOptionSelect={handlePaymentSelect}
+                  ref={paymentDropdownRef}
+                  title="Select payment method"
+                  className="mb-0"
+                  required
+                />
+              </Suspense>
+            </div>
+
+            {!selectedPayment && (
+              <p className="text-red-500 text-sm ml-5 mb-3">{error}</p>
+            )}
+
             {/* Step 4 Driver Instruction */}
             <div className="px-5 py-6">
               <h3 className="text-sm mb-4">
@@ -1626,8 +1521,8 @@ const SideBar = ({
               <button
                 type="submit"
                 className={`w-full py-3 rounded-md ${isRequesSend
-                  ? "bg-orange-50 text-orange-600"
-                  : "bg-orange-500 text-white  "
+                    ? "bg-orange-50 text-orange-600"
+                    : "bg-orange-500 text-white  "
                   } font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
                 disabled={isRequesSend}
               >
