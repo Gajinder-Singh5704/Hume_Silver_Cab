@@ -38,6 +38,7 @@ const TimePicker = lazy(() =>
 import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
 import { tr } from "date-fns/locale";
+import {getTollInfo} from "../../hooks/getTolls.js"
 
 const SideBar = ({
   onPickupSelect,
@@ -231,7 +232,7 @@ const SideBar = ({
 
   // set initial and later booking time type
 
-  const calculateFare = () => {
+  const calculateFare = async () => {
     // console.log("=== Fare Calculation Started ===");
 
     if (!distanceKm) {
@@ -240,9 +241,23 @@ const SideBar = ({
       return null;
     }
 
+    try {
+      const data = await getTollInfo(pickupLoc,destinationLoc);
+      setHasToll(true)
+     const priceObj = data?.[0]?.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
+     const totalToll =
+      priceObj
+    ? Number(priceObj.units) + priceObj.nanos / 1_000_000_000
+    : 0;
+    setTollPrice(totalToll)
+    } catch (error) {
+      setHasToll(false)
+    }
+
     const distance = parseFloat(distanceKm);
-    const tollCost = hasToll ? parseFloat(tollPrice) : 0;
+    const tollCost = hasToll ? tollPrice : 0;
     const bookingFees = SIDEBAR_CONSTANTS.FEES.BOOKING_FEE;
+    console.log(tollCost)
 
     // helper to compute per-vehicle fare
     const computeLocal = (vehicleName) => {
@@ -649,6 +664,7 @@ const SideBar = ({
       timeType,
       ipAddress: ip,
     };
+    // console.log(formData)
     const res = await sendBooking(formData);
     // console.log("Received data:", res);
     if (res.success) {
@@ -1016,7 +1032,6 @@ const SideBar = ({
       return
   }
     if (selectedPayment.id !== "CabCharge FastCard" && selectedPayment.id !== "MPTP") {
-      setIsOn((prev) => !prev);
     } else {
       setIsOn(false)
     }
