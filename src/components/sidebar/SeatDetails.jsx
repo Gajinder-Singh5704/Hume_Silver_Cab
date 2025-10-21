@@ -49,7 +49,7 @@ const SeatDetails = ({ data, changeVehicleText, onSelect, onVehicleDetailOpenCha
       charges: data.charges,
       fixedCharges: data.fixedCharges
     };
-    console.log(carData)
+    // console.log(carData)
 
     onSelect(carData)
     changeVehicleText("")

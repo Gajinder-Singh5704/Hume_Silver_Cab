@@ -318,6 +318,7 @@ const SideBar = ({
         // console.log("Distance is : "+distance)
         // console.log("Updated Fare: "+fareValue)
       }
+      // console.log(tollCost)
       return Number(fareValue.toFixed(2));
     };
 
