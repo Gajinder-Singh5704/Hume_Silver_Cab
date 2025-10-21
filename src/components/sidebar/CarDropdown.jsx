@@ -22,8 +22,6 @@ const CarDropdown = ({
     ? options.find((o) => o.id === selectedOption.id) ?? selectedOption
     : options[0];
 
-  // console.log("current Selected Car ",currentSelection)
-
   const toggleDropdown = () => setIsOpen(v => !v);
 
   const handleSelect = (option) => {
@@ -31,7 +29,6 @@ const CarDropdown = ({
     setIsOpen(false);
   };
 
-  // getFareFor - tries id then name match
   const getFareFor = (option) => {
     if (!allFares || allFares.length === 0) return null;
     const byId = allFares.find(f => f && (f.id === option.id));
@@ -39,6 +36,11 @@ const CarDropdown = ({
     const byName = allFares.find(f => f && f.name && option.name && f.name.toLowerCase() === option.name.toLowerCase());
     if (byName) return byName.price;
     return null;
+  };
+
+  const hasFare = (option) => {
+    const fare = getFareFor(option);
+    return fare !== null && fare !== undefined && fare !== "";
   };
 
   const renderFare = (val, fallback, fixedPrice = true) => {
@@ -52,20 +54,17 @@ const CarDropdown = ({
         return `$${min} - $${max}`; // no decimals for range
       }
     }
-
-    // if it's a string or object, stringify lightly
     return String(val);
   };
 
   const handleInfoClick = (e, id) => {
     e.stopPropagation();
     const elementTop = e.currentTarget.getBoundingClientRect().top + window.scrollY;
-    toggleDropdown()
+    toggleDropdown();
     onVehicleDetailOpenChange({ open: true, scrollY: elementTop });
     if (id === "maxi-taxi" && typeof isLuggageModal === "function") {
       isLuggageModal(true);
     }
-    // set changeVehicleText defensively
     switch (id) {
       case "Next-Available":
         changeVehicleText("Next Available");
@@ -86,7 +85,7 @@ const CarDropdown = ({
 
   return (
     <div className={`w-full bg-white rounded-lg shadow-lg mt-4`}>
-      {/* Header (clickable) */}
+      {/* Header */}
       <button
         type="button"
         onClick={toggleDropdown}
@@ -101,39 +100,39 @@ const CarDropdown = ({
         )}
       </button>
 
-      {/* WHEN CLOSED: show selected card (highlighted) */}
+      {/* WHEN CLOSED */}
       {!isOpen && (
         <div
           role="button"
           tabIndex={0}
           onClick={toggleDropdown}
-          className="relative px-2 py-4 cursor-pointer bg-orange-50 border-b  border-black"
+          className="relative px-2 py-4 cursor-pointer bg-orange-50 border-b border-black"
         >
-          <div className="absolute top-0 left-0 h-full w-2 bg-orange-500 " />
+          <div className="absolute top-0 left-0 h-full w-2 bg-orange-500" />
 
-          <div className="flex items-center justify-between ">
-            <div className="flex items-center space-x-3 ">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
               {currentSelection?.image && (
                 <img src={currentSelection.image} alt={currentSelection.name} className="h-14 w-20" />
               )}
               <div>
-                <div className="flex items-center space-x-2 ">
-                  <h3 className="font-semibold text-sm text-gray-800 ">{currentSelection?.name}</h3>
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-semibold text-sm text-gray-800">{currentSelection?.name}</h3>
                   <Info
-                    className="w-4 h-4 text-gray-400 "
+                    className="w-4 h-4 text-gray-400"
                     onClick={(e) => handleInfoClick(e, currentSelection?.id)}
                   />
                 </div>
                 <p className="text-sm text-gray-600">{currentSelection?.passengers}</p>
-                <p className="text-sm text-gray-600">{currentSelection?.charges}</p>
               </div>
             </div>
 
-            <div className="text-right">
+            {/* ✅ Center-aligned fare info */}
+            <div className="flex flex-col items-center justify-center text-center min-w-[100px]">
               <p className="text-sm font-medium text-gray-800">
                 {isFixedPrice ? "Fixed Price" : currentSelection?.fareEstimate}
               </p>
-              <p className="text-sm flex items-center text-gray-600">
+              <p className="text-sm flex items-center justify-center text-gray-600">
                 {isFixedPrice ? (
                   <>
                     <LockIcon className="mr-1" color="orange" size={12} />
@@ -147,13 +146,20 @@ const CarDropdown = ({
                   </span>
                 )}
               </p>
+
+              {hasFare(currentSelection) && (
+                isFixedPrice ? (
+                  <p className="text-[10px] font-bold text-gray-600">{currentSelection?.fixedCharges}</p>
+                ) : (
+                  <p className="text-[10px] font-bold text-gray-600">{currentSelection?.charges}</p>
+                )
+              )}
             </div>
           </div>
         </div>
       )}
 
-
-      {/* WHEN OPEN: show all options */}
+      {/* WHEN OPEN */}
       {isOpen && (
         <div>
           {options.map((option, idx) => {
@@ -166,13 +172,9 @@ const CarDropdown = ({
                 type="button"
                 key={option.id ?? idx}
                 onClick={(e) => {
-                  if (isSUV) {
-                    handleInfoClick(e, option.id);
-                  } else if (isMaxiTaxi) {
-                    handleInfoClick(e, option.id);
-                  } else {
-                    handleSelect(option);
-                  }
+                  if (isSUV) handleInfoClick(e, option.id);
+                  else if (isMaxiTaxi) handleInfoClick(e, option.id);
+                  else handleSelect(option);
                 }}
                 className={`relative w-full px-2 py-4 text-left transition border-b border-gray-200 cursor-pointer
                   ${idx === options.length - 1 ? "last:border-b-0 rounded-b-lg" : ""}
@@ -197,25 +199,32 @@ const CarDropdown = ({
                         />
                       </div>
                       <p className="text-sm text-gray-600">{option.passengers}</p>
-                       <p className="text-sm text-gray-600">{option.charges}</p>
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  {/* ✅ Center-aligned fare info */}
+                  <div className="flex flex-col items-center justify-center text-center min-w-[100px]">
                     <p className="text-sm font-medium text-gray-800">
                       {isFixedPrice ? "Fixed Price" : option.fareEstimate}
                     </p>
-                    <p className="text-sm text-gray-600 flex items-center">
+                    <p className="text-sm text-gray-600 flex items-center justify-center">
                       {isFixedPrice ? (
                         <>
                           <LockIcon className="mr-1" color="orange" size={12} />
-                          <span className="font-bold"> {renderFare(getFareFor(option), option.destRequired)}</span>
+                          <span className="font-bold">{renderFare(getFareFor(option), option.destRequired)}</span>
                         </>
                       ) : (
                         <span className="font-bold">{renderFare(getFareFor(option), option.destRequired)}</span>
                       )}
                     </p>
-                    
+
+                    {hasFare(option) && (
+                      isFixedPrice ? (
+                        <p className="text-[10px] font-bold text-gray-600">{option.fixedCharges}</p>
+                      ) : (
+                        <p className="text-[10px] font-bold text-gray-600">{option.charges}</p>
+                      )
+                    )}
                   </div>
                 </div>
               </button>

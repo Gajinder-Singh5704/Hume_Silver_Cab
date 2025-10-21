@@ -42,7 +42,7 @@ export const sendBooking = async (data) => {
       timeType: data.timeType,
       passangers: data.passangers,
       selectedVichle: data.selectedVichle,
-      fare: data.fare,
+      fare: data.newFare,
       tolls: data.tolls ? "Yes" : "No"  ,
       contact: data.contact,
       paymantMethod: data.paymantMethod,

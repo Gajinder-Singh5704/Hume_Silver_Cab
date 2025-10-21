@@ -46,7 +46,8 @@ const SeatDetails = ({ data, changeVehicleText, onSelect, onVehicleDetailOpenCha
       destRequired: "Dest required",
       color: "bg-gray-100",
       seatCount: isShow ? seats : 4,
-      charges: data.charges
+      charges: data.charges,
+      fixedCharges: data.fixedCharges
     };
     console.log(carData)
 

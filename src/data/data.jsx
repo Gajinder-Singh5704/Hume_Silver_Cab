@@ -26,7 +26,8 @@ export const defaultVehicleOptions = [
     fareEstimate: "Fare Estimate",
     destRequired: "Dest required",
     color: "bg-gray-100",
-    charges: "Meter + $0"
+    charges: "(Meter + $0)",
+    fixedCharges: "(No extra fee)"
   },
   {
     id: "silver-service",
@@ -36,7 +37,8 @@ export const defaultVehicleOptions = [
     fareEstimate: "Fare Estimate",
     destRequired: "Dest required",
     color: "bg-gray-100",
-    charges: "Meter + $11 incl."
+    charges: "(Meter + $11 incl.)",
+    fixedCharges: "($11 incl.)"
   },
   {
     id: "suv",
@@ -46,7 +48,8 @@ export const defaultVehicleOptions = [
     fareEstimate: "Fare Estimate",
     destRequired: "Dest required",
     color: "bg-gray-50",
-    charges: "Meter + $17.35 incl."
+    charges: "(Meter + $17.35 incl.)",
+    fixedCharges: "($17.35 incl.)"
   },
   {
     id: "maxi-taxi",
@@ -56,7 +59,8 @@ export const defaultVehicleOptions = [
     fareEstimate: "Fare Estimate",
     destRequired: "Dest required",
     color: "bg-gray-100",
-    charges: "Meter + $17.35 incl."
+    charges: "(Meter + $17.35 incl.)",
+    fixedCharges: "($17.35 incl.)"
   },
 ];
 
@@ -128,7 +132,8 @@ export const seatDetails = {
     imageDecs:
       "In a hurry? We'll get you there as soon as possible by sending the next available car!",
     path: "",
-    charges: "Meter + $0"
+    charges: "(Meter + $0)",
+    fixedCharges: "(No extra fee)"
   },
   "Silver Service": {
     name: "Silver Service",
@@ -137,7 +142,8 @@ export const seatDetails = {
     imageDecs:
       "We all deserve a little Silver Service occasionally. Travel in a luxurious long wheelbase sedan with a professional driver who’ll get you there in style.",
     path: "",
-    charges: "Meter + $11 incl."
+    charges: "(Meter + $11 incl.)",
+    fixedCharges: "($11 incl.)"
   },
   "Suv": {
     name: "SUV",
@@ -146,7 +152,8 @@ export const seatDetails = {
     imageDecs:
       "In a hurry? We'll get you there as soon as possible by sending the next available car!",
     path: "",
-    charges: "Meter + $17.35 incl."
+    charges: "(Meter + $17.35 incl.)",
+    fixedCharges: "($17.35 incl.)"
   },
   "Maxi Taxi": {
     name: "Maxi Taxi",
@@ -155,6 +162,7 @@ export const seatDetails = {
     imageDecs:
       "Traveling in a group? We'll get you there. Our fleet of MAXI TAXIS are the perfect option.",
     path: "",
-    charges: "Meter + $17.35 incl." 
+     charges: "(Meter + $17.35 incl.)",
+    fixedCharges: "($17.35 incl.)"
   },
 };

@@ -38,7 +38,7 @@ const TimePicker = lazy(() =>
 import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
 import { tr } from "date-fns/locale";
-import {getTollInfo} from "../../hooks/getTolls.js"
+import { getTollInfo } from "../../hooks/getTolls.js"
 
 const SideBar = ({
   onPickupSelect,
@@ -242,14 +242,14 @@ const SideBar = ({
     }
 
     try {
-      const data = await getTollInfo(pickupLoc,destinationLoc);
+      const data = await getTollInfo(pickupLoc, destinationLoc);
       setHasToll(true)
-     const priceObj = data?.[0]?.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
-     const totalToll =
-      priceObj
-    ? Number(priceObj.units) + priceObj.nanos / 1_000_000_000
-    : 0;
-    setTollPrice(totalToll)
+      const priceObj = data?.[0]?.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
+      const totalToll =
+        priceObj
+          ? Number(priceObj.units) + priceObj.nanos / 1_000_000_000
+          : 0;
+      setTollPrice(totalToll)
     } catch (error) {
       setHasToll(false)
     }
@@ -257,7 +257,7 @@ const SideBar = ({
     const distance = parseFloat(distanceKm);
     const tollCost = hasToll ? tollPrice : 0;
     const bookingFees = SIDEBAR_CONSTANTS.FEES.BOOKING_FEE;
-    console.log(tollCost)
+    // console.log(tollCost)
 
     // helper to compute per-vehicle fare
     const computeLocal = (vehicleName) => {
@@ -313,7 +313,7 @@ const SideBar = ({
       // console.log("Distance is : "+distance)
       // console.log("Price before updating: "+fareValue)
 
-      if (distance > 17 && distance < 30){
+      if (distance > 17 && distance < 30) {
         fareValue += 10
         // console.log("Distance is : "+distance)
         // console.log("Updated Fare: "+fareValue)
@@ -346,13 +346,13 @@ const SideBar = ({
   };
 
   const handlePickupChange = (e) => {
-     setPickupLoc(null)
-     setPickup(e.target.value)
+    setPickupLoc(null)
+    setPickup(e.target.value)
   }
 
-   const handleDestChange = (e) => {
-     setDestinationLoc(null)
-     setDestination(e.target.value)
+  const handleDestChange = (e) => {
+    setDestinationLoc(null)
+    setDestination(e.target.value)
   }
 
   const handleDeleteDestination = () => {
@@ -470,10 +470,10 @@ const SideBar = ({
 
           // Determine toll road usage
           // ---- Toll calculation ---- //
-          const toll = calculateToll(stepsText);
+          // const toll = calculateToll(stepsText);
 
-          setHasToll(toll > 0);
-          setTollPrice(toll);
+          // setHasToll(toll > 0);
+          // setTollPrice(toll);
           // console.log("Toll Cost:", toll); // If you already include tolls in fare calculation
         } else {
           // console.error("Directions request failed:", status);
@@ -486,72 +486,6 @@ const SideBar = ({
   };
 
   // ---- Helpers ---- //
-  const calculateToll = (stepsText) => {
-    let toll = 0;
-
-    // Strip HTML tags and lowercase
-    let plainText = stepsText.replace(/<[^>]*>?/gm, "").toLowerCase();
-
-    // Normalize each known road alias inside the text
-    Object.keys(roadAliases).forEach((alias) => {
-      if (plainText.includes(alias)) {
-        // console.log(
-        //   `Alias matched: replacing "${alias}" → "${roadAliases[alias]}"`
-        // );
-        plainText = plainText.replaceAll(alias, roadAliases[alias]);
-      }
-    });
-
-    // console.log("=== Toll Calculation ===");
-    // console.log("Normalized steps text:", plainText);
-
-    tolls.forEach((entry) => {
-      const normalizedEntry = normalizeRoad(entry.entryPoint);
-      const entryIndex = plainText.indexOf(normalizedEntry);
-
-      if (entryIndex !== -1) {
-        // console.log(
-        //   `✅ Entry point found: ${normalizedEntry} (index ${entryIndex})`
-        // );
-
-        // Track farthest exit match
-        let farthestExit = null;
-        let farthestExitIndex = -1;
-
-        entry.exits.forEach((exit) => {
-          const normalizedExit = normalizeRoad(exit.exitPoint);
-          const exitIndex = plainText.indexOf(normalizedExit);
-
-          if (exitIndex !== -1 && exitIndex > entryIndex) {
-            // console.log(
-            //   `   ↳ Exit matched: ${normalizedExit} (index ${exitIndex}), price: ${exit.price}`
-            // );
-            if (exitIndex > farthestExitIndex) {
-              farthestExitIndex = exitIndex;
-              farthestExit = exit;
-            }
-          }
-        });
-
-        if (farthestExit) {
-          // console.log(
-          //   `   ✅ Farthest exit: ${farthestExit.exitPoint}, price: ${farthestExit.price}`
-          // );
-          toll = Math.max(toll, farthestExit.price);
-        } else {
-          // console.log(
-          //   `   ⚠ No exits matched after entry point: ${normalizedEntry}`
-          // );
-        }
-      } else {
-        // console.log(`❌ Entry point NOT found: ${entry.entryPoint}`);
-      }
-    });
-
-    // console.log("💰 Final calculated toll:", toll);
-    return toll;
-  };
-
   const isAirportPickup = (pickup) => {
     let pickupAddress = "";
 
@@ -645,6 +579,14 @@ const SideBar = ({
       selectedCar: `${selected.name}`,
       passengers: `${selected.passengers}`,
     };
+    let newFare = ""
+    if (isOn) {
+      newFare = `${fare}`
+    } else {
+      const min = Math.round(fare - 8);
+      const max = Math.round(fare + 17);
+      newFare = `${min} - $${max}`
+    }
 
     const formData = {
       pickup,
@@ -654,7 +596,7 @@ const SideBar = ({
       selectedVichle: selectedCarData.selectedCar,
       passangers: selectedCarData.passengers,
       bookingMode,
-      fare,
+      newFare,
       pickupDate: formdate(bookingDate),
       pickupTime: bookingTime,
       passengerName: passenger,
@@ -668,11 +610,11 @@ const SideBar = ({
     const res = await sendBooking(formData);
     // console.log("Received data:", res);
     if (res.success) {
-      // toast.success("🎉 Booking Requested Successfully!", {
-      //   position: "top-right",
-      //   autoClose: 6000,
+      toast.success("🎉 Booking Requested Successfully!", {
+        position: "top-right",
+        autoClose: 6000,
 
-      // });
+      });
       window.location.href = "https://humesilvercabservices.com.au/thank-you/";
       setError("");
       scrollToTopOrNavbar();
@@ -765,15 +707,17 @@ const SideBar = ({
   };
 
   const handleToggle = () => {
-     if (!selectedPayment || !selectedPayment.id) {
+    if (!selectedPayment || !selectedPayment.id) {
       setIsOn((prev) => !prev);
       return
-  }
+    }
     if (selectedPayment.id !== "CabCharge FastCard" && selectedPayment.id !== "MPTP") {
       setIsOn((prev) => !prev);
     } else {
       setIsOn(false)
     }
+    calculateFare()
+
   }
   useEffect(() => {
     // Utility: move all pac containers into the provided wrapper element
@@ -850,7 +794,7 @@ const SideBar = ({
   useEffect(() => {
     if (!sessionStorage.getItem("firstLoadDone")) {
       sessionStorage.setItem("firstLoadDone", "true");
-      console.log("Reloading");
+      // console.log("Reloading");
       window.location.reload();
     }
   }, []);
@@ -972,7 +916,7 @@ const SideBar = ({
     };
   }, []); // run once
 
-  const [scrollToPassenger,setScroll] = useState(false)
+  const [scrollToPassenger, setScroll] = useState(false)
   // add this near your other effects
   useEffect(() => {
     // when SeatDetails is closed we set vehicleText to "" and the form becomes visible
@@ -1028,13 +972,16 @@ const SideBar = ({
 
   useEffect (() => {
       if (!selectedPayment || !selectedPayment.id) {
-      setIsOn((prev) => !prev);
+      setIsOn(true);
       return
   }
     if (selectedPayment.id !== "CabCharge FastCard" && selectedPayment.id !== "MPTP") {
+      setIsOn(true)
     } else {
       setIsOn(false)
     }
+
+    calculateFare()
   },[selectedPayment])
   // useEffect(() => {
   //   // Reset scroll when page reloads/mounts
@@ -1385,7 +1332,7 @@ const SideBar = ({
             )}
 
             {/* // ...existing code... */}
-                 {/* Step 2 Payment */}
+            {/* Step 2 Payment */}
             <div className="px-5 py-3 mb-4">
               <h3 className="text-sm mt-2 mb-4">
                 Step 2 of 4 - <b>Payment</b>
@@ -1436,8 +1383,8 @@ const SideBar = ({
                     fare
                       ? isOn
                         ? `$${fare}`
-                        : `$${Math.round(fare - 5)} - $${Math.round(
-                          fare - -15
+                        : `$${Math.round(fare - 8)} - $${Math.round(
+                          fare - -17
                         )}`
                       : "Dest required"
                   }
@@ -1563,8 +1510,8 @@ const SideBar = ({
               <button
                 type="submit"
                 className={`w-full py-3 rounded-md ${isRequesSend
-                    ? "bg-orange-50 text-orange-600"
-                    : "bg-orange-500 text-white  "
+                  ? "bg-orange-50 text-orange-600"
+                  : "bg-orange-500 text-white  "
                   } font-semibold transition-colors hover:bg-orange-50 hover:text-orange-600 border border-orange-500 cursor-pointer`}
                 disabled={isRequesSend}
               >
