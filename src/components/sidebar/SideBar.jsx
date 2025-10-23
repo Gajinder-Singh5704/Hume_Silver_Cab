@@ -263,7 +263,7 @@ const SideBar = ({
     const computeLocal = (vehicleName) => {
       let vehicleSurcharge = 0;
       switch (vehicleName) {
-        case "Sedan":
+        case "Next Available":
           vehicleSurcharge = SIDEBAR_CONSTANTS.VEHICLE_SURCHARGES.Sedan;
           if (distance > 30) {
             vehicleSurcharge += 3.65
@@ -326,7 +326,7 @@ const SideBar = ({
       {
         id: "next-available",
         name: "Next Available",
-        price: computeLocal("Sedan"),
+        price: computeLocal("Next Available"),
       },
       {
         id: "silver-service",
@@ -341,8 +341,11 @@ const SideBar = ({
     // console.log("All fares:", faresArray);
 
     // also keep the current selected fare for UI
-    const vehicleName = selected?.name || "Sedan";
+    const vehicleName = selected?.name || "Next Available";
     const selectedFare = computeLocal(vehicleName);
+    // console.log("Fares arrray = "+faresArray)
+    // console.log("Selected Name: "+ vehicleName)
+    // console.log("Selected Fare = "+selectedFare)
     setFare(selectedFare);
   };
 
@@ -588,6 +591,9 @@ const SideBar = ({
       const max = Math.round(fare + 17);
       newFare = `${min} - $${max}`
     }
+    // console.log("Fare is : "+fare)
+    // console.log("New Fare is : "+newFare)
+    // console.log("Selected Car: "+selectedCarData.selectedCar)
 
     const formData = {
       pickup,

@@ -1,24 +1,5 @@
-import axios from "axios";
-
-// export const sendBooking = async (data) => {
-//   try {
-//     const res = await axios.post(
-//       "http://localhost:8083/api/booking/send-email",
-//       data,
-//       {
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );
-//     return res.data
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
-// utils/sendBooking.js
 import emailjs from "@emailjs/browser";
+import { tr } from "date-fns/locale";
 
 const isTesting = false
 const publicKey = isTesting ? "Fvs3K2oVrfS-ia__Z" : "GP8oWDApS9Ak7Cv9B"
