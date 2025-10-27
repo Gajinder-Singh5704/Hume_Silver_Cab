@@ -250,6 +250,9 @@ const SideBar = ({
           ? Number(priceObj.units) + priceObj.nanos / 1_000_000_000
           : 0;
       setTollPrice(totalToll)
+      if (tollPrice < 1) {
+        setHasToll(false)
+      }
     } catch (error) {
       setHasToll(false)
     }
