@@ -15,6 +15,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { LockIcon } from "lucide-react";
+import EstimatedFareModal from "./ConfirmBookingModal.jsx";
 import ToggleSwitch from "./ToggleSwich";
 const CarDropdown = lazy(() => import("./CarDropdown"));
 import { getGeocode } from "../../hooks/map.js";
@@ -136,6 +137,8 @@ const SideBar = ({
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [tollPrice, setTollPrice] = useState(0);
   const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
+  const [isMinimumFareApplied, shouldApplyMinimumFare] = useState(false);
+  const [isConfirmBookingModalOpen, setIsConfirmBookingModalOpen] = useState(false);
   const topRef = useRef(null);
 
   const [pickup, setPickup] = useState("");
@@ -169,6 +172,8 @@ const SideBar = ({
 
   const [timeType, setTimeType] = useState(2); // number-3
   const [fare, setFare] = useState(null);
+  let minimumFare = 0;
+  const [minimumFareString, setMinimumFare] = useState("");
   const [contactError, setContactError] = useState("");
 
   const [vehicleText, setVehicleText] = useState("");
@@ -294,24 +299,37 @@ const SideBar = ({
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
+          minimumFare = 60
       } else if (timeType === 2) {
         base =
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].baseFlat +
           distance * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].flagFall;
+          minimumFare = 50
       } else {
         base =
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].baseFlat +
           distance * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].flagFall;
+          minimumFare = 40
       }
       base += bookingFees;
       if (isAirportPickup(pickup)) {
         base += SIDEBAR_CONSTANTS.FEES.AIRPORT_SURCHARGE;
       }
-      let fareValue = Math.max(base, SIDEBAR_CONSTANTS.FEES.MIN_FARE);
+      let fareValue = 0
+
+      if ( base > minimumFare) {
+        fareValue = base
+        shouldApplyMinimumFare(false)
+      } else {
+        fareValue = minimumFare
+        setMinimumFare(`${minimumFare}`)
+        shouldApplyMinimumFare(true)
+      }
+      console.log(minimumFare)
       fareValue += vehicleSurcharge;
       // console.log("Distance is : "+distance)
       // console.log("Price before updating: "+fareValue)
@@ -579,6 +597,19 @@ const SideBar = ({
       setContactError("Number must start with 0 and be 10 digits.");
       return; // stop here
     }
+
+    console.log("Minimum Fare is : "+minimumFare)
+    if (!isMinimumFareApplied) {
+      confirmBooking()
+    } else {
+      setIsConfirmBookingModalOpen(true)
+    }
+    // setIsRequestSend(true);
+    // resetForm()
+  };
+
+  const confirmBooking = async() => {
+    setIsConfirmBookingModalOpen(false)
     setIsRequestSend(true);
     const bookingTime = `${hourVal}:${minuteVal} ${meridiem} `;
     const bookingDate = `${dateVal}`;
@@ -627,7 +658,6 @@ const SideBar = ({
       });
       window.location.href = "https://humesilvercabservices.com.au/thank-you/";
       setError("");
-      scrollToTopOrNavbar();
       setIsRequestSend(false);
     } else {
       toast.error("Booking Request Failed", {
@@ -637,7 +667,21 @@ const SideBar = ({
       setIsRequestSend(false);
       return;
     }
-    // Reset all fields
+  }
+
+  const handleCancelBooking = () => {
+    toast.error("Booking Request Cancelled", {
+        position: "top-right",
+        autoClose: 6000,
+      });
+
+    resetForm()
+  }
+
+  const resetForm = () => {
+    scrollToTopOrNavbar();
+    setIsConfirmBookingModalOpen(false)
+     // Reset all fields
     setPickup("");
     setPickupLoc(null);
     setPickupSuggestions([]);
@@ -675,7 +719,7 @@ const SideBar = ({
     onPickupSelect(null);
     onDestinationSelect(null);
     setAllFares([]);
-  };
+  }
 
   // console.log("pickup ", pickupLoc);
 
@@ -980,11 +1024,11 @@ const SideBar = ({
       .catch((err) => console.error(err));
   }, []);
 
-  useEffect (() => {
-      if (!selectedPayment || !selectedPayment.id) {
+  useEffect(() => {
+    if (!selectedPayment || !selectedPayment.id) {
       setIsOn(true);
       return
-  }
+    }
     if (selectedPayment.id !== "CabCharge FastCard" && selectedPayment.id !== "MPTP") {
       setIsOn(true)
     } else {
@@ -992,7 +1036,7 @@ const SideBar = ({
     }
 
     calculateFare()
-  },[selectedPayment])
+  }, [selectedPayment])
   // useEffect(() => {
   //   // Reset scroll when page reloads/mounts
   //   window.scrollTo(0, 0);
@@ -1623,6 +1667,12 @@ const SideBar = ({
         onClose={() => setWhoopModal(false)}
         onOk={() => console.log("User acknowledged the modal")}
       />
+      { isConfirmBookingModalOpen && 
+        <EstimatedFareModal
+        fare={minimumFareString}
+        onConfirm={() => confirmBooking()}
+        onCancel={handleCancelBooking}
+      />}
     </>
   );
 };
