@@ -29,7 +29,7 @@ const NavSection = ({ onPlaceSelect }) => {
         <div className="flex items-center gap-2">
           <Phone className="text-white w-4 h-4 sm:w-5 sm:h-5" aria-hidden />
           <a
-            href="tel:+61490092704"
+            href="tel:0490092704"
             className="text-white text-sm sm:text-xl font-medium"
           >
             0490092704

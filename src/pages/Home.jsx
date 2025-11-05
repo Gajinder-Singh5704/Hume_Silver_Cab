@@ -1,8 +1,9 @@
+import { useEffect, useState } from "react";
 import MapSection from "../components/map/MapSection.jsx";
 import Navbar from "../components/navbar/Navbar.jsx";
 import NavSection from "../components/navSection/NavSection.jsx";
-import { useEffect, useState } from "react";
 import SideBar from "../components/sidebar/SideBar.jsx";
+import FloatingContactButtons from "../components/FloatingContactButtons.jsx";
 
 const Home = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -30,7 +31,7 @@ const Home = () => {
       )}
 
       {/* Wrapper: page scroll on small; fixed height on md+ */}
-      <div className="flex flex-col md:flex-row w-full md:h-[calc(100vh-125px)]">
+      <div className="flex flex-col md:flex-row w-full md:h-[calc(100vh-125px)] relative">
         {/* Sidebar */}
         <div
           className={`
@@ -59,6 +60,13 @@ const Home = () => {
             </div>
           )}
         </div>
+
+        {/* Floating Buttons */}
+        <FloatingContactButtons
+          whatsappNumber="+61490092704"
+          callNumber="0490092704"
+          whatsappMessage="Hello, I would like to book a taxi. Could you please assist me with the details?"
+        />
       </div>
     </>
   );
