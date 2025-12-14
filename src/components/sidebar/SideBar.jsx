@@ -334,8 +334,8 @@ const SideBar = ({
       // console.log("Distance is : "+distance)
       // console.log("Price before updating: "+fareValue)
 
-      if (distance > 17 && distance < 30) {
-        fareValue += 10
+      if (distance > 13 && distance < 250) {
+        fareValue += 15
         // console.log("Distance is : "+distance)
         // console.log("Updated Fare: "+fareValue)
       }
