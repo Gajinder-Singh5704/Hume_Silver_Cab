@@ -40,6 +40,17 @@ import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
 import { tr } from "date-fns/locale";
 import { getTollInfo } from "../../hooks/getTolls.js"
+const to24 = (h12, ampm) =>
+  String((parseInt(h12, 10) % 12) + (ampm === "PM" ? 12 : 0)).padStart(
+    2,
+    "0"
+  );
+
+const to12 = (h24) => {
+  const ampm = h24 >= 12 ? "PM" : "AM";
+  const h12 = h24 % 12 || 12;
+  return { h12: String(h12).padStart(2, "0"), ampm };
+};
 
 const SideBar = ({
   onPickupSelect,
@@ -161,7 +172,7 @@ const SideBar = ({
     melbourneNow.toISOString().split("T")[0] // yyyy-mm-dd
   );
   const [hourVal, setHourVal] = useState(
-    melbourneNow.getHours().toString().padStart(2, "0")
+    to12(melbourneNow.getHours()).h12
   );
   const [minuteVal, setMinuteVal] = useState(
     melbourneNow.getMinutes().toString().padStart(2, "0")
@@ -184,17 +195,6 @@ const SideBar = ({
   const pickupAutoRef = useRef(null);
   const destinationAutoRef = useRef(null);
   const passengerNameRef = useRef(null);
-  const to24 = (h12, ampm) =>
-    String((parseInt(h12, 10) % 12) + (ampm === "PM" ? 12 : 0)).padStart(
-      2,
-      "0"
-    );
-
-  const to12 = (h24) => {
-    const ampm = h24 >= 12 ? "PM" : "AM";
-    const h12 = h24 % 12 || 12;
-    return { h12: String(h12).padStart(2, "0"), ampm };
-  };
 
   const isAuMobileValid = (v) => /^0\d{9}$/.test(v); // starts with 0 and is 10 digits
 
@@ -237,31 +237,38 @@ const SideBar = ({
 
   // set initial and later booking time type
 
-  const calculateFare = async () => {
+  useEffect(() => {
+    const fetchTolls = async () => {
+      if (!pickupLoc || !destinationLoc) {
+        setHasToll(false);
+        setTollPrice(0);
+        return;
+      }
+      try {
+        const data = await getTollInfo(pickupLoc, destinationLoc);
+        const priceObj = data?.[0]?.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
+        const totalToll = priceObj
+          ? Number(priceObj.units) + priceObj.nanos / 1_000_000_000
+          : 0;
+        setTollPrice(totalToll);
+        setHasToll(totalToll >= 1);
+      } catch (error) {
+        console.error("Toll fetch error:", error);
+        setHasToll(false);
+        setTollPrice(0);
+      }
+    };
+    fetchTolls();
+  }, [pickupLoc, destinationLoc]);
+
+  const calculateFare = () => {
     // console.log("=== Fare Calculation Started ===");
 
     if (!distanceKm) {
-      // console.log("❌ No distance available — aborting fare calculation.");
-      setAllFares([]); // clear when no distance
-      return null;
+      setAllFares([]);
+      setFare(null);
+      return;
     }
-
-    try {
-      const data = await getTollInfo(pickupLoc, destinationLoc);
-      setHasToll(true)
-      const priceObj = data?.[0]?.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
-      const totalToll =
-        priceObj
-          ? Number(priceObj.units) + priceObj.nanos / 1_000_000_000
-          : 0;
-      setTollPrice(totalToll)
-      if (tollPrice < 1) {
-        setHasToll(false)
-      }
-    } catch (error) {
-      setHasToll(false)
-    }
-
     const distance = parseFloat(distanceKm);
     const tollCost = hasToll ? tollPrice : 0;
     const bookingFees = SIDEBAR_CONSTANTS.FEES.BOOKING_FEE;
@@ -996,7 +1003,7 @@ const SideBar = ({
 
   useEffect(() => {
     if (distanceKm) calculateFare();
-  }, [selected, distanceKm, hasToll, timeType]);
+  }, [selected, distanceKm, hasToll, tollPrice, timeType, isOn]);
 
   useEffect(() => {
     let dateObj;
@@ -1006,16 +1013,16 @@ const SideBar = ({
         new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" })
       );
     } else if (bookingMode === "later" && dateVal) {
-      const hour = parseInt(hourVal, 10);
+      const h24 = to24(hourVal, meridiem);
       dateObj = new Date(
-        `${dateVal}T${hour.toString().padStart(2, "0")}:${minuteVal}:00`
+        `${dateVal}T${h24}:${minuteVal}:00`
       );
     }
 
     if (dateObj) {
       setTimeType(determineTimeType(dateObj));
     }
-  }, [bookingMode, dateVal, hourVal, minuteVal]);
+  }, [bookingMode, dateVal, hourVal, minuteVal, meridiem]);
 
   useEffect(() => {
     axios

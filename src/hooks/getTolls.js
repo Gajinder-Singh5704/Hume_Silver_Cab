@@ -16,12 +16,7 @@ export const getTollInfo = async (origin,dest) => {
             }
           }
         },
-        routeModifiers: {
-          vehicleInfo: {
-            emissionType: "GASOLINE"
-          },
-          tollPasses: ["US_MA_EZPASSMA", "US_WA_GOOD_TO_GO"]
-        }
+          tollPasses: []
       }
     ],
     destinations: [
