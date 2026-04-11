@@ -32,7 +32,7 @@ const NavSection = ({ onPlaceSelect }) => {
             href="tel:0490092704"
             className="text-white text-sm sm:text-xl font-medium"
           >
-            0490092704
+            1300 2704
           </a>
         </div>
 

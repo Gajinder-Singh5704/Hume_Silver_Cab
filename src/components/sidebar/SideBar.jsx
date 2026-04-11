@@ -1209,7 +1209,7 @@ const SideBar = ({
                     <Radio
                       sx={{
                         color: "black",
-                        "&.Mui-checked": { color: "#f4b20bff" },
+                        "&.Mui-checked": { color: fixedColor },
                         p: 1,
                       }}
                     />
@@ -1223,7 +1223,7 @@ const SideBar = ({
                     <Radio
                       sx={{
                         color: "black",
-                        "&.Mui-checked": { color: "#f4b20bff" },
+                        "&.Mui-checked": { color: fixedColor },
                         p: 1,
                       }}
                     />

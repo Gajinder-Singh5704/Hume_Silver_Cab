@@ -1,4 +1,25 @@
 @import "tailwindcss";
+
+/* ===== Brand Color Tokens ===== */
+/* Override Tailwind v4's orange palette with the brand gold-orange (#F4BA40).
+   Every bg-orange-*, text-orange-*, border-orange-*, ring-orange-* class will
+   now use a tint/shade of this brand color automatically. */
+@theme {
+  /* Base brand hue: #F4BA40 ≈ hsl(43, 90%, 60%) */
+  --color-orange-50:  #fffbeb;
+  --color-orange-100: #fef3c7;
+  --color-orange-200: #fde68a;
+  --color-orange-300: #fcd34d;
+  --color-orange-400: #fbbf24;
+  --color-orange-500: #F4BA40;   /* ← Brand primary */
+  --color-orange-600: #d9a336;   /* slightly darker for hovers */
+  --color-orange-700: #b87e28;
+  --color-orange-800: #92621f;
+  --color-orange-900: #78501a;
+  --color-orange-950: #451f05;
+}
+
+
 /* ensures Google pac container is treated as positioned and visible inside wrappers */
 .pac-container {
   position: absolute !important;

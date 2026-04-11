@@ -24,7 +24,7 @@ const DirectionsOverlay = ({ origin, selectedDestination }) => {
           map,
           suppressMarkers: true,
           polylineOptions: {
-            strokeColor: "#ffb300ff",
+            strokeColor: "#F4BA40",
             strokeWeight: 4,
           },
         }
@@ -164,7 +164,7 @@ const MapSection = ({
           {/* Pickup marker */}
           {selectedPickup && (
             <AdvancedMarker position={selectedPickup}>
-              <Pin background="orange" borderColor="white" glyphColor="white"/>
+              <Pin background="#F4BA40" borderColor="white" glyphColor="white"/>
             </AdvancedMarker>
           )}
 
@@ -172,7 +172,7 @@ const MapSection = ({
           {selectedDestination && (
             <AdvancedMarker position={selectedDestination}>
               <Pin
-                background="orange"
+                background="#F4BA40"
                 borderColor="white"
                 glyphColor="white"
                 scale={1.2}

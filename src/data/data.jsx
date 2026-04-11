@@ -5,8 +5,8 @@ import { CreditCard, IdCard, Wallet } from "lucide-react";
 export const navItems = [
   // { label: "Fare estimate", path: "/fare-estimate" },
   // { label: "Book a taxi", path: "/book-taxi" },
-  { label: "Company website", path: "https://humesilvercabservices.com.au" },
-  { label: "Contact us", path: "https://humesilvercabservices.com.au/contact-us/" },
+  { label: "Company website", path: "https://1300taximel.com/" },
+  { label: "Contact us", path: "https://1300taximel.com/contact-us/" },
 ];
 
 export const mdNavItems = [

@@ -8,7 +8,7 @@ export const getMelbourneNow = () =>
   );
 
 export const COLORS = {
-  FIXED_ORANGE: "#f4b20bff", // used as fixedColor in SideBar
+  FIXED_ORANGE: "#F4BA40", // used as fixedColor in SideBar
 };
 
 export const LIMITS = {

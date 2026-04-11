@@ -13,7 +13,7 @@ export const sendBooking = async (data) => {
   try {
     const templateParams = {
       email: receiverEmail,
-      passengerName: data.passengerName,
+      passengerName: data.passengerName+" (1300 TAXI BOOKING)",
       pickup: data.pickup,
       bookingMode: data.bookingMode,
       destination: data.destination,
