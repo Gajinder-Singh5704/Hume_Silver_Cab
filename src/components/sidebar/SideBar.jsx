@@ -40,6 +40,7 @@ import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
 import { tr } from "date-fns/locale";
 import { getTollInfo } from "../../hooks/getTolls.js"
+import AwardWinner from "./AwardWinner.jsx";
 
 const SideBar = ({
   onPickupSelect,
@@ -1052,6 +1053,9 @@ const SideBar = ({
       {(
         <section className={`w-full scroll-container ${vehicleText ? "hidden" : "block"}`} ref={topRef}>
           <form onSubmit={handleSubmit} autoComplete="off">
+            <div className="px-5 pt-6">
+              <AwardWinner />
+            </div>
             {/* Step 1 */}
             <div className="px-5 py-6">
               <h3 className="text-sm mb-4">

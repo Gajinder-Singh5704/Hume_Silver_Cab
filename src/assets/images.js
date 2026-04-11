@@ -9,6 +9,7 @@ import suv from "./images/SUV.jpeg";
 import aus from "./images/ausLogo.png"
 import creditcard from "./images/creditcard.png"
 import cash from "./images/cash.png"
+import awardWinner from "./images/awardWinner.png"
 
 const images = {
   cabcharge,
@@ -21,7 +22,8 @@ const images = {
   suv,
   aus,
   creditcard,
-  cash
+  cash,
+  awardWinner
 };
 
 export default images;
