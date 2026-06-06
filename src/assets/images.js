@@ -5,7 +5,7 @@ import menuCar from "./images/menuCar.jpeg";
 import reactLogo from "./images/react.svg";
 import sedan from "./images/Sedan.png";
 import silver from "./images/Silver.png";
-import suv from "./images/SUV.jpeg";
+import suv from "./images/SUV.png";
 import aus from "./images/ausLogo.png"
 import creditcard from "./images/creditcard.png"
 import cash from "./images/cash.png"

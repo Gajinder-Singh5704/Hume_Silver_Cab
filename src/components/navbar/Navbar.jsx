@@ -12,17 +12,19 @@ const Navbar = () => {
 
   return (
     <header className="bg-[#f9f6f3] relative">
-      <nav id="navbar" className="flex items-center justify-between pt-2 pb-2 text-[16px]">
+      <nav id="navbar" className="flex items-center justify-between py-2 text-[16px]">
         {/* logo section */}
         <div className="ml-2 md:ml-6">
           <img src={images.logo} alt="logo" className="h-10 rounded-lg shadow-[4px_4px_10px_rgba(0,0,0,0.55)]" />
         </div>
         {/* nav links section */}
-        <div className="flex md:space-x-8 space-x-4 md:mr-4 mr-1 items-center ">
+        <div className="flex md:space-x-8 space-x-2 md:mr-4 items-center">
           <ul className="flex md:space-x-8 space-x-4 cursor-pointer  ">
             {navItems.map((item, index) => (
               <li key={index} className="text-[#454545] hover:text-[#000]">
-                <NavLink to={item.path}>{item.label}</NavLink>
+                <NavLink to={item.path} className="block text-center max-w-[80px] leading-tight md:max-w-none md:text-left">
+                  {item.label}
+                </NavLink>
               </li>
             ))}
           </ul>

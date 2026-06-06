@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, startTransition } from "react";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { tolls, normalizeRoad, roadAliases } from "../../data/tollsData.js";
@@ -26,16 +26,8 @@ const LuggageModal = lazy(() => import("./LuggageModal.jsx"));
 import { toast } from "react-hot-toast";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-const DatePicker = lazy(() =>
-  import("@mui/x-date-pickers/DatePicker").then((m) => ({
-    default: m.DatePicker,
-  }))
-);
-const TimePicker = lazy(() =>
-  import("@mui/x-date-pickers/TimePicker").then((m) => ({
-    default: m.TimePicker,
-  }))
-);
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import images from "../../assets/images.js";
 import { sendBooking } from "../../hooks/sendEmail.js";
 import { tr } from "date-fns/locale";
@@ -306,21 +298,21 @@ const SideBar = ({
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.OVERNIGHT_WEEKEND].flagFall;
-          minimumFare = 60
+        minimumFare = 60
       } else if (timeType === 2) {
         base =
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].baseFlat +
           distance * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.SHOULDER].flagFall;
-          minimumFare = 50
+        minimumFare = 50
       } else {
         base =
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].baseFlat +
           distance * SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].perKm +
           tollCost +
           SIDEBAR_CONSTANTS.FARE_RATES[TIME_TYPE.NORMAL].flagFall;
-          minimumFare = 40
+        minimumFare = 40
       }
       base += bookingFees;
       if (isAirportPickup(pickup)) {
@@ -328,7 +320,7 @@ const SideBar = ({
       }
       let fareValue = 0
 
-      if ( base > minimumFare) {
+      if (base > minimumFare) {
         fareValue = base
         shouldApplyMinimumFare(false)
       } else {
@@ -605,7 +597,7 @@ const SideBar = ({
       return; // stop here
     }
 
-    console.log("Minimum Fare is : "+minimumFare)
+    console.log("Minimum Fare is : " + minimumFare)
     if (!isMinimumFareApplied) {
       confirmBooking()
     } else {
@@ -615,7 +607,7 @@ const SideBar = ({
     // resetForm()
   };
 
-  const confirmBooking = async() => {
+  const confirmBooking = async () => {
     setIsConfirmBookingModalOpen(false)
     setIsRequestSend(true);
     const bookingTime = `${hourVal}:${minuteVal} ${meridiem} `;
@@ -663,7 +655,7 @@ const SideBar = ({
         autoClose: 6000,
 
       });
-      window.location.href = "https://humesilvercabservices.com.au/thank-you/";
+      window.location.href = "https://1300taximel.com/thank-you/";
       setError("");
       setIsRequestSend(false);
     } else {
@@ -678,9 +670,9 @@ const SideBar = ({
 
   const handleCancelBooking = () => {
     toast.error("Booking Request Cancelled", {
-        position: "top-right",
-        autoClose: 6000,
-      });
+      position: "top-right",
+      autoClose: 6000,
+    });
 
     resetForm()
   }
@@ -688,7 +680,7 @@ const SideBar = ({
   const resetForm = () => {
     scrollToTopOrNavbar();
     setIsConfirmBookingModalOpen(false)
-     // Reset all fields
+    // Reset all fields
     setPickup("");
     setPickupLoc(null);
     setPickupSuggestions([]);
@@ -1200,7 +1192,10 @@ const SideBar = ({
               <RadioGroup
                 row
                 value={bookingMode}
-                onChange={(e) => setBookingMode(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  startTransition(() => setBookingMode(val));
+                }}
                 sx={{ "& .MuiFormControlLabel-root": { mr: 6 } }} // spacing between radios
               >
                 <FormControlLabel
@@ -1238,7 +1233,6 @@ const SideBar = ({
                 <div className="flex flex-col md:flex-col gap-4">
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <Suspense fallback={null}>
                         <DatePicker
                           key={`date-${pickerKey}`}
                           label="Pickup date"
@@ -1302,13 +1296,11 @@ const SideBar = ({
                             },
                           }}
                         />
-                      </Suspense>
                     </LocalizationProvider>
                   </div>
 
                   <div className="flex-1">
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <Suspense fallback={null}>
                         <TimePicker
                           ampm // ← force 12-hour UI
                           key={`time-${pickerKey}`}
@@ -1385,7 +1377,6 @@ const SideBar = ({
                             actionBar: { actions: ["accept", "cancel"] },
                           }}
                         />
-                      </Suspense>
                     </LocalizationProvider>
                   </div>
                 </div>
@@ -1555,7 +1546,7 @@ const SideBar = ({
                   inputProps={{ maxLength: 350 }}
                   value={instruction}
                   onChange={(e) => setInstruction(e.target.value)}
-                  placeholder="e.g. Unit, Gate and floor numbers"
+                  placeholder="Notes for driver"
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       "&.Mui-focused fieldset": {
@@ -1674,12 +1665,12 @@ const SideBar = ({
         onClose={() => setWhoopModal(false)}
         onOk={() => console.log("User acknowledged the modal")}
       />
-      { isConfirmBookingModalOpen && 
+      {isConfirmBookingModalOpen &&
         <EstimatedFareModal
-        fare={minimumFareString}
-        onConfirm={() => confirmBooking()}
-        onCancel={handleCancelBooking}
-      />}
+          fare={minimumFareString}
+          onConfirm={() => confirmBooking()}
+          onCancel={handleCancelBooking}
+        />}
     </>
   );
 };
