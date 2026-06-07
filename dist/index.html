@@ -3,14 +3,11 @@
 
 <head>
   <!-- Google Tag Manager -->
-  <script>(function (w, d, s, l, i) {
-      w[l] = w[l] || []; w[l].push({
-        'gtm.start':
-          new Date().getTime(), event: 'gtm.js'
-      }); var f = d.getElementsByTagName(s)[0],
-        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
-          'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
-    })(window, document, 'script', 'dataLayer', 'GTM-T33JZZCJ');</script>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T33JZZCJ');</script>
   <!-- End Google Tag Manager -->
 
   <!-- Global site tag (gtag.js) - Google Ads: 18083045393 -->
@@ -60,7 +57,21 @@
   <link rel="icon" type="image/svg+xml" href="./src/assets/logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Book a taxi online with Silver Service</title>
-  <script type="module" crossorigin src="/assets/index-Dd8QYm_D.js"></script>
+
+  <!-- URL Cleanup script for GA4 linker parameters -->
+  <script>
+    (function () {
+      if (window.history.replaceState) {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('_gl') || url.searchParams.has('_ga')) {
+          url.searchParams.delete('_gl');
+          url.searchParams.delete('_ga');
+          window.history.replaceState(null, '', url.toString());
+        }
+      }
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/index-Cj1CtUin.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/vendor-react-gH-7aFTg.js">
   <link rel="modulepreload" crossorigin href="/assets/vendor-mui-D1rIA98E.js">
   <link rel="modulepreload" crossorigin href="/assets/vendor-utils-CmIXKihP.js">
@@ -71,8 +82,8 @@
 
 <body>
   <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T33JZZCJ" height="0" width="0"
-      style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T33JZZCJ"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
   <div id="root"></div>
