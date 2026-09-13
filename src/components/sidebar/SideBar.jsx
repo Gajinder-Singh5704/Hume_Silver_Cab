@@ -240,7 +240,7 @@ const SideBar = ({
         const data = await getTollInfo(pickupLoc, destinationLoc);
         const priceObj = data?.[0]?.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
         const totalToll = priceObj
-          ? Number(priceObj.units) + priceObj.nanos / 1_000_000_000
+          ? Number(priceObj.units || 0) + (priceObj.nanos || 0) / 1_000_000_000
           : 0;
         setTollPrice(totalToll);
         setHasToll(totalToll >= 1);

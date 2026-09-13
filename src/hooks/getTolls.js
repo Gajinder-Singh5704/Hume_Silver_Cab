@@ -15,8 +15,7 @@ export const getTollInfo = async (origin,dest) => {
               longitude: origin.lng
             }
           }
-        },
-          tollPasses: []
+        }
       }
     ],
     destinations: [
